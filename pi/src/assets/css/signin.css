@@ -1,0 +1,71 @@
+/* signin.css */
+.signin-container {
+    margin-top: 30px; /* Ajoute un espace de 30px entre la navbar et le formulaire */
+    padding: 20px; /* Ajoute du padding pour mieux espacer le contenu à l'intérieur */
+  }
+  
+.signin-container {
+   
+    width: 100%;
+    max-width: 400px;
+    margin: auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .signin-logo {
+    font-size: 2rem;
+    color: #5FCF80;
+    margin-bottom: 20px;
+  }
+  
+  .signin-form .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .form-control {
+    width: 100%;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+  }
+  
+  .btn-submit {
+    width: 100%;
+    padding: 12px;
+    background-color: #5FCF80;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  .btn-submit:hover {
+    background-color: #4CAF50;
+  }
+  
+  .forgot-password-link {
+    display: block;
+    text-align: right;
+    color: #5FCF80;
+    text-decoration: none;
+  }
+  
+  .forgot-password-link:hover {
+    text-decoration: underline;
+  }
+  
+  .error-message {
+    color: red;
+    text-align: center;
+    margin-top: 10px;
+  }
+  
+  .google-login {
+    margin-top: 20px;
+    text-align: center;
+  }
+  
