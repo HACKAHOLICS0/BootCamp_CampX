@@ -1,13 +1,11 @@
-// src/components/user/signin.js
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useUser } from "../../JS/UserProvider";
 import GoogleLoginButton from "./GoogleLoginButton";
 import "../../assets/css/signin.css";
+import Cookies from "js-cookie"; // Import de js-cookie
 
 export default function Signin() {
   const navigate = useNavigate();
-  const { login } = useUser();
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errorDisplay, setErrorDisplay] = useState("");
 
@@ -16,18 +14,23 @@ export default function Signin() {
 
   const onSubmit = async (e) => {
     e.preventDefault();
+
     try {
       const response = await fetch("http://localhost:5000/api/auth/signin", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(formData),
       });
 
       const data = await response.json();
+
       if (response.ok) {
-        localStorage.setItem("token", data.token);
-        login(data.user);
-        navigate("/");
+        Cookies.set("token", data.token, { expires: 7 }); // Expire dans 7 jours
+        Cookies.set("user", JSON.stringify(data.user), { expires: 7 });
+        window.dispatchEvent(new Event("userUpdated")); // Notifie le changement
+        navigate("/"); // Redirige après la connexion
       } else {
         setErrorDisplay(data.message || "Incorrect email or password");
       }
@@ -36,12 +39,7 @@ export default function Signin() {
     }
   };
 
-  // Gérer la connexion Google côté frontend :
   const handleGoogleLoginSuccess = async (credentialResponse) => {
-    // Vous pouvez envoyer credentialResponse.credential (l'id_token) à un endpoint dédié
-    // Ici, nous appelons directement l'endpoint backend en redirigeant l'utilisateur
-    // Une alternative serait de créer une route /api/auth/google qui accepte le token et renvoie un JWT
-    // Pour cet exemple, nous redirigeons vers le backend qui lancera la stratégie Google.
     window.location.href = "http://localhost:5000/api/auth/google";
   };
 

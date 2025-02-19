@@ -48,5 +48,8 @@ router.get(
     res.redirect(`http://localhost:3000/google/${token}`);
   }
 );
+router.put("/:id", upload.single('image'), authController.editUser);
+router.get("/:id", authController.getUserById);
+
 
 module.exports = router;

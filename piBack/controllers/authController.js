@@ -16,51 +16,177 @@ const checkEmailExists = async (req, res) => {
   }
 };
 
-// Sign up a new user
 const signup = async (req, res) => {
-  const { name, lastname, birthDate, phone, email, password } = req.body;
-  const imagePath = req.file ? req.file.path : null;
+  const { name, lastName, birthDate, phone, email, password } = req.body; // 'lastName' ici
+  const imagePath = req.file ? req.file.path : null; // Récupère le chemin de l'image téléchargée
 
-  if (!name || !lastname || !birthDate || !phone || !email || !password) {
-    return res.status(400).json({ message: 'All fields are required' });
+  // Validation des champs nécessaires
+  if (!name || !lastName || !birthDate || !phone || !email || !password) {  // 'lastName' ici
+      return res.status(400).json({ error: 'All fields are required' });
   }
 
   try {
-    const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ message: 'Email already exists' });
+      // Vérifie si l'utilisateur existe déjà
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+          return res.status(400).json({ error: 'Email already exists' });
+      }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ name, lastname, birthDate, phone, email, password: hashedPassword, image: imagePath });
-    await newUser.save();
-    res.status(201).json({ message: 'User registered successfully' });
+      // Hacher le mot de passe avant de le sauvegarder
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Créer un nouvel utilisateur
+      const newUser = new User({
+          name,
+          lastName, // 'lastName' ici
+          birthDate,
+          phone,
+          email,
+          typeUser: "user", // Ajouter le type d'utilisateur
+          password: hashedPassword, // Mot de passe haché
+          image: imagePath, // Ajouter l'image
+      });
+
+      await newUser.save();
+      res.status(201).json({ message: 'User registered successfully' });
   } catch (error) {
-    console.error('Error during signup:', error);
-    res.status(500).json({ message: 'Internal server error' });
+      console.error('Error during signup:', error);
+      res.status(500).json({ error: 'Internal server error' });
   }
 };
 
-// Sign in an existing user
+
+
 const signin = async (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ message: 'Email and password are required' });
+
+  // Validation des champs nécessaires
+  if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+  }
 
   try {
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: 'User not found' });
+      // Vérifier si l'utilisateur existe
+      const user = await User.findOne({ email });
+      if (!user) {
+          return res.status(400).json({ msg: 'User not found' });
+      }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: 'Incorrect password' });
+      // Vérifier le mot de passe
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+          return res.status(400).json({ msg: 'Incorrect password' });
+      }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.status(200).json({ message: 'Login successful', token, user: { id: user._id, name: user.name, email: user.email } });
+      // Générer un token JWT
+      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+      // Enregistrer le token JWT dans un cookie sécurisé (HTTPOnly)
+      res.cookie('token', token, {
+          httpOnly: true,  // Ne peut être accédé par JavaScript
+          secure: process.env.NODE_ENV === 'production',  // Utilise 'secure' en mode production
+          sameSite: 'Strict', // Empêche les attaques CSRF
+          maxAge: 3600000, // Durée du cookie (1 heure)
+      });
+
+      // Retourner la réponse avec les informations de l'utilisateur
+      res.status(200).json({
+          msg: 'Login successful',
+          user: {
+              id: user._id,
+              name: user.name,
+              lastName: user.lastName, // Nom de famille
+              birthDate: user.birthDate, // Date de naissance
+              phone: user.phone, // Numéro de téléphone
+              email: user.email, // Email
+              image: user.image, // Image de profil
+              state: user.state, // État de l'utilisateur (par exemple actif, inactif, etc.)
+              coursepreferences: user.coursepreferences, // Préférences de cours
+              refinterestpoints: user.refinterestpoints, // Points d'intérêt
+              refmodules: user.refmodules, // Modules de référence
+              reffriends: user.reffriends, // Amis de référence
+              typeUser: user.typeUser
+          },
+      });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+      console.error(err);
+      res.status(500).json({ msg: 'Server error' });
   }
 };
 
-// Initialize Twilio client
+const authenticate = (req, res, next) => {
+  const token = req.cookies.token;
 
+  if (!token) {
+      return res.status(401).json({ msg: 'No token provided, authorization denied' });
+  }
+
+  try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = decoded; // Sauvegarder l'utilisateur décodé dans `req.user`
+      next();
+  } catch (err) {
+      console.error(err);
+      return res.status(401).json({ msg: 'Token is not valid' });
+  }
+};
+const editUser = async (req, res) => {
+  try {
+      const { name, lastName, birthDate, phone, email, password } = req.body;
+      const userId = req.params.id;
+      const imagePath = req.file ? req.file.path : null;
+
+      // Vérifier si l'utilisateur existe
+      let user = await User.findById(userId);
+      if (!user) {
+          return res.status(404).json({ error: "User not found" });
+      }
+
+      // Si un mot de passe est fourni, le hacher
+      let hashedPassword = user.password;
+      if (password) {
+          hashedPassword = await bcrypt.hash(password, 10);
+      }
+
+      // Mettre à jour les informations de l'utilisateur
+      user.name = name || user.name;
+      user.birthDate = birthDate || user.birthDate;
+      user.phone = phone || user.phone;
+      user.lastName = lastName || user.lastName; // Fix: lastName not lastname
+      user.email = email || user.email;
+      user.password = hashedPassword;
+      user.image = imagePath || user.image;
+
+      await user.save();
+
+      res.status(200).json(user);
+  } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+const getUserById = async (req, res) => {
+  try {
+      const { id } = req.params;
+
+      // Vérifie si l'ID est valide
+      if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+          return res.status(400).json({ error: "Invalid user ID format" });
+      }
+
+      const user = await User.findById(id);
+      if (!user) {
+          return res.status(404).json({ error: "User not found" });
+      }
+
+      res.json(user);
+  } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ error: "Internal server error" });
+  }
+};
 const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
 // Send verification code via SMS
@@ -205,5 +331,5 @@ const forgotPasswordEmail = async (req, res) => {
 
 
   
-  module.exports = { signup, signin, checkEmailExists, sendVerificationCode, verifyCode, resetPassword, resetPasswordEmail, forgotPasswordEmail };
+  module.exports = { signup,authenticate, signin, checkEmailExists, sendVerificationCode,editUser,getUserById, verifyCode, resetPassword, resetPasswordEmail, forgotPasswordEmail };
   

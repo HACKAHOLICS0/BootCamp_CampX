@@ -12,6 +12,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@fortawesome/react-fontawesome": "^0.2.2",
     "@react-oauth/google": "^0.12.1",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.3",
@@ -27,9 +28,8 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "piback": "file:",
-    "twilio": "^5.4.4"
-  },
-  "devDependencies": {
+    "twilio": "^5.4.4",
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11"
+
   }
 }

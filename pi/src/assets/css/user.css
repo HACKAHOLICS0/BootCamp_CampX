@@ -1,0 +1,129 @@
+#main{
+    background-color: rgb(255, 255, 255) !important;
+}
+.card-user {
+    box-shadow: 0 20px 27px 0 rgb(0 0 0 / 5%) !important;
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+    word-wrap: break-word !important;
+    background-color: rgb(255, 255, 255) !important;
+    background-clip: border-box !important;
+    border: 0px solid rgba(0,0,0,.125) !important;
+    border-radius: 1rem !important;
+}
+
+.card-body-user{   
+    margin-left: 20px;
+    border: 0px !important;
+}
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1050; /* Assure que le modal est toujours au-dessus */
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 50%;
+    max-width: 500px;
+    text-align: center;
+    position: relative;
+    z-index: 1051; /* Plus haut que tout autre élément */
+}
+
+.modal-content .close {
+    position: absolute;
+    right: 20px;
+    top: 10px;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+body.modal-open {
+    overflow: hidden; /* Empêche le scroll arrière-plan */
+}
+.edit-button {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background-color: #28a745; /* Vert */
+    color: white; /* Icône en blanc */
+    border: none;
+    border-radius: 20%; /* Rond */
+    width: 45px; /* Taille du bouton */
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem; /* Taille de l'icône */
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
+}
+
+.edit-button:hover {
+    background-color: #218838; /* Vert plus foncé au survol */
+}
+
+/* Assurez-vous que la card-body-user a une position relative */
+.card-body-user {
+    position: relative;
+    padding-bottom: 50px; /* Pour ne pas que l'icône cache du texte */
+}
+
+.card-point {
+    box-shadow: 0 20px 27px 0 rgb(0 0 0 / 5%) !important;
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+    word-wrap: break-word !important;
+    background-color: rgb(255, 255, 255) !important;
+    background-clip: border-box !important;
+    border: 0px solid rgba(0,0,0,.125) !important;
+    border-radius: 1rem !important;
+}
+
+.card-body-point{   
+    margin-left: 20px;
+    border: 0px !important;
+}
+/* Style de la carte de points d'intérêt */
+.card.point-card {
+    transition: transform 0.3s, box-shadow 0.3s, border 0.3s;
+    cursor: pointer;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Ombre douce par défaut */
+    background-color: #fff;
+}
+
+/* Effet au survol de la carte */
+.card.point-card:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Ombre plus forte */
+    transform: translateY(-5px); /* Légère remontée */
+}
+
+/* Style lorsque la carte est sélectionnée */
+.card.selected {
+    box-shadow: 0 4px 8px rgba(0, 255, 0, 0.5); /* Ombre verte brillante */
+    border: 2px solid #00ff00; /* Contour brillant */
+    background-color: #e0ffe0; /* Fond légèrement vert */
+}
+
+/* Style pour les points non sélectionnés */
+.card:not(.selected) {
+    box-shadow: 0 4px 8px rgba(0, 255, 0, 0.5); /* Ombre verte brillante */
+    
+    /* Pas de contour par défaut */
+}

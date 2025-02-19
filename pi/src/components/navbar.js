@@ -1,19 +1,49 @@
-import React from "react"; 
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom"; // Remplacer useHistory par useNavigate
 import "bootstrap/dist/css/bootstrap.min.css";
-import '../Navbar.css'; // Importons un fichier CSS pour personnaliser davantage le design
-import { useUser } from "../JS/UserProvider";
+import "../Navbar.css";
+import Cookies from "js-cookie"; // Importer js-cookie
 
 export default function Navbar() {
-  const { user, logout } = useUser();
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate(); // Utiliser useNavigate pour la redirection
 
+  // Fonction pour mettre à jour l'utilisateur
+  const updateUser = () => {
+    const storedUser = Cookies.get("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  };
+
+  // Charger l'utilisateur au montage et écouter les mises à jour
+  useEffect(() => {
+    updateUser();
+  
+    const handleUserUpdate = () => updateUser();
+    window.addEventListener("userUpdated", handleUserUpdate);
+  
+    return () => {
+      window.removeEventListener("userUpdated", handleUserUpdate); // Assurez-vous de supprimer l'événement
+    };
+  }, []);
+
+  // Fonction pour déconnecter l'utilisateur
+  const handleSignOut = (e) => {
+    e.preventDefault();
+    Cookies.remove("user");
+    Cookies.remove("token"); // Supprime aussi le token
+    setUser(null);
+    window.dispatchEvent(new Event("userUpdated")); // Notifie le changement
+    navigate("/signin"); // Redirige après la déconnexion
+  };
 
   return (
     <div id="header" className="bg-white text-dark py-3 shadow-lg">
       <div className="container d-flex align-items-center justify-content-between">
         <h1 className="logo me-auto text-light">
           <Link to="/" className="text-light text-decoration-none">
-            <span className="logo-text">HACKAHOLICS</span>
+            <span className="logo-text">CAMP X</span>
           </Link>
         </h1>
         <nav id="navbar" className="navbar navbar-expand-lg">
@@ -28,7 +58,19 @@ export default function Navbar() {
                 Modules
               </Link>
             </li>
-            {!user ? (
+            {user && user.typeUser === "user" ? (
+              <li className="nav-item d-flex">
+                <Link to="/profile" className="nav-link text-dark hover-effect">
+                  Profile
+                </Link>
+                <button
+                  onClick={handleSignOut}
+                  className="nav-link btn btn-link text-dark hover-effect"
+                >
+                  Sign Out
+                </button>
+              </li>
+            ) : (
               <>
                 <li className="nav-item">
                   <Link to="/signin" className="nav-link text-dark hover-effect">
@@ -40,20 +82,6 @@ export default function Navbar() {
                     Sign Up
                   </Link>
                 </li>
-              </>
-            ) : (
-              <>
-                <li className="nav-item">
-                  <Link to="/profile" className="nav-link text-dark hover-effect">
-                    Profile
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <button onClick={logout} className="nav-link text-dark hover-effect">
-                    Logout
-                  </button>
-                </li>
-            
               </>
             )}
           </ul>

@@ -14,23 +14,6 @@ const GoogleRedirectHandler = () => {
     // Stocker le token (par exemple dans le localStorage)
     localStorage.setItem("token", token);
 
-    // Option 1 : décoder le token pour récupérer quelques infos (si le payload le contient)
-    // Vous pouvez utiliser la librairie jwt-decode : npm install jwt-decode
-    // Exemple :
-    // import jwtDecode from 'jwt-decode';
-    // const decoded = jwtDecode(token);
-    // login(decoded);
-
-    // Option 2 : appeler votre endpoint backend pour récupérer les informations complètes de l'utilisateur
-    // Exemple :
-    // fetch('http://localhost:5000/api/auth/profile', {
-    //   headers: { Authorization: `Bearer ${token}` },
-    // })
-    // .then(res => res.json())
-    // .then(userData => login(userData))
-    // .catch(err => console.error(err));
-
-    // Ici, nous utiliserons une méthode simple en décodant le token sans librairie (si le payload contient par exemple { id, iat, exp })
     try {
       const base64Url = token.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');

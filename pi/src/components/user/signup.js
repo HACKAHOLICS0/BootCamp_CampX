@@ -8,7 +8,7 @@ export default function Signup() {
     const [errorDisplay, setErrorDisplay] = useState("");
     const [formErrors, setFormErrors] = useState({
         name: "",
-        lastname: "",
+        lastName: "",
         birthDate: "",
         phone: "",
         email: "",
@@ -18,7 +18,7 @@ export default function Signup() {
     });
     const [formData, setFormData] = useState({
         name: "",
-        lastname: "",
+        lastName: "",
         birthDate: "",
         phone: "",
         email: "",
@@ -56,8 +56,8 @@ export default function Signup() {
             case "name":
                 errors.name = value ? "" : "Name is required";
                 break;
-            case "lastname":
-                errors.lastname = value ? "" : "Last Name is required";
+            case "lastName": // Fixed extra space
+                errors.lastName = value ? "" : "Last Name is required";
                 break;
             case "email":
                 errors.email = value ? "" : "Email is required";
@@ -166,15 +166,15 @@ export default function Signup() {
                 <div className="form-group">
                     <input
                         type="text"
-                        className={`form-control ${formErrors.lastname ? "is-invalid" : ""}`}
-                        id="lastname"
-                        name="lastname"
+                        className={`form-control ${formErrors.lastName ? "is-invalid" : ""}`} // Fixed class and variable
+                        id="lastName"
+                        name="lastName"
                         placeholder="Enter Last Name"
-                        value={formData.lastname}
+                        value={formData.lastName}
                         onChange={onChange}
                         onBlur={onBlur}
                     />
-                    {formErrors.lastname && <div className="invalid-feedback">{formErrors.lastname}</div>}
+                    {formErrors.lastName && <div className="invalid-feedback">{formErrors.lastName}</div>}
                 </div>
 
                 <div className="form-group">
