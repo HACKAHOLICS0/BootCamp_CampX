@@ -3,10 +3,19 @@ import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 
 const backendURL = "http://localhost:5000";
+const getImageUrl = (user) => {
+    if (!user) return "/uploads/avatar7.png"; // Image par défaut si user est null
 
-const getImageUrl = (imagePath) => {
-    return imagePath ? `${backendURL}/${imagePath.replace(/\\/g, "/")}` : "/uploads/avatar7.png";
+    // Vérifier si l'image existe et commence par "http" (cas Google OAuth)
+    if (user.image && user.image.startsWith("http")) {
+        return user.image;
+    }
+
+    // Image locale stockée sur le serveur
+    return `${backendURL}/${user.image.replace(/\\/g, "/")}`;
 };
+
+
 
 export default function UserProfile() {
     const [user, setUser] = useState(null);
@@ -22,10 +31,13 @@ export default function UserProfile() {
         const storedUser = Cookies.get("user");
         if (storedUser) {
             const parsedUser = JSON.parse(storedUser);
-            console.log("user avec cookie ",parsedUser);
+            console.log("Utilisateur récupéré:", parsedUser); // Vérifier si l'image est bien là
             setUser(parsedUser);
         }
     }, []);
+    
+    
+    
 
     useEffect(() => {
         if (user) {
@@ -224,8 +236,8 @@ export default function UserProfile() {
                         <div className="col-md-4 mb-3 d-flex align-items-stretch">
                             <div className="card card-user w-100">
                                 <div className="card-body-user text-center">
-                                    <img src={getImageUrl(user.image)} className="rounded-circle" width="200" alt="User Avatar" />
-                                    <div className="mt-3">
+                                <img src={getImageUrl(user)} className="rounded-circle" width="200" alt="User Avatar" />
+                                <div className="mt-3">
                                         <h4>{user.name || "User"}</h4>
                                     </div>
                                 </div>
