@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useUser } from '../../JS/UserProvider';
 // Vous pouvez également utiliser une librairie pour décoder le token, ex. jwt-decode
+import Cookies from "js-cookie"; // Import de js-cookie
 
 const GoogleRedirectHandler = () => {
   const { token } = useParams();
@@ -13,6 +14,9 @@ const GoogleRedirectHandler = () => {
 
     // Stocker le token (par exemple dans le localStorage)
     localStorage.setItem("token", token);
+    Cookies.set("token", token, { expires: 7 });
+    window.dispatchEvent(new Event("userUpdated"));
+ 
 
     try {
       const base64Url = token.split('.')[1];

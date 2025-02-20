@@ -26,6 +26,7 @@ router.post('/reset-password', authController.resetPassword);
 // Pour l'email de réinitialisation
 router.post('/forgotpasswordemail', authController.forgotPasswordEmail);
 router.post('/resetpasswordemail', authController.resetPasswordEmail);
+router.post("/google/token", authController.googleTokenAuth);
 
 // Route pour lancer l'authentification Google
 router.get(

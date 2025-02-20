@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom"; // Remplacer useHistory par useNavigate
+import { Link, useNavigate } from "react-router-dom"; 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../Navbar.css";
-import Cookies from "js-cookie"; // Importer js-cookie
+import Cookies from "js-cookie"; 
 
 export default function Navbar() {
   const [user, setUser] = useState(null);
-  const navigate = useNavigate(); // Utiliser useNavigate pour la redirection
+  const navigate = useNavigate(); 
 
-  // Fonction pour mettre à jour l'utilisateur
+  // Fonction pour récupérer l'utilisateur stocké dans les cookies
   const updateUser = () => {
     const storedUser = Cookies.get("user");
     if (storedUser) {
       setUser(JSON.parse(storedUser));
+    } else {
+      setUser(null);
     }
   };
 
@@ -20,11 +22,15 @@ export default function Navbar() {
   useEffect(() => {
     updateUser();
   
-    const handleUserUpdate = () => updateUser();
+    const handleUserUpdate = () => {
+      console.log("Mise à jour utilisateur détectée !");
+      updateUser();
+    };
+
     window.addEventListener("userUpdated", handleUserUpdate);
   
     return () => {
-      window.removeEventListener("userUpdated", handleUserUpdate); // Assurez-vous de supprimer l'événement
+      window.removeEventListener("userUpdated", handleUserUpdate);
     };
   }, []);
 
@@ -32,11 +38,13 @@ export default function Navbar() {
   const handleSignOut = (e) => {
     e.preventDefault();
     Cookies.remove("user");
-    Cookies.remove("token"); // Supprime aussi le token
+    Cookies.remove("token"); 
     setUser(null);
-    window.dispatchEvent(new Event("userUpdated")); // Notifie le changement
-    navigate("/signin"); // Redirige après la déconnexion
+    window.dispatchEvent(new Event("userUpdated"));
+    navigate("/signin"); 
   };
+
+  console.log("Utilisateur actuel :", user); // 🔍 Vérification
 
   return (
     <div id="header" className="bg-white text-dark py-3 shadow-lg">
@@ -58,7 +66,7 @@ export default function Navbar() {
                 Modules
               </Link>
             </li>
-            {user && user.typeUser === "user" ? (
+            {user ? (
               <li className="nav-item d-flex">
                 <Link to="/profile" className="nav-link text-dark hover-effect">
                   Profile
