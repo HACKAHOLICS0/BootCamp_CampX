@@ -34,6 +34,7 @@ function App() {
           <Route path="/profile" element={<UserProfile />} />
           {/* Route pour récupérer le token de Google après redirection */}
           <Route path="/google/:token" element={<GoogleRedirectHandler />} />
+
         </Routes>
         {location.pathname !== "/signin" && location.pathname !== "/signup" && location.pathname !== "/forget-password" && location.pathname !== "/profile" && <Template />}
 

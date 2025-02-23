@@ -29,6 +29,11 @@ var User = new Schema({
     state : {
         type:Number
     },
+    githubId: {
+        type: String,
+        unique: true, // Un utilisateur GitHub doit être unique
+        sparse: true, // Permet d'avoir des utilisateurs sans GitHub ID (Google, Email, etc.)
+      },
     coursepreferences : {
         type:[String]
     },
@@ -44,6 +49,7 @@ var User = new Schema({
     typeUser : {
         type:String,
     } 
+    
 });
 
-module.exports = mongoose.model('user',User);
+module.exports = mongoose.model('User', User); // Avec une majuscule

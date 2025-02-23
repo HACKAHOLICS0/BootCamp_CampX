@@ -92,6 +92,7 @@ const signin = async (req, res) => {
       // Retourner la réponse avec les informations de l'utilisateur
       res.status(200).json({
           msg: 'Login successful',
+          token,
           user: {
               id: user._id,
               name: user.name,

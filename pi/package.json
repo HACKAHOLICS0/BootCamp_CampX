@@ -4,10 +4,10 @@
   "private": true,
   "dependencies": {
     "@react-oauth/google": "^0.12.1",
+    "axios": "^1.7.9",
     "bootstrap": "^5.3.3",
     "cra-template": "1.2.0",
     "font-awesome": "^4.7.0",
-    "pi": "file:",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-google-login": "^5.2.2",
@@ -40,5 +40,4 @@
     ]
   },
   "proxy": "http://localhost:5000"
-
 }

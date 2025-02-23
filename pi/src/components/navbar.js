@@ -7,7 +7,50 @@ import Cookies from "js-cookie";
 export default function Navbar() {
   const [user, setUser] = useState(null);
   const navigate = useNavigate(); 
-
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+    const user = params.get("user"); // Si ton backend envoie l'user sous forme de chaîne JSON
+    
+    if (token && user) {
+      Cookies.set("token", token, { expires: 7 });
+      Cookies.set("user", user, { expires: 7 });
+  
+      setUser(JSON.parse(user)); // Met à jour l'état avec les données utilisateur
+      navigate("/"); // Redirige vers la page d'accueil après login
+    }
+  }, []);
+  
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.search).get("token");
+  
+    if (token) {
+      // Stocker le token dans le localStorage ou dans les cookies
+      localStorage.setItem("token", token);
+      Cookies.set("token", token, { expires: 7 });
+  
+      // Vous pouvez aussi récupérer le profil utilisateur si nécessaire
+      fetchUserProfile(token);
+    }
+  }, []);
+  
+  const fetchUserProfile = async (token) => {
+    try {
+      const response = await fetch("http://localhost:5000/api/user/profile", {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+  
+      const data = await response.json();
+      if (data.user) {
+        setUser(data.user); // Mettre à jour l'état utilisateur
+      }
+    } catch (err) {
+      console.error("Error fetching user profile", err);
+    }
+  };
+  
   // Fonction pour récupérer l'utilisateur stocké dans les cookies
   const updateUser = () => {
     const storedUser = Cookies.get("user");
@@ -23,16 +66,17 @@ export default function Navbar() {
     updateUser();
   
     const handleUserUpdate = () => {
-      console.log("Mise à jour utilisateur détectée !");
       updateUser();
     };
-
+  
     window.addEventListener("userUpdated", handleUserUpdate);
   
     return () => {
       window.removeEventListener("userUpdated", handleUserUpdate);
     };
   }, []);
+  
+  
 
   // Fonction pour déconnecter l'utilisateur
   const handleSignOut = (e) => {

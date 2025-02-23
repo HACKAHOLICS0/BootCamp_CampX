@@ -31,13 +31,10 @@ export default function UserProfile() {
         const storedUser = Cookies.get("user");
         if (storedUser) {
             const parsedUser = JSON.parse(storedUser);
-            console.log("Utilisateur récupéré:", parsedUser); // Vérifier si l'image est bien là
+            console.log("user avec cookie ",parsedUser);
             setUser(parsedUser);
         }
     }, []);
-    
-    
-    
 
     useEffect(() => {
         if (user) {
@@ -79,15 +76,18 @@ export default function UserProfile() {
     };
 
     const handleSaveUser = async () => {
-        if (!user || !user._id) {
-            console.log("No user or user ID found.");
-            return;
-        }
-    
-        console.log("User ID passed as parameter:", user._id); // Ajout du log pour afficher l'ID
+            console.log("Current user state before saving:", user); // Debugging
+            if (!user || !(user._id || user.id)) {
+                console.log("No user or user ID found.");
+                return;
+            }
+            
+            const userId = user._id || user.id; // Get the correct ID
+            console.log("User ID passed as parameter:", userId);
+            
     
         try {
-            const response = await fetch(`${backendURL}/api/auth/${user._id}`, {
+            const response = await fetch(`${backendURL}/api/auth/${userId}`, {  // Use userId
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -228,6 +228,14 @@ export default function UserProfile() {
             </div>
         );
     }
+    
+    if (!user) {
+        return (
+            <div className="text-center mt-5">
+                <h4>Loading user data...</h4>
+            </div>
+        );
+    }
     return (
         <div id="main" data-aos="fade-in">
             <div className="container mt-5">
@@ -308,61 +316,131 @@ export default function UserProfile() {
                 </div>
 
                 {isModalOpen && (
-                    <div className="modal-overlay">
-                        <div className="modal-content">
-                            <span className="close" onClick={closeModal}>&times;</span>
-                            <h4>Edit User Information</h4>
-{Object.keys(editableUser).map((key, index) => (
+            <div className="modal-overlay">
+              <div className="modal-content">
+                <span className="close" onClick={() => setIsModalOpen(false)}>&times;</span>
+                <h4>Edit User Information</h4>
+                {Object.keys(editableUser).map((key) => (
+                  <div key={key} className="form-group">
+                    <label>{key.replace(/([A-Z])/g, ' $1')}</label>
+                    <input
+                      type={key === "birthDate" ? "date" : "text"}
+                      className="form-control"
+                      value={editableUser[key]}
+                      onChange={(e) => {
+                        setEditableUser({ ...editableUser, [key]: e.target.value });
+                        validateField(key);
+                      }}
+                    />
+                    {errors[key] && <small className="text-danger">{errors[key]}</small>}
+                  </div>
+                ))}
+                <div className="text-end mt-3">
+                  <button className="save-button" onClick={handleSaveUser} disabled={!isFormValid}>Save</button>
+                </div>
+              </div>
+            </div>
+          )}
 
-                                <div key={index} className="form-group">
-                                    <label>{key.replace(/([A-Z])/g, ' $1')}</label>
-                                    <input
-                                        type={key === "birthDate" ? "date" : "text"}
-                                        className="form-control"
-                                        value={editableUser[key]}
-                                        onChange={(e) => {
-                                            setEditableUser({ ...editableUser, [key]: e.target.value });
-                                            validateField(key);
-                                        }}
-                                    />
-                                    {errors[key] && <small className="text-danger">{errors[key]}</small>}
-                                </div>
-                            ))}
-                            <div className="text-end mt-3">
-                                <button className="save-button" onClick={handleSaveUser} disabled={!isFormValid}>
-                                    Save
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
+{isInterestPointModalOpen && (
+    <div className="modal-overlay">
+        <div className="modal-content">
+            <style>
+                {`
+                .modal-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.5); 
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
 
-                {isInterestPointModalOpen && (
-                    <div className="modal-overlay">
-                        <div className="modal-content">
-                            <span className="close" onClick={closeInterestPointModal}>&times;</span>
-                            <h4>Select Points of Interest</h4>
-                            <div className="interest-points-container">
-                                {interestPoints.map((point, index) => (
-                                    <div key={index} className="form-check">
-                                        <input
-                                            type="checkbox"
-                                            className="form-check-input"
-                                            checked={selectedPoints.includes(point.value)}
-                                            onChange={() => handlePointSelection(point)}
-                                        />
-                                        <label className="form-check-label">{point.label}</label>
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="text-end mt-3">
-                                <button className="save-button" onClick={handleSaveSelection}>
-                                    Save Selection
-                                </button>
-                            </div>
-                        </div>
+                .modal-content {
+                    background: white;
+                    padding: 20px;
+                    border-radius: 10px;
+                    width: 400px;
+                    max-width: 90%;
+                    text-align: center;
+                    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+                }
+
+                .close {
+                    position: absolute;
+                    top: 10px;
+                    right: 15px;
+                    font-size: 20px;
+                    cursor: pointer;
+                }
+
+                .interest-points-container {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                    align-items: center;
+                }
+
+                .form-check {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+
+                .form-check-input {
+                    width: 20px;
+                    height: 20px;
+                    accent-color: #007bff; 
+                }
+
+                .form-check-label {
+                    color: black; 
+                    font-size: 16px;
+                }
+
+                .save-button {
+                    background: #28a745;
+                    color: white;
+                    border: none;
+                    padding: 10px 15px;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    font-size: 16px;
+                    width: 100%;
+                }
+
+                .save-button:hover {
+                    background: #218838;
+                }
+                `}
+            </style>
+            <span className="close" onClick={closeInterestPointModal}>&times;</span>
+            <h4>Select Points of Interest</h4>
+            <div className="interest-points-container">
+                {interestPoints.map((point, index) => (
+                    <div key={index} className="form-check">
+                        <input
+                            type="checkbox"
+                            className="form-check-input"
+                            checked={selectedPoints.includes(point.value)}
+                            onChange={() => handlePointSelection(point)}
+                        />
+                        <label className="form-check-label">{point.label}</label>
                     </div>
-                )}
+                ))}
+            </div>
+            <div className="text-end mt-3">
+                <button className="save-button" onClick={handleSaveSelection}>
+                    Save Selection
+                </button>
+            </div>
+        </div>
+    </div>
+)}
+
             </div>
         </div>
     );
