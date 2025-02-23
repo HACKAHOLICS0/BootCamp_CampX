@@ -4,14 +4,16 @@ import Cookies from "js-cookie";
 
 const backendURL = "http://localhost:5000";
 const getImageUrl = (user) => {
-    if (!user) return "/uploads/avatar7.png"; // Image par défaut si user est null
+    if (!user || !user.image) {
+        return "/uploads/avatar7.png"; // Image par défaut
+    }
 
-    // Vérifier si l'image existe et commence par "http" (cas Google OAuth)
-    if (user.image && user.image.startsWith("http")) {
+    // Si l'image vient de Google OAuth (URL externe)
+    if (user.image.startsWith("http")) {
         return user.image;
     }
 
-    // Image locale stockée sur le serveur
+    // Si l'image est stockée localement
     return `${backendURL}/${user.image.replace(/\\/g, "/")}`;
 };
 

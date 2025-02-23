@@ -29,10 +29,19 @@ var User = new Schema({
     state : {
         type:Number
     },
+    googleId: {
+        type: String,
+        unique: true, // Un utilisateur GitHub doit être unique
+        sparse: true, // Permet d'avoir des utilisateurs sans GitHub ID (Google, Email, etc.)
+      },
     githubId: {
         type: String,
         unique: true, // Un utilisateur GitHub doit être unique
         sparse: true, // Permet d'avoir des utilisateurs sans GitHub ID (Google, Email, etc.)
+      },
+      authProvider: {
+        type: String,
+        enum: ['auth', 'github', 'local'],
       },
     coursepreferences : {
         type:[String]

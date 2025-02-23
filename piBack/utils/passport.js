@@ -12,29 +12,36 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: process.env.GITHUB_CALLBACK_URL,
+      callbackURL: "http://localhost:5000/api/auth/google/callback",
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        // Recherche un utilisateur avec le googleId fourni
+        // Vérifier uniquement par Google ID
         let user = await User.findOne({ googleId: profile.id });
+
+        // Si l'utilisateur n'existe pas, en créer un nouveau même avec un email identique
         if (!user) {
-          // Si l'utilisateur n'existe pas, créez-le
           user = new User({
             googleId: profile.id,
             name: profile.displayName,
             email: profile.emails && profile.emails[0].value,
-            // Vous pouvez ajouter d'autres champs selon vos besoins
+            image: profile.photos?.[0]?.value || null,
+            authProvider: 'auth',
+            typeUser: 'user',
           });
           await user.save();
         }
-        return done(null, user);
+
+        
+
+        return done(null, { user,  });
       } catch (error) {
         return done(error, null);
       }
     }
   )
 );
+
 
 // (Optionnel) Pour la gestion des sessions, si vous les utilisez
 passport.serializeUser((user, done) => {
