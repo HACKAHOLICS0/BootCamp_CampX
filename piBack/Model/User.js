@@ -63,6 +63,9 @@ var User = new Schema({
     },  
     emailVerificationToken: {
         type: String
+    },
+    verificationCode: {
+        type: String
     }
     
 });

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "cron":"node cron.js",
+    "cron": "node cron.js",
     "front": "cd ../pi && npm start",
     "back": "nodemon app",
     "dev": "concurrently \"npm run front\" \"npm run back\""
@@ -16,7 +16,7 @@
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@react-oauth/google": "^0.12.1",
-    "axios": "^1.7.9",
+    "axios": "^1.8.1",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.3",
     "concurrently": "^9.1.2",

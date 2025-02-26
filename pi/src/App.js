@@ -22,26 +22,36 @@ function App() {
   return (
     
     <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
-      <div className="App">
-        <Navbar />
-        <Routes>
-          <Route path="/signin" element={<Signin />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/forget-password" element={<ForgotPassword />} />
-          <Route path="/verify-code" element={<VerifyCode />} />
-          <Route path="/reset-password" element={<ResetPassword />} />   
-          <Route path="/resetpasswordemail" element={<ResetPasswordEmail />} />      
-          <Route path="/verifycodeEmail" element={<VerifyCodeEmail />} />
-          <Route path="/profile" element={<UserProfile />} />
-          <Route path="/google/:token" element={<GoogleRedirectHandler />} />
-          <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
+  <div className="App">
+    <Navbar />
+    <Routes>
+      <Route path="/signin" element={<Signin />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/forget-password" element={<ForgotPassword />} />
+      <Route path="/verify-code" element={<VerifyCode />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/resetpasswordemail" element={<ResetPasswordEmail />} />
+      <Route path="/verifycodeEmail" element={<VerifyCodeEmail />} />
+      <Route path="/profile" element={<UserProfile />} />
+      <Route path="/google/:token" element={<GoogleRedirectHandler />} />
+      <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
+    </Routes>
 
-        </Routes>
-        {location.pathname !== "/signin" && location.pathname !== "/signup" && location.pathname !== "/forget-password" && location.pathname !== "/profile" && <Template />}
+    {location.pathname !== "/signin" &&
+      location.pathname !== "/resetpasswordemail" &&
+      location.pathname !== "/signup" &&
+      location.pathname !== "/forget-password" &&
+      location.pathname !== "/profile" &&
+      location.pathname !== "/verify-code" &&
+      location.pathname !== "/reset-password" &&
+      location.pathname !== "/verifycodeEmail" &&
+      location.pathname !== "/google/:token" &&
+      location.pathname !== "/verify-email/:token" && <Template />}
 
-        <Footer />
-      </div>
-    </GoogleOAuthProvider>
+    <Footer />
+  </div>
+</GoogleOAuthProvider>
+
   );
 }
 

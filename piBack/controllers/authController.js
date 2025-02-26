@@ -2,6 +2,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const twilio = require('twilio');
 const User = require('../Model/User');
+const axios = require("axios");
+
 require('dotenv').config();
 const sendEmail = require('../utils/email');
 // Check if an email exists
@@ -127,14 +129,25 @@ const verifyEmail = async (req, res) => {
 
 
 const signin = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, recaptchaToken } = req.body;
 
   // Validation des champs nécessaires
-  if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
+  if (!email || !password || !recaptchaToken) {
+    return res.status(400).json({ error: "All fields and reCAPTCHA are required" });
   }
 
   try {
+    // Vérifier le reCAPTCHA avec Google
+    const recaptchaVerify = await axios.post(`https://www.google.com/recaptcha/api/siteverify`, null, {
+      params: {
+        secret: process.env.RECAPTCHA_SECRET, // Ajoute la clé secrète dans ton .env
+        response: recaptchaToken,
+      },
+    });
+
+    if (!recaptchaVerify.data.success) {
+      return res.status(400).json({ error: "reCAPTCHA verification failed" });
+    }
       // Vérifier si l'utilisateur existe
       const user = await User.findOne({ email });
       if (!user) {

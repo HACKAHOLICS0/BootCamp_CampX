@@ -4,19 +4,19 @@ import Cookies from "js-cookie";
 
 const backendURL = "http://localhost:5000";
 const getImageUrl = (user) => {
+    // Vérifie si l'utilisateur ou son image est défini
     if (!user || !user.image) {
         return "/uploads/avatar7.png"; // Image par défaut
     }
 
-    // Si l'image vient de Google OAuth (URL externe)
+    // Si l'image est déjà une URL complète (Google OAuth, GitHub, etc.)
     if (user.image.startsWith("http")) {
-        return user.image;
+        return user.image; // Retourner directement l'URL de l'image de Google
     }
 
-    // Si l'image est stockée localement
-    return `${backendURL}/${user.image.replace(/\\/g, "/")}`;
+    // Sinon, utiliser l'image locale stockée sur le serveur
+    return `${backendURL}/${user.image.replace(/\\/g, "/")}`;  // Assurez-vous que le chemin soit correctement formaté
 };
-
 
 
 export default function UserProfile() {
@@ -33,10 +33,11 @@ export default function UserProfile() {
         const storedUser = Cookies.get("user");
         if (storedUser) {
             const parsedUser = JSON.parse(storedUser);
-            console.log("user avec cookie ",parsedUser);
+            console.log("User récupéré des cookies:", parsedUser);
             setUser(parsedUser);
         }
     }, []);
+    
 
     useEffect(() => {
         if (user) {
