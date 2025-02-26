@@ -49,7 +49,6 @@ passport.use(new GitHubStrategy(
 // Sérialisation de l'utilisateur (stocker uniquement l'ID dans la session)
 passport.serializeUser((data, done) => {
   const user = data.user;
-  console.log("User being serialized:", user);
 
   if (!user || !user._id || !mongoose.Types.ObjectId.isValid(user._id)) {
     return done(new Error("Invalid user ID format"), null);

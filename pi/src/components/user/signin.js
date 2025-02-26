@@ -1,16 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, {  useRef, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import GoogleLoginButton from "./GoogleLoginButton";
 import "../../assets/css/signin.css";
 import Cookies from "js-cookie"; // Import de js-cookie
-import axios from 'axios';
+import ReCAPTCHA from "react-google-recaptcha";
 
 export default function Signin() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errorDisplay, setErrorDisplay] = useState("");
-
- 
+  
 
  
   const onChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -86,13 +85,23 @@ export default function Signin() {
         <button type="submit" className="btn btn-submbb it">Submit</button>
       </form>
       <div style={{ textAlign: "center", marginTop: "20px" }}>
-        <GoogleLoginButton onSuccess={handleGoogleLoginSuccess} />
-      </div>
-      <div style={{ textAlign: "center", marginTop: "20px" }}>
-        <button onClick={handleGitHubLogin} className="btn btn-dark">
-          Sign in with GitHub
-        </button>
-      </div>
+  <GoogleLoginButton onSuccess={handleGoogleLoginSuccess}/>
+</div>
+<div style={{ textAlign: "center", marginTop: "20px" }}>
+  <button 
+    onClick={handleGitHubLogin} 
+    style={{ backgroundColor: "white", color: "black", border: "1px solid black", display: "flex", alignItems: "center", padding: "8px" }}
+  >
+    <img 
+      src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" 
+      alt="GitHub Logo" 
+      style={{ width: "20px", height: "20px", marginRight: "8px" }} />
+    Sign in with GitHub
+  </button>
+ 
+    
+</div>
+
     </div>
   );
 }

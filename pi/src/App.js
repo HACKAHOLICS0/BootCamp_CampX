@@ -14,6 +14,7 @@ import ResetPasswordEmail from './components/user/ResetPasswordEmail';
 import VerifyCodeEmail from './components/user/VerifyCodeEmail';
 import GoogleRedirectHandler from './components/user/GoogleRedirectHandler';
 import UserProfile from './components/user/UserProfile';
+import VerifyEmailPage from './components/user/VerifyEmailPage';
 
 function App() {
   const location = useLocation();
@@ -32,8 +33,8 @@ function App() {
           <Route path="/resetpasswordemail" element={<ResetPasswordEmail />} />      
           <Route path="/verifycodeEmail" element={<VerifyCodeEmail />} />
           <Route path="/profile" element={<UserProfile />} />
-          {/* Route pour récupérer le token de Google après redirection */}
           <Route path="/google/:token" element={<GoogleRedirectHandler />} />
+          <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
 
         </Routes>
         {location.pathname !== "/signin" && location.pathname !== "/signup" && location.pathname !== "/forget-password" && location.pathname !== "/profile" && <Template />}

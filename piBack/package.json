@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "cron":"node cron.js",
     "front": "cd ../pi && npm start",
     "back": "nodemon app",
     "dev": "concurrently \"npm run front\" \"npm run back\""
@@ -28,6 +29,7 @@
     "jwt-decode": "^4.0.0",
     "mongoose": "^8.10.0",
     "multer": "^1.4.5-lts.1",
+    "node-cron": "^3.0.3",
     "nodemailer": "^6.10.0",
     "nodemon": "^3.1.9",
     "passport": "^0.7.0",
