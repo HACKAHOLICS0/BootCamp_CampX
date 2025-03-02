@@ -1,6 +1,6 @@
 import { Route, useNavigate, useParams } from "react-router-dom";
 import React, { useState, useEffect } from 'react';
-import { Badge, Card, Collapse, Table } from "react-bootstrap";
+import { Badge, Card, Collapse, Table ,Modal,Button} from "react-bootstrap";
 import AddQuiz from "./AddQuiz";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faEdit, faClose, faCircleXmark, faCircleCheck, faGear, faXmark, faCheck, faArrowUp } from "@fortawesome/free-solid-svg-icons";
@@ -28,7 +28,8 @@ const [seTerroChronoval, setSeTerroChronoval] = useState(null);
     const [module, setModule] = useState(null);
     const [quizzes, setQuizzes] = useState([]);
     const [error, setError] = useState(null);
-    
+    const [ShowManagePopup, setShowManagePopup] = useState(false);
+
     const [openAdd, setopenAdd] = useState(false);
     const [showAddQuestion, setShowAddQuestion] = useState(false);
     const [quizSelected, setQuizSelected] = useState(false);
@@ -240,9 +241,14 @@ useEffect(() => {
       };
       
       async function AddQuestionEvent(data, responses, code, language) {
-        try {
-          // Vérifier si l'utilisateur est authentifié
+        console.log("✅ AddQuestionEvent called with:", { data, responses, code, language, Quizselected });
       
+        try {
+          // Vérifier que quizSelected n'est pas null
+          if (!Quizselected) {
+            console.error("❌ No quiz selected. Please select a quiz before adding a question.");
+            return;
+          }
       
           // Construire le corps de la requête
           const requestBody = {
@@ -257,11 +263,14 @@ useEffect(() => {
             requestBody.language = language;
           }
       
+          console.log("📤 Sending request to:", `${backendURL}/quiz/addQuestion/${Quizselected._id}`);
+          console.log("📝 Request body:", requestBody);
+      
           const response = await fetch(`${backendURL}/quiz/addQuestion/${Quizselected._id}`, {
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
-           },
+            },
             body: JSON.stringify(requestBody),
           });
       
@@ -270,11 +279,14 @@ useEffect(() => {
           }
       
           const q = await response.json();
-          setQuizselected(q);
+          console.log("✅ Question added successfully:", q);
+          setQuizSelected(q); // Mise à jour de l'état après ajout
         } catch (err) {
-          console.error("Error adding question:", err.message);
+          console.error("❌ Error adding question:", err.message);
         }
       }
+      
+      
 
       async function addQuizFn(data, timer) {
         try {
@@ -307,186 +319,170 @@ useEffect(() => {
           console.error("Error creating quiz:", err.message);
         }
       }      
-  
- return (
+return (
   <div className="content-section">
-  <h2>Quiz Management</h2>
+    <h2>Quiz Management</h2>
 
-     <div>{!module&&quizzes&&
-    <div>
-    <div class="row mt-5 mx-auto" >
-     <div class="col-4 me-3">
-      {openAdd==false&&
-     <a class="btn  col-12 btncustom mb-3" onClick={()=>setopenAdd(true)}>Add Quiz</a>
-      }
-      {openAdd==true&&
-     <a class="btn  col-12 btncustom mb-3" onClick={()=>setopenAdd(false)}>  <FontAwesomeIcon icon={faClose}/> close </a>
-      }
-     <Collapse in={openAdd}>
-     <Card className="mb-3">
-  <Card.Body>
-    
-     <AddQuiz QuizEvent={addQuizFn}></AddQuiz>
-   
-</Card.Body>
-<Card.Footer  style={{cursor: "pointer"}} onClick={()=>setopenAdd(false)} className="d-flex justify-content-center"> <FontAwesomeIcon icon={faArrowUp}/>
-</Card.Footer>
+    <div>{!module && quizzes &&
+      <div>
+        <div className="row mt-5 mx-auto">
+          <div className="col-4 me-3">
+            {openAdd === false &&
+              <a className="btn col-12 btncustom mb-3" onClick={() => setopenAdd(true)}>Add Quiz</a>
+            }
+            {openAdd === true &&
+              <a className="btn col-12 btncustom mb-3" onClick={() => setopenAdd(false)}>  <FontAwesomeIcon icon={faClose}/> Close </a>
+            }
 
-     </Card>
-     </Collapse>
-     
- {/* 
-<a className="btn col-12 btncustom mb-3" onClick={() => {
-    history.push("/module/" + idModule + "/QuizResults");
-}}>
-    Show Results
-</a> 
-*/}
+            <Collapse in={openAdd}>
+              <Card className="mb-3">
+                <Card.Body>
+                  <AddQuiz QuizEvent={addQuizFn}></AddQuiz>
+                </Card.Body>
+                <Card.Footer style={{ cursor: "pointer" }} onClick={() => setopenAdd(false)} className="d-flex justify-content-center">
+                  <FontAwesomeIcon icon={faArrowUp} />
+                </Card.Footer>
+              </Card>
+            </Collapse>
 
-     <Collapse in={ShowAddQuestion}>
-     <Card className="mb-3">
-       <Card.Header>{Quizselected&& <Card.Title style={{"textAlign":"center"}}>{Quizselected.title}</Card.Title>}</Card.Header>
-  <Card.Body>
-     <h6>Questions :</h6>
-     <div id="accordion">
+            <a className="btn col-12 btncustom mb-3" onClick={() => {
+              history.push("/module/" + idModule + "/QuizResults");
+            }}>
+              Show Results
+            </a>
 
-  { Quizselected&&
-      Quizselected.Questions.map((question, index) => (
+            <Collapse in={ShowAddQuestion && Quizselected !== null}>
+              <Card className="mb-3">
+                <Card.Header>
+                  {Quizselected && <Card.Title style={{ textAlign: "center" }}>{Quizselected.title}</Card.Title>}
+                </Card.Header>
+                <Card.Body>
+                  <h6>Questions :</h6>
+                  <div id="accordion">
+                    {Quizselected && Quizselected.Questions.length > 0 ? (
+                      Quizselected.Questions.map((question, index) => (
+                        <div className="card my-3" key={index}>
+                          <div id={"heading" + index} className="card-header">
+                            <h5 className="mb-0">
+                              <div className="row">
+                                <div className="col-10" data-toggle="collapse" data-target={"#collapse" + index} aria-expanded="true" aria-controls={"collapse" + index} style={{ color: "black", cursor: "pointer" }}>
+                                  {question.texte}
+                                </div>
+                                <div className="col ms-4">
+                                  <FontAwesomeIcon size="sm" icon={faTrash} onClick={() => confirDeleteQuestion(Quizselected._id, question._id)} />
+                                </div>
+                              </div>
+                            </h5>
+                          </div>
+                          <div id={"collapse" + index} className="card-body collapse" aria-labelledby={"heading" + index} data-parent="#accordion">
+                            {question.QuestionType === "Radio" &&
+                              question.Responses.map((reponse, i) => (
+                                <div className="form-group" key={i}>
+                                  <input type="radio" name={question.texte} /> {reponse.texte}
+                                  <FontAwesomeIcon icon={faXmark} color="red" hidden={!reponse.correct} />
+                                  <FontAwesomeIcon icon={faCheck} color="green" hidden={reponse.correct} />
+                                </div>
+                              ))}
+                            {question.QuestionType === "CheckBox" &&
+                              question.Responses.map((reponse, i) => (
+                                <div className="form-group" key={i}>
+                                  <input type="checkbox" name={reponse.texte} /> {reponse.texte} {reponse.correct.toString()}
+                                </div>
+                              ))}
+                            {question.QuestionType === "Select" && (
+                              <select className="form-control">
+                                {question.Responses.map((reponse, i) => (
+                                  <option key={i} value={reponse.texte}>
+                                    {reponse.texte} {reponse.correct.toString()}
+                                  </option>
+                                ))}
+                              </select>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-center text-muted">Aucune question trouvée.</p>
+                    )}
+                  </div>
+                </Card.Body>
+                <Card.Footer style={{ cursor: "pointer" }} onClick={() => setShowAddQuestion(false)} className="d-flex justify-content-center">
+                  <FontAwesomeIcon icon={faArrowUp} />
+                </Card.Footer>
+                <Modal show={showAddQuestion} onHide={() => setShowAddQuestion(false)}>
+            <Modal.Header closeButton>
+              <Modal.Title>
+                {Quizselected ? `Manage Questions - ${Quizselected.title}` : "No quiz selected"}
+              </Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <AddQuestion AddQuestionEvent={AddQuestionEvent} quiz={Quizselected} />
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={() => setShowAddQuestion(false)}>
+                Close <FontAwesomeIcon icon={faArrowUp} />
+              </Button>
+            </Modal.Footer>
+          </Modal>
+              </Card>
+              
+            </Collapse>
 
-        <div class="card my-3" key={index}>
-        <div id={"heading"+index} class="card-header" >
-          <h5 class="mb-0">
-            <div class="row">
-              <div class="col-10" data-toggle="collapse" data-target={"#collapse"+index} aria-expanded="true" aria-controls={"collapse"+index}  style={{color:"black",cursor: "pointer"}}>{question.texte}</div>
-              <div class="col ms-4"> <FontAwesomeIcon size="sm" icon={faTrash} onClick={()=>confirDeleteQuestion(Quizselected._id,question._id)}   /> </div>
+          </div>
 
-            </div>
-          </h5>
+          <div className="col-7">
+            <Table striped bordered hover>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Date</th>
+                  <th>Title</th>
+                  <th>Link</th>
+                  <th>Duration</th>
+                  <th style={{ textAlign: "center" }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {quizzes.map((quiz, index) => (
+                  <tr key={index} style={{ cursor: "pointer" }} onClick={() => setQuizselected(quiz)}>
+                    <td>{index + 1}</td>
+                    <td>{quiz.dateQuiz.substring(0, 10)}</td>
+                    <td>{quiz.title}</td>
+                    <td><a href={`/studentQuiz/${quiz._id}`}>Preview</a></td>
+                    <td>
+                      {quiz.chrono === false && <FontAwesomeIcon icon={faCircleXmark} color="red" />}
+                      {quiz.chrono === true && <FontAwesomeIcon icon={faCircleCheck} className="me-3" color="green" />}
+                      {quiz.chrono === true && `${quiz.chronoVal} Minutes`}
+                    </td>
+                    <td style={{ textAlign: "center" }}>
+                      <FontAwesomeIcon icon={faEdit} className="me-3" />
+                      <FontAwesomeIcon icon={faTrash} className="me-3" onClick={() => confirmDelete(quiz._id)} />
+                      <button
+                        className="btn btn-secondary ms-2"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Empêcher le clic sur la ligne de tableau d'ouvrir le modal
+                          setQuizselected(quiz); // Associer le quiz sélectionné au popup
+                          setShowAddQuestion(true); // Ouvrir le modal pour ce quiz
+                        }}
+                      >
+                        Manage Questions
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </div>
+
+          {/* Modal pour gérer les questions */}
+
+
         </div>
-        <div id={"collapse"+index} class="card-body collapse" aria-labelledby={"heading"+index} data-parent="#accordion">
-          {question.QuestionType=="Radio"&&
-          question.Responses.map((reponse,index)=>(
-          <div class="form-group" key={index}>
-          <input type="radio"  name={question.texte}/>{ reponse.texte} <FontAwesomeIcon icon={faXmark} color={"red"} hidden={!reponse.correct} ></FontAwesomeIcon><FontAwesomeIcon icon={faCheck} color={"green"} hidden={reponse.correct} ></FontAwesomeIcon>
-          </div>))}
-          {question.QuestionType=="CheckBox"&&
-          question.Responses.map((reponse,index)=>(
-          <div class="form-group" key={index}>
-          <input type="checkbox"  name={reponse.texte}/>{ reponse.texte} {reponse.correct.toString()}  
-          </div>))}
-          {question.QuestionType=="Select"&&
-          <select  class="form-control">  
- {
-    question.Responses.map((reponse,index)=>(
-        <option value={ reponse.texte}>{ reponse.texte} {reponse.correct.toString()} </option>    
-      ))
- }         
-          </select>
-}
-        </div>
-        </div>
+      </div>
+    }
+    </div>
+  </div>
+);
 
-
-    ))
-
-    
-  }
-</div>
-</Card.Body>
-<Card.Footer  style={{cursor: "pointer"}} onClick={()=>setShowAddQuestion(false)} className="d-flex justify-content-center"> <FontAwesomeIcon icon={faArrowUp}/>
-</Card.Footer>
-
-     </Card>
-     </Collapse>
-     </div>
-     <div class="col-7">
-     <Table striped bordered hover>
-  <thead>
-    <tr>
-      <th>#</th>
-      <th>Date</th>
-      <th>Title</th>
-      <th>Link</th>
-      <th>Duration</th>
-      <th style={{textAlign:"center"}}>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-  {
-                        
-                        quizzes.map((quiz, index) => (
-                        editQuiz==false  || editQuiz==true && index!=setKeySelected ?(
-                        <tr key={index}>
-                            <td>{index + 1}</td>
-                            <td>{quiz.dateQuiz.substring(0, 10)}</td>
-                            <td>{quiz.title}</td>
-                            <td><a href={"/studentQuiz/"+quiz._id}>Preview</a></td>
-                            <td>{quiz.chrono==false&& <FontAwesomeIcon icon={faCircleXmark} color={"red"}></FontAwesomeIcon>}
-                            {quiz.chrono==true&&
-                             <FontAwesomeIcon icon={faCircleCheck} className="me-3" color={"green"}></FontAwesomeIcon>  }
-                             {quiz.chrono==true&&
-                             quiz.chronoVal + " Minutes" }
-                            </td>
-                            <td style={{textAlign:"center"}}>
-                            <a style={{color:"#4284f5",cursor: "pointer"}}  className="me-3" onClick={()=>{setShowAddQuestion(true);
-                               setQuizselected(quiz)
-                               console.log(Quizselected)}}> <FontAwesomeIcon icon={faGear}/> Manage Question </a> 
-                            <FontAwesomeIcon icon={faEdit} className="me-3" onClick={()=>{setQuizselected(quiz);
-                            setKeySelected(index);
-                            setEditQuiz(true);
-                            setChecked(quiz.chrono)
-                            }}/>
-                            <FontAwesomeIcon icon={faTrash} className="me-3" onClick={()=>confirmDelete(quiz._id)}/>
-
-                            </td>
-                            </tr>
-                        ):(<tr key={index}>
-                          <td>{index + 1}</td>
-                          <td> {quiz.dateQuiz.substring(0, 10)}</td>
-                          <td><input className="form-control"type="texte" name="title" defaultValue={quiz.title} onKeyPress={handleKeyPresstitle}/></td>
-                          <td><a href={"/studentQuiz/"+quiz._id}>Preview</a></td>
-                          <td> <Switch   checked={checked}  onChange={handleChange} ></Switch> Timer (Minutes) 
-                          {checked==true&&
-                          <input class="form-control" type="number" placeholder="minutes" defaultValue={quiz.chronoVal} onKeyPress={handleKeyPresschrono}/>
-                           }
-                           {erroChronoval==true&&checked==true&&
-                           <div class="alert alert-danger" role="alert">
-                           Timer must be greater than 0
-                           </div>
-                           }
-                      
-                          </td>
-                          <td style={{textAlign:"center"}}>
-                          <FontAwesomeIcon icon={faClose} className="me-3" onClick={()=>{setQuizselected(null);
-                          setKeySelected(-1);
-                          setEditQuiz(false);
-                         
-                          }}/>
-                    
-                          </td>
-                          </tr>)
-
-
-                        ))
-        }
-  </tbody>
-</Table>
-
-<Collapse in={ShowAddQuestion}>
-     <Card className="mb-3">
-  <Card.Body>
-     <AddQuestion AddQuestionEvent={AddQuestionEvent}></AddQuestion>
-</Card.Body>
-<Card.Footer  style={{cursor: "pointer"}} onClick={()=>setShowAddQuestion(false)} className="d-flex justify-content-center"> <FontAwesomeIcon icon={faArrowUp}/>
-</Card.Footer>
-
-     </Card>
-     </Collapse>
-         </div>
-        </div>
-        </div>}
-        </div>
-        </div>);
-
-}
+    }      
 export default QuizAdmin; 

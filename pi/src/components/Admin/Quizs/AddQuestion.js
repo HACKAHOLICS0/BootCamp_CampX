@@ -91,7 +91,7 @@ const AddQuestion = ({ AddQuestionEvent }) => {
       <div class="alert alert-danger" role="alert" hidden={!errors.texte}>
         {errors.texte?.message}
       </div>
-      {/* <div class="form-group my-3">
+      <div class="form-group my-3">
         {insertCode == false && <a className="btn btn-secondary" onClick={() => setInsertCode(true)}>Insert Code block</a>}
 
         {insertCode &&
@@ -128,7 +128,7 @@ const AddQuestion = ({ AddQuestionEvent }) => {
       
       </div>
         }
-      </div> */}
+      </div> 
       <div class="form-group my-3">
         <select class="form-control" {...register("QuestionType")}>
           <option value="CheckBox">CheckBox</option>
