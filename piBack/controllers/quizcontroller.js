@@ -49,59 +49,56 @@ module.exports.find = async (req, res) => {
       res.status(500).send("Error to get data");
   }
 };
-
-
-
-  
 module.exports.delete = async (req, res) => {
-    User= await UserModel.findOne()
-    if(User==null){
-      return res.send('authorization failed')
-    }
-    if (!ObjectID.isValid(req.params.id))
-      return res.status(400).send("ID unknown : " + req.params.id);
-  
-      quizModel.findByIdAndRemove(req.params.id, (err, docs) => {
-      if (err) console.log("Delete error : " + err);
-      else
-      return res.status(200).send("Quiz deleted ");
+  if (!ObjectID.isValid(req.params.id))
+    return res.status(400).send("ID unknown : " + req.params.id);
 
-      });
-  
-  };
-  
-module.exports.update = async (req, res) => {
-  User= await UserModel.findOne()
-  if(User==null){
-    return res.send('authorization failed')
-  }
-  if (!ObjectID.isValid(req.body.id))
-    return res.status(400).send("ID unknown : " + req.body.id);
-    const updatedRecord = {};
-  if(req.body.title!=null){
-  updatedRecord["title"]=req.body.title;
-  }
-  if(req.body.chrono!=null){
-    updatedRecord["chrono"]=req.body.chrono
-  }
-  if(req.body.chronoVal!=null){
-    updatedRecord["chronoVal"]=req.body.chronoVal
+  try {
+    const quiz = await quizModel.findByIdAndDelete(req.params.id);
 
-  }
-  if(Object.keys(updatedRecord).length !== 0){
-    quizModel.findByIdAndUpdate(
-    req.body.id,
-    { $set: updatedRecord },
-    { new: true },
-    (err, docs) => {
-      if (!err) res.send(docs);
-      else console.log("Update error : " + err);
+    if (!quiz) {
+      return res.status(404).send("Quiz not found");
     }
-  );
-  }else{
-    return res.status(400).send("No update here : " + req.params.id);
+
+    return res.status(200).send("Quiz deleted");
+  } catch (err) {
+    console.error("Delete error:", err);
+    return res.status(500).send("Error deleting quiz");
   }
 };
+
+  
+  module.exports.update = async (req, res) => {
+    try {
+      if (!mongoose.Types.ObjectId.isValid(req.body.id)) {
+        return res.status(400).send("ID unknown : " + req.body.id);
+      }
+  
+      const updatedRecord = {};
+      if (req.body.title != null) updatedRecord["title"] = req.body.title;
+      if (req.body.chrono != null) updatedRecord["chrono"] = req.body.chrono;
+      if (req.body.chronoVal != null) updatedRecord["chronoVal"] = req.body.chronoVal;
+  
+      if (Object.keys(updatedRecord).length === 0) {
+        return res.status(400).send("No update provided");
+      }
+  
+      const updatedQuiz = await quizModel.findByIdAndUpdate(
+        req.body.id,
+        { $set: updatedRecord },
+        { new: true }
+      );
+  
+      if (!updatedQuiz) {
+        return res.status(404).send("Quiz not found");
+      }
+
+      res.status(200).json(updatedQuiz);
+    } catch (err) {
+      console.error("Update error:", err);
+      res.status(500).send("Server error");
+    }
+  };
 module.exports.findQuizByID=async(req,res)=>{
   User= await UserModel.findOne()
   if(User==null){
@@ -181,10 +178,7 @@ module.exports.addScore = async (req, res) => {
 };
 
 module.exports.addReponse = async (req, res) => {
-  User= await UserModel.findOne()
-  if(User==null){
-    return res.send('authorization failed')
-  }
+  
   if (!ObjectID.isValid(req.body.idQuiz))
     return res.status(400).send("ID unknown : " + req.body.idQuiz);
    qui= await quizModel.findOne({_id:req.body.idQuiz})
@@ -197,30 +191,28 @@ module.exports.addReponse = async (req, res) => {
   
 };
 module.exports.DeleteQuestion = async (req, res) => {
-  User= await UserModel.findOne()
-  if(User==null){
-    return res.send('authorization failed')
-  }
   if (!ObjectID.isValid(req.params.id))
     return res.status(400).send("ID unknown : " + req.params.id);
-    quizModel.findByIdAndUpdate(
+
+  try {
+    const updatedQuiz = await quizModel.findByIdAndUpdate(
       req.params.id,
       {
-        $pull: { Questions:{ _id: req.params.idQuestion } },
+        $pull: { Questions: { _id: req.params.idQuestion } }
       },
-      { new: true },
-      (err, docs) => {
-        if (!err) 
-        return res.send(docs);
-        else 
-        return res.status(400).send("No update here : " + req.params.id);
-
-      }
+      { new: true }  // Cette option permet de renvoyer le document mis à jour
     );
-    
-  
 
-};
+    if (!updatedQuiz) {
+      return res.status(404).send("Quiz not found");
+    }
+
+    return res.send(updatedQuiz); // Renvoie le quiz mis à jour
+  } catch (err) {
+    console.error("Error deleting question:", err);
+    return res.status(400).send("Error deleting question");
+  }
+}; 
 module.exports.findStudent =  async (req, res) => {
   User= await UserModel.findOne()
   if(User==null){
@@ -277,4 +269,53 @@ module.exports.updateBehavior = async (req, res) => {
    
   
 };
+module.exports.toggleQuizActivation = async (req, res) => {
+  User = await UserModel.findOne();
+  if (User == null) {
+    return res.send('authorization failed');
+  }
+  if (!ObjectID.isValid(req.params.id)) {
+    return res.status(400).send("ID unknown : " + req.params.id);
+  }
 
+  // Toggle the 'activer' field (if it's true, set to false, and vice versa)
+  const quiz = await quizModel.findById(req.params.id);
+  if (!quiz) {
+    return res.status(404).send("Quiz not found");
+  }
+
+  quiz.activer = !quiz.activer; // Change the state of 'activer'
+
+  // Save the updated quiz
+  await quiz.save();
+
+  res.status(200).send(`Quiz ${quiz.activer ? 'activated' : 'deactivated'}`);
+};
+
+module.exports.toggleQuestionActivation = async (req, res) => {
+  User = await UserModel.findOne();
+  if (User == null) {
+    return res.send('authorization failed');
+  }
+  if (!ObjectID.isValid(req.params.idQuiz) || !ObjectID.isValid(req.params.idQuestion)) {
+    return res.status(400).send("ID unknown");
+  }
+
+  const quiz = await quizModel.findById(req.params.idQuiz);
+  if (!quiz) {
+    return res.status(404).send("Quiz not found");
+  }
+
+  const question = quiz.Questions.id(req.params.idQuestion);
+  if (!question) {
+    return res.status(404).send("Question not found");
+  }
+
+  // Toggle the 'activer' field of the question
+  question.activer = !question.activer; // Change the state of 'activer'
+
+  // Save the updated quiz with the updated question
+  await quiz.save();
+
+  res.status(200).send(`Question ${question.activer ? 'activated' : 'deactivated'}`);
+};

@@ -9,7 +9,7 @@ import { Switch } from "@mui/material";
 import AddQuestion from "./AddQuestion";
 import Cookies from "js-cookie";  
 import "../../../assets/css/styleQuiz.css";
-
+import { confirmAlert } from "react-confirm-alert";
 // États manquants
 
 const backendURL = "http://localhost:5001/api";
@@ -29,11 +29,11 @@ const [seTerroChronoval, setSeTerroChronoval] = useState(null);
     const [quizzes, setQuizzes] = useState([]);
     const [error, setError] = useState(null);
     const [ShowManagePopup, setShowManagePopup] = useState(false);
-
+    const [editQuiz,setEditQuiz]=useState(false);
+    
     const [openAdd, setopenAdd] = useState(false);
     const [showAddQuestion, setShowAddQuestion] = useState(false);
     const [quizSelected, setQuizSelected] = useState(false);
-    const [editQuiz, setEditQuiz] = useState(false);
     const [keySelected, setKeySelected] = useState(false);
     const [checked, setChecked] = useState(false);
     const [erroChronoval, setErroChronoval] = useState(false);
@@ -42,23 +42,80 @@ const ShowAddQuestion = () => {
     console.log("ShowAddQuestion function called");
   };
   
-  const confirDeleteQuestion = () => {
-    console.log("confirDeleteQuestion function called");
-  };
-  
-  const confirmDelete = () => {
-    console.log("confirmDelete function called");
-  };
-    // Charger l'utilisateur depuis les cookies
-    useEffect(() => {
-        const storedUser = Cookies.get("user");
-        if (storedUser) {
-            const parsedUser = JSON.parse(storedUser);
-            console.log("User avec cookie:", parsedUser);
-            setUser(parsedUser);
-        }
-    }, []);
+  async function confirDeleteQuestion(idquiz,idQuestion){
+    confirmAlert({
+      title: 'Confirm to Delete',
+      message: 'Are you sure to do this.',
+      buttons: [
+        {
+          label: 'Yes',
+          onClick: () =>DeleteQuestion(idquiz,idQuestion)
+        },
+        {
+          label: 'No',
+          onClick: () => {
 
+          }
+        }
+      ]
+    });
+  }
+  async function DeleteQuestion(idquiz, idQuestion) { 
+    try {
+      const response = await fetch(`${backendURL}/quiz/deleteQuestion/${idquiz}/${idQuestion}`, {
+        method: 'GET', // Ou 'DELETE' si c'est plus approprié
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+  
+      if (!response.ok) {
+        throw new Error("Erreur lors de la suppression de la question");
+      }
+  
+      const data = await response.json();
+      setQuizselected(data);
+      // window.location.reload();
+    } catch (error) {
+      console.error("Erreur lors de la suppression de la question :", error.message);
+    }
+  }
+  
+  async function confirmDelete(id) {
+    confirmAlert({
+      title: 'Confirm to Delete',
+      message: 'Are you sure to do this?',
+      buttons: [
+        {
+          label: 'Yes',
+          onClick: () => deletequiz(id)
+        },
+        {
+          label: 'No'
+        }
+      ]
+    });
+  }
+  
+  async function deletequiz(id) {
+    try {
+      const response = await fetch(`${backendURL}/quiz/delete/${id}`, {
+        method: 'GET', // Ou 'DELETE' si plus logique
+        headers: {
+         'Content-Type': 'application/json'
+        }
+      });
+  
+      if (!response.ok) {
+        throw new Error("Erreur lors de la suppression du quiz");
+      }
+  
+      window.location.reload();
+        } catch (error) {
+      console.error("Erreur lors de la suppression du quiz :", error.message);
+    }
+  }
+  
     // Charger le module
    
 useEffect(() => {
@@ -134,7 +191,7 @@ useEffect(() => {
         // Reset reloadquiz to false after the quizzes are fetched
         setReloadquiz(false);
     }
-  }, [user],[reloadquiz]);
+  }, [user,reloadquiz]);
   
 
     // Vérifier si l'utilisateur est propriétaire du module
@@ -182,9 +239,7 @@ useEffect(() => {
     const handleKeyPresstitle = async (event) => {
         if (event.key === 'Enter') {
           try {
-            // Vérifier si l'utilisateur est défini
-          
-      
+           
             const response = await fetch(`${backendURL}/quiz/update`, {
               method: 'PATCH',
               headers: {
@@ -199,8 +254,8 @@ useEffect(() => {
             if (!response.ok) {
               throw new Error("Failed to update quiz title");
             }
-      
-            reloadquiz();
+          
+            window.location.reload();
           } catch (err) {
             console.error("Error updating quiz title:", err.message);
           }
@@ -211,34 +266,42 @@ useEffect(() => {
         if (event.key === 'Enter') {
           if (event.target.value > 0) {
             try {
-              // Vérifier si l'utilisateur est défini
-         
+              console.log("quizeselected id = ", Quizselected?._id);
+      
               const response = await fetch(`${backendURL}/quiz/update`, {
                 method: 'PATCH',
                 headers: {
                   'Content-Type': 'application/json',
-              },
+                },
                 body: JSON.stringify({
-                  id: Quizselected._id,
+                  id: Quizselected?._id,
                   chrono: checked,
                   chronoVal: event.target.value
                 })
               });
       
+              console.log("response = ", response.ok);
+      
               if (!response.ok) {
                 throw new Error("Failed to update quiz chrono value");
               }
       
-              reloadquiz();
-              seTerroChronoval(false);
+              // ✅ Rafraîchir les données après mise à jour
+              setReloadquiz(true); 
+              setSeTerroChronoval(false);
+      
+              // ✅ Option 1 : Forcer un rechargement complet
+               window.location.reload();
+      
             } catch (err) {
               console.error("Error updating quiz chrono value:", err.message);
             }
           } else {
-            seTerroChronoval(true);
+            setSeTerroChronoval(true);
           }
         }
       };
+      
       
       async function AddQuestionEvent(data, responses, code, language) {
         console.log("✅ AddQuestionEvent called with:", { data, responses, code, language, Quizselected });
@@ -444,11 +507,16 @@ return (
               </thead>
               <tbody>
                 {quizzes.map((quiz, index) => (
-                  <tr key={index} style={{ cursor: "pointer" }} onClick={() => setQuizselected(quiz)}>
-                    <td>{index + 1}</td>
-                    <td>{quiz.dateQuiz.substring(0, 10)}</td>
-                    <td>{quiz.title}</td>
-                    <td><a href={`/studentQuiz/${quiz._id}`}>Preview</a></td>
+                   editQuiz==false  || editQuiz==true && index!=keySelected ?(
+                       
+                  <tr key={index}  onClick={() => { setQuizselected(quiz); 
+                    setKeySelected(index);
+                    setEditQuiz(true);
+                    setChecked(quiz.chrono) }}>
+                    <td style={{ cursor: "pointer" }}>{index + 1}</td>
+                    <td style={{ cursor: "pointer" }}>{quiz.dateQuiz.substring(0, 10)}</td>
+                    <td style={{ cursor: "pointer" }}>{quiz.title}</td>
+                    <td style={{ cursor: "pointer" }} ><a href={`/studentQuiz/${quiz._id}`}>Preview</a></td>
                     <td>
                       {quiz.chrono === false && <FontAwesomeIcon icon={faCircleXmark} color="red" />}
                       {quiz.chrono === true && <FontAwesomeIcon icon={faCircleCheck} className="me-3" color="green" />}
@@ -469,7 +537,35 @@ return (
                       </button>
                     </td>
                   </tr>
-                ))}
+                   ):(<tr key={index}>
+                    <td>{index + 1}</td>
+                    <td> {quiz.dateQuiz.substring(0, 10)}</td>
+                    <td><input className="form-control"type="texte" name="title" defaultValue={quiz.title} onKeyPress={handleKeyPresstitle}/></td>
+                    <td><a href={"/studentQuiz/"+quiz._id}>Preview</a></td>
+                    <td> <Switch   checked={checked}  onChange={handleChange} ></Switch> Timer (Minutes) 
+                    {checked==true&&
+                    <input class="form-control" type="number" placeholder="minutes" defaultValue={quiz.chronoVal} onKeyPress={handleKeyPresschrono}/>
+                     }
+                     {erroChronoval==true&&checked==true&&
+                     <div class="alert alert-danger" role="alert">
+                     Timer must be greater than 0
+                     </div>
+                     }
+                
+                    </td>
+                    <td style={{textAlign:"center"}}>
+                    <FontAwesomeIcon icon={faClose} className="me-3" onClick={()=>{setQuizselected(null);
+                    setKeySelected(-1);
+                    setEditQuiz(false);
+                   
+                    }}/>
+                    <FontAwesomeIcon icon={faTrash} className="me-3" onClick={()=>confirmDelete(quiz._id)}/>
+
+                    </td>
+                    </tr>)
+
+
+                  ))}
               </tbody>
             </Table>
           </div>

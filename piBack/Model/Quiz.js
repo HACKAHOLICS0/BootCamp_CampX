@@ -19,6 +19,10 @@ var Quiz = new Schema({
   chronoVal:{
       type:Number
   },
+  activer: {
+    type: Boolean,
+    default: true // Par défaut, un quiz est activé
+  },
  
   Questions: {
     type: [
@@ -38,6 +42,10 @@ var Quiz = new Schema({
 
               }]
           },
+          activer: {
+            type: Boolean,
+            default: true // Par défaut, une question est activée
+          }
         }
       ],
   },
