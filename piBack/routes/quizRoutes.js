@@ -1,16 +1,30 @@
-const router = require('express').Router();
-const quizController = require('../controllers/quizcontroller')
-router.post("/:idModule/create",quizController.createQuiz);
-router.get("/findall",quizController.find);
-router.get("/delete/:id",quizController.delete);
-router.patch("/update",quizController.update);
-router.patch("/addQuestion/:id",quizController.addQuestion);
-router.get("/find/:id",quizController.findQuizByID)
-router.get("/deleteQuestion/:id/:idQuestion",quizController.DeleteQuestion)
-router.patch("/addResponseScore",quizController.addScore);
-router.patch("/addResponse",quizController.addReponse);
-router.get("/findStudent/:studentid",quizController.findStudent);
-router.post("/runScriptPython",quizController.runScriptPython);
-router.patch("/updateBehavior",quizController.updateBehavior);
+const express = require('express');
+const router = express.Router();
+const quizController = require('../controllers/quizController');
 
-module.exports=router;
+// Routes pour la gestion des quiz
+router.get("/findall", quizController.find);
+router.post("/:idModule/create", quizController.createQuiz);
+router.delete("/delete/:id", quizController.deleteQuiz);
+router.put("/update", quizController.updateQuiz);
+router.get("/questions/:id", quizController.findQuizByID);
+router.post("/addQuestion/:id", quizController.addQuestion);
+router.delete("/deleteQuestion/:idquiz/:idQuestion", quizController.DeleteQuestion);
+router.put("/updateQuestion", quizController.updateQuiz);
+router.patch("/activateQuestion/:id", quizController.toggleQuestionActivation);
+router.post("/runScriptPython", quizController.runScriptPython);
+router.patch("/updateBehavior", quizController.updateBehavior);
+
+// Routes pour l'affectation des quiz aux cours
+router.post('/assign/:quizId/course/:courseId', quizController.assignQuizToCourse);
+router.post('/unassign/:quizId/course/:courseId', quizController.unassignQuizFromCourse);
+
+// Routes pour les scores et réponses
+router.post('/score/add', quizController.addScore);
+router.post('/reponse/add', quizController.addReponse);
+router.get('/student/:id', quizController.findStudent);
+
+// Route pour activer/désactiver un quiz
+router.patch('/activate/:id', quizController.toggleQuizActivation);
+
+module.exports = router;

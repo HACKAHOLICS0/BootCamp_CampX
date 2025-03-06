@@ -1,28 +1,64 @@
 import React from 'react';
-import './AdminStyle.css'
-const Dashboard = () => (
-  <div className="dashboard-grid">
-    <div className="stat-card">
-      <h3>Total Users</h3>
-      <p className="stat-number">1,234</p>
-      <span className="stat-change positive">+12.5%</span>
+import { Users, Book, FolderTree, Layers } from 'lucide-react';
+import './styles/AdminPointsStyle.css';
+
+const DashboardCard = ({ title, value, icon: Icon, color }) => (
+  <div className="dashboard-card" style={{ borderColor: color }}>
+    <div className="card-icon" style={{ backgroundColor: color }}>
+      <Icon size={24} color="white" />
     </div>
-    <div className="stat-card">
-      <h3>Revenue</h3>
-      <p className="stat-number">$45,678</p>
-      <span className="stat-change positive">+8.3%</span>
-    </div>
-    <div className="stat-card">
-      <h3>Orders</h3>
-      <p className="stat-number">892</p>
-      <span className="stat-change negative">-3.2%</span>
-    </div>
-    <div className="stat-card">
-      <h3>Products</h3>
-      <p className="stat-number">156</p>
-      <span className="stat-change positive">+5.7%</span>
+    <div className="card-content">
+      <h3>{title}</h3>
+      <p className="value">{value}</p>
     </div>
   </div>
 );
+
+const Dashboard = () => {
+  // Ces valeurs seront remplacées par des données réelles de l'API
+  const stats = {
+    users: 150,
+    categories: 12,
+    modules: 25,
+    courses: 48
+  };
+
+  return (
+    <div className="content-section">
+      <h2>Dashboard</h2>
+      
+      <div className="dashboard-grid">
+        <DashboardCard
+          title="Utilisateurs"
+          value={stats.users}
+          icon={Users}
+          color="#4CAF50"
+        />
+        <DashboardCard
+          title="Catégories"
+          value={stats.categories}
+          icon={FolderTree}
+          color="#2196F3"
+        />
+        <DashboardCard
+          title="Modules"
+          value={stats.modules}
+          icon={Layers}
+          color="#FF9800"
+        />
+        <DashboardCard
+          title="Cours"
+          value={stats.courses}
+          icon={Book}
+          color="#E91E63"
+        />
+      </div>
+
+      <div className="dashboard-charts">
+        {/* Espace réservé pour les graphiques futurs */}
+      </div>
+    </div>
+  );
+};
 
 export default Dashboard;

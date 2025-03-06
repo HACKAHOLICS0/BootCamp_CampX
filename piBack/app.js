@@ -4,33 +4,35 @@ const cors = require("cors");
 const passport = require("passport");
 const mongoose = require('mongoose');
 const adminRoutes = require("./routes/AdminRoutes"); 
- // Configuration Passport
 const bodyParser = require("body-parser");
 const path = require("path");
 const authRoutes = require("./routes/authRoutes");
-const { initializePoints } = require('./controllers/intrestpoint'); // Ton contrôleur pour les points d'intérêt
-const interestPointRoutes = require('./routes/intrestRoutes'); // Assurez-vous que le chemin est correct
+const { initializePoints } = require('./controllers/intrestpoint');
+const interestPointRoutes = require('./routes/intrestRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
+const moduleRoutes = require('./routes/moduleRoutes');
+const courseRoutes = require('./routes/courseRoutes');
 const cookieParser = require('cookie-parser');
 
 require("./utils/passport");
+require("./utils/passport1")
 
+const videoRoutes = require("./routes/VideoRoutes");
 
-require("./utils/passport1") // Pass the app to githubAuth.js
-
-
-// Charger les variables d'environnement
 dotenv.config({ path: "./config/.env" });
 const quizRoutes=require('./routes/quizRoutes');
-const session = require("express-session"); // Importation de express-session
+const session = require("express-session");
 const jwt = require('jsonwebtoken');
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true
+}));
 app.use(bodyParser.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(passport.initialize());
 
-// Votre connexion à la base (MongoDB) doit être initialisée ici
 require("./config/dbConfig");
 
 mongoose.connect(process.env.MONGO_URI, {
@@ -39,46 +41,50 @@ mongoose.connect(process.env.MONGO_URI, {
 })
 .then(() => {
   console.log("Connexion à MongoDB réussie");
-
-  // Appeler la fonction d'initialisation des points d'intérêt
-  initializePoints(); // Insérer les points d'intérêt par défaut dans la base de données
+  initializePoints();
 })
 .catch((err) => {
   console.error("Erreur lors de la connexion à MongoDB:", err);
 });
 
-
 app.use(session({
-  secret: process.env.SESSION_SECRET, // Vous pouvez mettre cette valeur dans votre fichier .env
+  secret: process.env.SESSION_SECRET,
   resave: false, 
   saveUninitialized: true, 
-  cookie: { secure: false } // Mettre 'true' si vous utilisez HTTPS
+  cookie: { secure: false }
 }));
+
 const SECRET_KEY = "6LebIeMqAAAAAH51qBo0r1Q87u1FxnysnflAv6rb"; 
 app.use(cookieParser());
 app.use(passport.initialize());
 
-// Routes d'authentification
+// API Routes
+app.use("/api/videos", videoRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
-const interestPointModel = require('./Model/Interestpoint'); // Assure-toi d'importer ton modèle
 app.use('/api', interestPointRoutes);
-app.use('/api/quiz',quizRoutes)
+app.use('/api/quiz', quizRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/modules', moduleRoutes);
+app.use('/api/courses', courseRoutes);
+
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+
 app.get('/api/points', async (req, res) => {
     try {
+        const interestPointModel = require('./Model/Interestpoint'); 
         const points = await interestPointModel.find();
-        res.status(200).json(points); // Retourne les points d'intérêt au client
+        res.status(200).json(points);
     } catch (err) {
         console.error("Erreur lors de la récupération des points d'intérêt:", err);
         res.status(500).json({ message: "Erreur serveur" });
     }
 });
-// Gestion des routes non définies
+
 app.all("*", (req, res) => {
   res.status(404).json({ message: "Route not found" });
 });
 
-// Démarrer le serveur
 const port = process.env.PORT || 5001;
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);

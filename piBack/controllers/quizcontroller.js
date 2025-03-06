@@ -1,104 +1,177 @@
 const quizModel = require('../Model/Quiz');
+const Course = require('../Model/Course');
 const mongoose = require("mongoose");
 const ObjectID = mongoose.Types.ObjectId;
-const UserModel=require('../Model/User')
+const UserModel = require('../Model/User');
 const { spawn } = require('child_process');
-const {PythonShell} =require('python-shell');
-//const pd = require("node-pandas")
+const {PythonShell} = require('python-shell');
 
-module.exports.createQuiz = async (req, res) => {
-
-    /*if (!ObjectID.isValid(req.params.idModule))
-    return res.status(400).send("ID unknown : " + req.params.idModule);*/
-  if(req.body.chrono&&req.body.chronoVal)
- {
-
-  const newquiz = new quizModel({
-    title: req.body.title,
-    chrono: req.body.chrono,
-    chronoVal: req.body.chronoVal,
-    refModule: 1,
-    dateQuiz: new Date().toDateString()
-    
-  });
-  
-  const quiz = await newquiz.save();
-  return res.status(200).send("Quiz added "+quiz);
-  }else{
-    const newquiz = new quizModel({
-      title: req.body.title,
-      refModule: 1, //req.params.idModule,
-      dateQuiz: new Date().toDateString()
-    });
-    
-  const quiz = await newquiz.save();
-  return res.status(200).send("Quiz added "+quiz);
-  }
-}
-
+// Récupérer tous les quiz
 module.exports.find = async (req, res) => {
   try {
-      // Utilisation de await pour récupérer tous les quiz
-      const docs = await quizModel.find({});
-      
-      // Envoi des résultats si tout se passe bien
-      res.send(docs);
+    const quizzes = await quizModel.find({}).populate('course');
+    res.status(200).json(quizzes);
   } catch (err) {
-      // Gestion des erreurs
-      console.log("Error to get data: " + err);
-      res.status(500).send("Error to get data");
+    console.error("Find error:", err);
+    res.status(500).json({ error: err.message });
   }
 };
-module.exports.delete = async (req, res) => {
-  if (!ObjectID.isValid(req.params.id))
-    return res.status(400).send("ID unknown : " + req.params.id);
 
+// Créer un nouveau quiz
+module.exports.createQuiz = async (req, res) => {
   try {
-    const quiz = await quizModel.findByIdAndDelete(req.params.id);
+    const newquiz = new quizModel({
+      title: req.body.title,
+      chrono: req.body.chrono,
+      chronoVal: req.body.chronoVal,
+      course: req.body.courseId
+    });
+    
+    const quiz = await newquiz.save();
+    
+    if (req.body.courseId) {
+      await Course.findByIdAndUpdate(req.body.courseId, {
+        quiz: quiz._id
+      });
+    }
+    
+    res.status(200).json(quiz);
+  } catch (err) {
+    console.error("Create error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
 
+// Supprimer un quiz
+module.exports.deleteQuiz = async (req, res) => {
+  try {
+    const quiz = await quizModel.findById(req.params.id);
     if (!quiz) {
-      return res.status(404).send("Quiz not found");
+      return res.status(404).json({ error: "Quiz not found" });
     }
 
-    return res.status(200).send("Quiz deleted");
+    if (quiz.course) {
+      await Course.findByIdAndUpdate(quiz.course, {
+        $unset: { quiz: "" }
+      });
+    }
+
+    await quiz.deleteOne();
+    res.status(200).json({ message: "Quiz deleted successfully" });
   } catch (err) {
     console.error("Delete error:", err);
-    return res.status(500).send("Error deleting quiz");
+    res.status(500).json({ error: err.message });
   }
 };
 
-  
-  module.exports.update = async (req, res) => {
-    try {
-      if (!mongoose.Types.ObjectId.isValid(req.body.id)) {
-        return res.status(400).send("ID unknown : " + req.body.id);
-      }
-  
-      const updatedRecord = {};
-      if (req.body.title != null) updatedRecord["title"] = req.body.title;
-      if (req.body.chrono != null) updatedRecord["chrono"] = req.body.chrono;
-      if (req.body.chronoVal != null) updatedRecord["chronoVal"] = req.body.chronoVal;
-  
-      if (Object.keys(updatedRecord).length === 0) {
-        return res.status(400).send("No update provided");
-      }
-  
-      const updatedQuiz = await quizModel.findByIdAndUpdate(
-        req.body.id,
-        { $set: updatedRecord },
-        { new: true }
-      );
-  
-      if (!updatedQuiz) {
-        return res.status(404).send("Quiz not found");
-      }
-
-      res.status(200).json(updatedQuiz);
-    } catch (err) {
-      console.error("Update error:", err);
-      res.status(500).send("Server error");
+// Mettre à jour un quiz
+module.exports.updateQuiz = async (req, res) => {
+  try {
+    const updatedRecord = {};
+    
+    if (req.body.title) updatedRecord.title = req.body.title;
+    if (req.body.chrono !== undefined) updatedRecord.chrono = req.body.chrono;
+    if (req.body.chronoVal !== undefined) updatedRecord.chronoVal = req.body.chronoVal;
+    if (req.body.courseId) updatedRecord.course = req.body.courseId;
+    
+    if (Object.keys(updatedRecord).length === 0) {
+      return res.status(400).json({ error: "No update provided" });
     }
-  };
+
+    const quiz = await quizModel.findById(req.body.id);
+    if (!quiz) {
+      return res.status(404).json({ error: "Quiz not found" });
+    }
+
+    // Gérer le changement de cours
+    if (req.body.courseId && quiz.course && quiz.course.toString() !== req.body.courseId) {
+      await Course.findByIdAndUpdate(quiz.course, {
+        $unset: { quiz: "" }
+      });
+    }
+
+    const updatedQuiz = await quizModel.findByIdAndUpdate(
+      req.body.id,
+      { $set: updatedRecord },
+      { new: true }
+    ).populate('course');
+
+    if (req.body.courseId) {
+      await Course.findByIdAndUpdate(req.body.courseId, {
+        quiz: req.body.id
+      });
+    }
+
+    res.status(200).json(updatedQuiz);
+  } catch (err) {
+    console.error("Update error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Affecter un quiz à un cours
+module.exports.assignQuizToCourse = async (req, res) => {
+  try {
+    const { quizId, courseId } = req.params;
+
+    const quiz = await quizModel.findById(quizId);
+    if (!quiz) {
+      return res.status(404).json({ error: "Quiz not found" });
+    }
+
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ error: "Course not found" });
+    }
+
+    if (quiz.course && quiz.course.toString() !== courseId) {
+      await Course.findByIdAndUpdate(quiz.course, {
+        $unset: { quiz: "" }
+      });
+    }
+
+    quiz.course = courseId;
+    await quiz.save();
+
+    course.quiz = quizId;
+    await course.save();
+
+    res.status(200).json({ message: "Quiz assigned successfully" });
+  } catch (err) {
+    console.error("Assign error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Désaffecter un quiz d'un cours
+module.exports.unassignQuizFromCourse = async (req, res) => {
+  try {
+    const { quizId, courseId } = req.params;
+
+    const quiz = await quizModel.findById(quizId);
+    if (!quiz) {
+      return res.status(404).json({ error: "Quiz not found" });
+    }
+
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ error: "Course not found" });
+    }
+
+    quiz.course = undefined;
+    await quiz.save();
+
+    course.quiz = undefined;
+    await course.save();
+
+    res.status(200).json({ message: "Quiz unassigned successfully" });
+  } catch (err) {
+    console.error("Unassign error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Les autres méthodes existantes restent inchangées
 module.exports.findQuizByID=async(req,res)=>{
   User= await UserModel.findOne()
   if(User==null){
@@ -113,6 +186,7 @@ module.exports.findQuizByID=async(req,res)=>{
     
 
 }
+
 module.exports.addQuestion = async (req, res) => {
   const { id } = req.params;
 
@@ -190,6 +264,7 @@ module.exports.addReponse = async (req, res) => {
    
   
 };
+
 module.exports.DeleteQuestion = async (req, res) => {
   if (!ObjectID.isValid(req.params.id))
     return res.status(400).send("ID unknown : " + req.params.id);
@@ -213,6 +288,7 @@ module.exports.DeleteQuestion = async (req, res) => {
     return res.status(400).send("Error deleting question");
   }
 }; 
+
 module.exports.findStudent =  async (req, res) => {
   User= await UserModel.findOne()
   if(User==null){
@@ -225,6 +301,7 @@ module.exports.findStudent =  async (req, res) => {
     else console.log("Error to get data : " + err);
   })
 };
+
 module.exports.runScriptPython =async(req,res)=>{
   /*const pyProg = spawn('python', ['public/script.py',req.body.nbclicks,"20","30"]);
   pyProg.stdout.on('data', function(data) {
@@ -249,9 +326,6 @@ PythonShell.run('Behavior.py', options, function (err, results) {
   res.send(results[0])
 });
 }
-/*idquiz:props[1]._id,
-userId:Student._id,
-behavior:r*/
 
 module.exports.updateBehavior = async (req, res) => {
   User= await UserModel.findOne()
@@ -269,6 +343,7 @@ module.exports.updateBehavior = async (req, res) => {
    
   
 };
+
 module.exports.toggleQuizActivation = async (req, res) => {
   User = await UserModel.findOne();
   if (User == null) {

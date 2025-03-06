@@ -1,158 +1,159 @@
 /* Conteneur principal */
 .content-section {
-    padding: 20px;
-    background-color: #f9f9f9;
-    border-radius: 12px;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-  }
-  
-  /* En-tête */
-  h2 {
-    text-align: center;
-    color: #2e2e2e;
-    font-size: 26px;
-    font-weight: bold;
-    margin-bottom: 30px;
-  }
-  
-  /* Table */
-  .data-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-  }
-  
-  .data-table th,
-  .data-table td {
-    padding: 15px;
-    text-align: left;
-    border-bottom: 1px solid #e0e0e0;
-  }
-  
-  .data-table th {
-    background-color: #f2f2f2;
-    font-size: 16px;
-  }
-  
-  .data-table td {
-    font-size: 14px;
-    color: #525558;
-  }
-  
-  /* Boutons */
-  .action-btn {
-    padding: 10px 20px;
-    border-radius: 25px;
-    font-size: 14px;
-    font-weight: 500;
-    border: none;
-    cursor: pointer;
-    transition: background-color 0.3s, transform 0.2s;
-    display: inline-block;
-    text-align: center;
-    min-width: 100px;
-  }
-  
-  .action-btn:hover {
-    transform: scale(1.05);
-  }
-  
-  /* Bouton Ajouter */
-  .action-btn.add {
-    background-color: #1e293b;
-    color: white;
-  }
-  
-  .action-btn.add:hover {
-    background-color: #100060;
-  }
-  
-  /* Bouton Modifier */
-  .action-btn.modify {
-    background-color: #ffb74d;
-    color: white;
-  }
-  
-  .action-btn.modify:hover {
-    background-color: #ff9800;
-  }
-  
-  /* Bouton Supprimer */
-  .action-btn.delete {
-    background-color: #e57373;
-    color: white;
-  }
-  
-  .action-btn.delete:hover {
-    background-color: #f44336;
-  }
-  
-  /* Bouton Activer / Désactiver */
-  .action-btn.activate {
-    background-color: #81c784;
-    color: white;
-  }
-  
-  .action-btn.activate:hover {
-    background-color: #66bb6a;
-  }
-  
-  .action-btn.deactivate {
-    background-color: #d1d1d1;
-    color: white;
-  }
-  
-  .action-btn.deactivate:hover {
-    background-color: #b0b0b0;
-  }
-  
-  /* Disposition des boutons "Modifier" et "Supprimer" côte à côte */
-  td button {
-    display: inline-block;
-    margin: 5px 10px;
-  }
-  /* Styles pour la modale */
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 12px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* En-tête */
+h2 {
+  text-align: center;
+  color: #2e2e2e;
+  font-size: 26px;
+  font-weight: bold;
+  margin-bottom: 30px;
+}
+
+/* Table */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.data-table th,
+.data-table td {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.data-table th {
+  background-color: #f2f2f2;
+  font-size: 16px;
+}
+
+.data-table td {
+  font-size: 14px;
+  color: #525558;
+}
+
+/* Boutons */
+.action-btn {
+  padding: 10px 20px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+  display: inline-block;
+  text-align: center;
+  min-width: 100px;
+}
+
+.action-btn:hover {
+  transform: scale(1.05);
+}
+
+/* Bouton Ajouter */
+.action-btn.add {
+  background-color: #1e293b;
+  color: white;
+}
+
+.action-btn.add:hover {
+  background-color: #100060;
+}
+
+/* Bouton Modifier */
+.action-btn.modify {
+  background-color: #ffb74d;
+  color: white;
+}
+
+.action-btn.modify:hover {
+  background-color: #ff9800;
+}
+
+/* Bouton Supprimer */
+.action-btn.delete {
+  background-color: #e57373;
+  color: white;
+}
+
+.action-btn.delete:hover {
+  background-color: #f44336;
+}
+
+/* Bouton Activer / Désactiver */
+.action-btn.activate {
+  background-color: #81c784;
+  color: white;
+}
+
+.action-btn.activate:hover {
+  background-color: #66bb6a;
+}
+
+.action-btn.deactivate {
+  background-color: #d1d1d1;
+  color: white;
+}
+
+.action-btn.deactivate:hover {
+  background-color: #b0b0b0;
+}
+
+/* Disposition des boutons "Modifier" et "Supprimer" côte à côte */
+td button {
+  display: inline-block;
+  margin: 5px 10px;
+}
+
+/* Styles pour la modale */
 .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-  }
-  
-  .modal-content {
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    width: 300px;
-  }
-  
-  .modal-content input {
-    width: 100%;
-    padding: 8px;
-    margin: 10px 0;
-  }
-  
-  .modal-content button {
-    margin: 5px;
-    padding: 10px 15px;
-    cursor: pointer;
-  }
-  
-  .modal-content .cancel {
-    background-color: #f44336;
-    color: white;
-  }
-  
-  .modal-content .add {
-    background-color: #40599c;
-    color: white;
-  }
-  
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  width: 900px; /* Augmentation supplémentaire de la largeur */
+  max-width: 95%; /* S'assurer qu'il ne dépasse pas l'écran */
+}
+
+.modal-content input {
+  width: 100%;
+  padding: 8px;
+  margin: 10px 0;
+}
+
+.modal-content button {
+  margin: 5px;
+  padding: 10px 15px;
+  cursor: pointer;
+}
+
+.modal-content .cancel {
+  background-color: #f44336;
+  color: white;
+}
+
+.modal-content .add {
+  background-color: #40599c;
+  color: white;
+}

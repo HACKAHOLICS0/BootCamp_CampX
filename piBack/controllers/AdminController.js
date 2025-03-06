@@ -1,9 +1,10 @@
-const User = require("../Model/User");
+const User = require('../Model/User');
+const Course = require('../Model/Course');
 
 // Get all users with typeUser = "user"
 const getUsers = async (req, res) => {
   try {
-    const users = await User.find({ typeUser: "user" }); // ✅ Fixed incorrect method call
+    const users = await User.find({ typeUser: "user" }); // 
     res.status(200).json(users);
   } catch (error) {
     console.error("Error fetching users:", error);

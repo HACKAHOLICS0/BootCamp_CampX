@@ -469,10 +469,10 @@ return (
                     )}
                   </div>
                 </Card.Body>
-                <Card.Footer style={{ cursor: "pointer" }} onClick={() => setShowAddQuestion(false)} className="d-flex justify-content-center">
+                <Card.Footer style={{ cursor: "pointer" }} onClick={() => setShowAddQuestion(false)} className="d-flex justify-content-center ">
                   <FontAwesomeIcon icon={faArrowUp} />
                 </Card.Footer>
-                <Modal show={showAddQuestion} onHide={() => setShowAddQuestion(false)}>
+                <Modal show={showAddQuestion} onHide={() => setShowAddQuestion(false)} >
             <Modal.Header closeButton>
               <Modal.Title>
                 {Quizselected ? `Manage Questions - ${Quizselected.title}` : "No quiz selected"}

@@ -46,7 +46,7 @@ const signup = async (req, res) => {
           typeUser: "user", // Ajouter le type d'utilisateur
           password: hashedPassword, // Mot de passe haché
           image: imagePath, // Ajouter l'image
-          emailVerificationToken: verificationToken, // ✅ Stocke le token
+          emailVerificationToken: verificationToken, // Stocke le token
 
       });
 
@@ -94,16 +94,16 @@ const signup = async (req, res) => {
 
 const verifyEmail = async (req, res) => {
   const { token } = req.params;
-  console.log("Received token:", token); // ✅ Affiche le token reçu
+  console.log("Received token:", token); // Stocke le token reçu
 
   try {
       // Vérifier le token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      console.log("Decoded token:", decoded); // ✅ Affiche les infos du token
+      console.log("Decoded token:", decoded); // Stocke les infos du token
 
       // Trouver l'utilisateur avec ce token et cet email
       const user = await User.findOne({ email: decoded.email, emailVerificationToken: token });
-      console.log("Found user:", user); // ✅ Affiche l'utilisateur trouvé ou null
+      console.log("Found user:", user); // Stocke l'utilisateur trouvé ou null
 
       if (!user) {
           return res.status(400).json({ message: 'Invalid or expired token' });
@@ -111,10 +111,10 @@ const verifyEmail = async (req, res) => {
 
       // Mettre à jour l'utilisateur comme vérifié
       user.isVerified = true;
-      user.emailVerificationToken = null; // ✅ Supprime le token après vérification
+      user.emailVerificationToken = null; // Stocke le token après vérification
       await user.save();
 
-      console.log("User updated:", user); // ✅ Vérifie si l'utilisateur est bien mis à jour
+      console.log("User updated:", user); // Stocke si l'utilisateur est bien mis à jour
 
       res.status(200).json({ message: 'Email verified successfully' });
 

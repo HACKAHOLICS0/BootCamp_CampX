@@ -14,15 +14,22 @@ import VerifyCodeEmail from './components/user/VerifyCodeEmail';
 import GoogleRedirectHandler from './components/user/GoogleRedirectHandler';
 import UserProfile from './components/user/UserProfile';
 import AdminLayout from './components/Admin/AdminLayout';
+import VerifyEmailPage from './components/user/VerifyEmailPage';
+import UploadVideo from './components/user/UploadVideo';
+import CategoryList from './components/categories/CategoryList';
+import ModuleList from './components/modules/ModuleList';
+import CourseList from './components/courses/CourseList';
+import QuizAdmin from './components/Admin/Quizs/QuizAdmin';
 import Dashboard from './components/Admin/Dashboard';
 import Users from './components/Admin/Users';
+import Points from './components/Admin/PointsOfIntrest';
+import Categories from './components/Admin/Categories';
+import Modules from './components/Admin/Modules';
+import Courses from './components/Admin/Courses';
 import Products from './components/Admin/Products';
 import Analytics from './components/Admin/Analytics';
 import Notifications from './components/Admin/Notifications';
 import Settings from './components/Admin/Settings';
-import Quizs from './components/Admin/Quizs/QuizAdmin';
-import Points from './components/Admin/PointsOfIntrest';
-import VerifyEmailPage from './components/user/VerifyEmailPage';
 
 function App() {
   const location = useLocation();
@@ -49,17 +56,25 @@ function App() {
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/google/:token" element={<GoogleRedirectHandler />} />
           <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
+          <Route path="/upload-video" element={<UploadVideo />} />
+
+          {/* Routes pour les catégories, modules et cours */}
+          <Route path="/categories" element={<CategoryList />} />
+          <Route path="/categories/:categoryId/modules" element={<ModuleList />} />
+          <Route path="/modules/:moduleId/courses" element={<CourseList />} />
 
           {/* Routes Admin */}
-          <Route path="/admin/*" element={<AdminLayout />}>
+          <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="users" element={<Users />} />
+            <Route path="quizs" element={<QuizAdmin />} />
+            <Route path="categories" element={<Categories />} />
+            <Route path="modules" element={<Modules />} />
+            <Route path="courses" element={<Courses />} />
             <Route path="points" element={<Points />} />
-            <Route path="products" element={<Products />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="notifications" element={<Notifications />} />
             <Route path="settings" element={<Settings />} />
-            <Route path="quizs" element={<Quizs />} />
           </Route>
         </Routes>
 
