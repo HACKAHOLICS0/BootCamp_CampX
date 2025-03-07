@@ -66,7 +66,15 @@ var User = new Schema({
     },
     verificationCode: {
         type: String
-    }
+    },enrolledCourses: [
+        {
+          courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' },
+          progress: { type: Number, default: 0 }, // En pourcentage
+          timeSpent: { type: Number, default: 0 }, // Temps passé en minutes
+          quizzesCompleted: { type: Number, default: 0 } 
+        }
+      ]
+      
     
 });
 

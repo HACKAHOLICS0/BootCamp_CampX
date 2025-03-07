@@ -219,40 +219,48 @@ const authenticate = (req, res, next) => {
 };
 const editUser = async (req, res) => {
   try {
-      const { name, lastName, birthDate, phone, email, password } = req.body;
-      const userId = req.params.id;
-      const imagePath = req.file ? req.file.path : null;
+    console.log("Params:", req.params); // 🔍 Vérifie ce qui est reçu
+    const { name, lastName, birthDate, phone, email, password } = req.body;
+    const userId = req.params.id;
 
-      // Vérifier si l'utilisateur existe
-      let user = await User.findById(userId);
-      if (!user) {
-          return res.status(404).json({ error: "User not found" });
-      }
+    if (!userId) {
+      return res.status(400).json({ error: "User ID is required" });
+    }
 
-      // Si un mot de passe est fourni, le hacher
-      let hashedPassword = user.password;
-      if (password) {
-          hashedPassword = await bcrypt.hash(password, 10);
-      }
+    console.log("User ID:", userId); // 🔍 Vérifie si l'ID est défini
 
-      // Mettre à jour les informations de l'utilisateur
-      user.name = name || user.name;
-      user.birthDate = birthDate || user.birthDate;
-      user.phone = phone || user.phone;
-      user.lastName = lastName || user.lastName; // Fix: lastName not lastname
-      user.email = email || user.email;
-      user.password = hashedPassword;
-      user.image = imagePath || user.image;
+    const imagePath = req.file ? req.file.path : null;
 
-      await user.save();
+    let user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
 
-      res.status(200).json(user);
+    let hashedPassword = user.password;
+    if (password) {
+      hashedPassword = await bcrypt.hash(password, 10);
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        name: name || user.name,
+        lastName: lastName || user.lastName,
+        birthDate: birthDate || user.birthDate,
+        phone: phone || user.phone,
+        email: email || user.email,
+        password: hashedPassword,
+        image: imagePath || user.image
+      },
+      { new: true }
+    );
+
+    res.status(200).json(updatedUser);
   } catch (error) {
-      console.error("Error updating user:", error);
-      res.status(500).json({ error: "Internal server error" });
+    console.error("Error updating user:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
-
 
 const getUserById = async (req, res) => {
   try {

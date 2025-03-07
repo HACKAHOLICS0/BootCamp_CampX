@@ -1,6 +1,8 @@
 import "../../assets/css/user.css";
 import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
+import 'bootstrap-icons/font/bootstrap-icons.css';
+
 
 const backendURL = "http://localhost:5000";
 const getImageUrl = (user) => {
@@ -23,6 +25,9 @@ export default function UserProfile() {
     const [user, setUser] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isInterestPointModalOpen, setIsInterestPointModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+const [pointToDelete, setPointToDelete] = useState(null);
+
     const [editableUser, setEditableUser] = useState({
         name: "", lastName: "", birthDate: "", email: "", phone: ""
     });
@@ -33,11 +38,10 @@ export default function UserProfile() {
         const storedUser = Cookies.get("user");
         if (storedUser) {
             const parsedUser = JSON.parse(storedUser);
-            console.log("User récupéré des cookies:", parsedUser);
+            console.log("user avec cookie ",parsedUser);
             setUser(parsedUser);
         }
     }, []);
-    
 
     useEffect(() => {
         if (user) {
@@ -54,15 +58,21 @@ export default function UserProfile() {
     useEffect(() => {
         const fetchInterestPoints = async () => {
             try {
+                // Corriger le chemin de l'API pour s'assurer qu'il correspond à la route backend
                 const response = await fetch(`${backendURL}/api/interest-points`);
                 const data = await response.json();
-                console.log("Fetched interest points:", data);
+                console.log("Fetched interest points:", data); // Vérifie le format des données
     
-                setInterestPoints(data);
+                // Assurez-vous que les données récupérées sont correctement filtrées
+                if (Array.isArray(data)) {
+                    setInterestPoints(data);
     
-                if (user && user.interestPoints) {
-                    const filteredPoints = data.filter(point => user.interestPoints.includes(point.value));
-                    setSelectedPoints(filteredPoints.map(point => point.value));
+                    if (user && user.interestPoints) {
+                        const filteredPoints = data.filter(point => user.interestPoints.includes(point.value));
+                        setSelectedPoints(filteredPoints.map(point => point.value));
+                    }
+                } else {
+                    console.error("Les données récupérées ne sont pas un tableau:", data);
                 }
             } catch (error) {
                 console.error("Erreur lors de la récupération des points d'intérêt :", error);
@@ -73,24 +83,23 @@ export default function UserProfile() {
             fetchInterestPoints();
         }
     }, [user]);
+    
 
     const handleEditUser = () => {
         setIsModalOpen(true);
     };
 
     const handleSaveUser = async () => {
-            console.log("Current user state before saving:", user); // Debugging
-            if (!user || !(user._id || user.id)) {
-                console.log("No user or user ID found.");
-                return;
-            }
-            
-            const userId = user._id || user.id; // Get the correct ID
-            console.log("User ID passed as parameter:", userId);
-            
+        if (!user || !(user._id || user.id)) {
+            console.log("No user or user ID found.");
+            return;
+        }
+    
+        const userId = user._id || user.id; // Extract and ensure we have a valid ID
+        console.log("User ID passed as parameter:", userId); // Ajout du log pour afficher l'ID
     
         try {
-            const response = await fetch(`${backendURL}/api/auth/${userId}`, {  // Use userId
+            const response = await fetch(`${backendURL}/api/auth/${userId}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -223,15 +232,67 @@ export default function UserProfile() {
     const checkFormValidity = (newErrors) => {
         setIsFormValid(!Object.values(newErrors).some(error => error !== '') && Object.values(editableUser).every(value => value !== ''));
     };
+    const openDeleteModal = (point) => {
+        console.log("Selected point for deletion:", point); // Vérifie ce qui est sélectionné
+        setPointToDelete(point);  // Assure-toi d'utiliser `point.value`
+        setIsDeleteModalOpen(true);
+    };
     
-    if (!user) {
-        return (
-            <div className="text-center mt-5">
-                <h4>Loading user data...</h4>
-            </div>
-        );
-    }
     
+    const closeDeleteModal = () => {
+        setIsDeleteModalOpen(false);
+        setPointToDelete(null);
+    };
+    const deleteInterestPoint = async () => {
+        console.log("Point to delete:", pointToDelete);  // Vérifie ce que contient pointToDelete
+        
+        const storedUser = Cookies.get("user");
+        if (!storedUser) {
+            console.log("No stored user found in localStorage.");
+            return;
+        }
+    
+        const parsedUser = JSON.parse(storedUser);
+        const userId = parsedUser._id || parsedUser.id;
+    
+        try {
+            const response = await fetch(`${backendURL}/api/user/${userId}/interest-point`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ point: pointToDelete })
+            });
+    
+            if (!response.ok) {
+                throw new Error("Failed to delete interest point");
+            }
+    
+            // Mettre à jour les points d'intérêt de l'utilisateur
+            const updatedUserInterestPoints = user.refinterestpoints.filter(point => point !== pointToDelete);
+            
+            // Mettez à jour les données de l'utilisateur pour refléter les points supprimés
+            const updatedUser = { 
+                ...user, 
+                refinterestpoints: updatedUserInterestPoints 
+            };
+    
+            setUser(updatedUser);
+            Cookies.set("user", JSON.stringify(updatedUser), { expires: 7 });
+    
+            // Mettre à jour l'état local des points d'intérêt
+            setInterestPoints(updatedUserInterestPoints);  // Seuls les points de l'utilisateur
+    
+            // Fermer le modal après suppression
+            closeDeleteModal();
+    
+        } catch (error) {
+            console.error("Erreur lors de la suppression du point d'intérêt :", error);
+        }
+    };
+    
+    
+
     if (!user) {
         return (
             <div className="text-center mt-5">
@@ -269,11 +330,12 @@ export default function UserProfile() {
                                             <hr />
                                         </React.Fragment>
                                     ))}
-                                    <div className="text-end mt-3">
-                                        <button className="edit-button" onClick={handleEditUser}>
-                                            Edit
-                                        </button>
-                                    </div>
+                                     <div className="text-end mt-3">
+            <button className="edit-button" onClick={handleEditUser}>
+                <i className="fa fa-edit"></i> {/* Icône d'édition */}
+              
+            </button>
+        </div>
                                 </div>
                             </div>
                         </div>
@@ -285,158 +347,93 @@ export default function UserProfile() {
                                 <h4 className="text-center my-3">Points of Interest</h4>
                                 <hr />
                                 <div className="row">
-                                    {user.refinterestpoints && user.refinterestpoints.length > 0 ? (
-                                        user.refinterestpoints.map((point, i) => (
-                                            <div key={i} className="col-auto mb-2">
-                                                <div
-                                                    className="card point-card"
-                                                    style={{
-                                                        cursor: 'pointer',
-                                                        maxWidth: '250px',
-                                                        fontSize: '0.9rem',
-                                                        padding: '10px',
-                                                        transition: 'transform 0.3s, box-shadow 0.3s',
-                                                    }}
-                                                >
-                                                    <div className="card-body" style={{ padding: '10px' }}>
-                                                        <h5>{typeof point === 'string' ? point : JSON.stringify(point)}</h5>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <p>No points of interest available.</p>
-                                    )}
-                                </div>
-                                <div className="text-end mt-3 me-3">
-                                    <button className="edit-button" onClick={openInterestPointModal}>
-                                        Add
-                                    </button>
-                                </div>
+    {user.refinterestpoints && user.refinterestpoints.length > 0 ? (
+        user.refinterestpoints.map((point, i) => (
+            <div key={i} className="col-auto mb-2">
+                <div
+                    className="card point-card"
+                    style={{
+                        cursor: 'pointer',
+                        maxWidth: '250px',
+                        fontSize: '0.9rem',
+                        padding: '10px',
+                        transition: 'transform 0.3s, box-shadow 0.3s',
+                    }}
+                    onClick={() => openDeleteModal(typeof point === 'string' ? point : point.value)} // Vérifie si point est une chaîne ou un objet
+                >
+                    <div className="card-body" style={{ padding: '10px' }}>
+                        <h5>{typeof point === 'string' ? point : point.value}</h5> {/* Affiche correctement le nom du point */}
+                    </div>
+                </div>
+            </div>
+        ))
+    ) : (
+        <p>No points of interest available.</p>
+    )}
+</div>
+<div className="text-end mt-3 me-3">
+    <button className="edit-button" onClick={openInterestPointModal}>
+        <i className="bi bi-plus"></i> {/* Icône + */}
+    </button>
+</div>
+
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {isModalOpen && (
-            <div className="modal-overlay">
-              <div className="modal-content">
-                <span className="close" onClick={() => setIsModalOpen(false)}>&times;</span>
-                <h4>Edit User Information</h4>
-                {Object.keys(editableUser).map((key) => (
-                  <div key={key} className="form-group">
-                    <label>{key.replace(/([A-Z])/g, ' $1')}</label>
-                    <input
-                      type={key === "birthDate" ? "date" : "text"}
-                      className="form-control"
-                      value={editableUser[key]}
-                      onChange={(e) => {
-                        setEditableUser({ ...editableUser, [key]: e.target.value });
-                        validateField(key);
-                      }}
-                    />
-                    {errors[key] && <small className="text-danger">{errors[key]}</small>}
-                  </div>
+    <div className="edit-modal-overlay">
+        <div className="edit-modal-content">
+            <span className="edit-modal-close" onClick={closeModal}>&times;</span>
+            <h4 className="edit-modal-title">Edit User Information</h4>
+            <form className="edit-modal-form">
+                {Object.keys(editableUser).map((key, index) => (
+                    <div key={index} className="edit-form-group">
+                        <label className="edit-form-label">{key.replace(/([A-Z])/g, ' $1')}</label>
+                        <input
+                            type={key === "birthDate" ? "date" : "text"}
+                            className="edit-form-control"
+                            value={editableUser[key]}
+                            onChange={(e) => {
+                                setEditableUser({ ...editableUser, [key]: e.target.value });
+                                validateField(key);
+                            }}
+                        />
+                        {errors[key] && <small className="text-danger">{errors[key]}</small>}
+                    </div>
                 ))}
-                <div className="text-end mt-3">
-                  <button className="save-button" onClick={handleSaveUser} disabled={!isFormValid}>Save</button>
+                <div className="edit-modal-footer">
+                    <button className="edit-save-button" onClick={handleSaveUser} disabled={!isFormValid}>
+                        Save
+                    </button>
                 </div>
-              </div>
-            </div>
-          )}
+            </form>
+        </div>
+    </div>
+)}
+
 
 {isInterestPointModalOpen && (
-    <div className="modal-overlay">
-        <div className="modal-content">
-            <style>
-                {`
-                .modal-overlay {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(0, 0, 0, 0.5); 
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-
-                .modal-content {
-                    background: white;
-                    padding: 20px;
-                    border-radius: 10px;
-                    width: 400px;
-                    max-width: 90%;
-                    text-align: center;
-                    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-                }
-
-                .close {
-                    position: absolute;
-                    top: 10px;
-                    right: 15px;
-                    font-size: 20px;
-                    cursor: pointer;
-                }
-
-                .interest-points-container {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 10px;
-                    align-items: center;
-                }
-
-                .form-check {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                }
-
-                .form-check-input {
-                    width: 20px;
-                    height: 20px;
-                    accent-color: #007bff; 
-                }
-
-                .form-check-label {
-                    color: black; 
-                    font-size: 16px;
-                }
-
-                .save-button {
-                    background: #28a745;
-                    color: white;
-                    border: none;
-                    padding: 10px 15px;
-                    border-radius: 5px;
-                    cursor: pointer;
-                    font-size: 16px;
-                    width: 100%;
-                }
-
-                .save-button:hover {
-                    background: #218838;
-                }
-                `}
-            </style>
-            <span className="close" onClick={closeInterestPointModal}>&times;</span>
+    <div className="custom-modal-overlay">
+        <div className="custom-modal-content">
+            <span className="custom-close" onClick={closeInterestPointModal}>&times;</span>
             <h4>Select Points of Interest</h4>
-            <div className="interest-points-container">
+            <div className="custom-interest-points-grid">
                 {interestPoints.map((point, index) => (
-                    <div key={index} className="form-check">
-                        <input
-                            type="checkbox"
-                            className="form-check-input"
-                            checked={selectedPoints.includes(point.value)}
-                            onChange={() => handlePointSelection(point)}
-                        />
-                        <label className="form-check-label">{point.label}</label>
+                    <div 
+                        key={index} 
+                        className={`custom-card custom-point-card ${selectedPoints.includes(point.value) ? 'custom-selected' : ''}`} 
+                        onClick={() => handlePointSelection(point)}
+                    >
+                        <div className="custom-card-body custom-card-body-point">
+                            <h5>{point.value}</h5>
+                        </div>
                     </div>
                 ))}
             </div>
-            <div className="text-end mt-3">
-                <button className="save-button" onClick={handleSaveSelection}>
+            <div className="custom-text-end custom-mt-3">
+                <button className="custom-save-button" onClick={handleSaveSelection}>
                     Save Selection
                 </button>
             </div>
@@ -444,8 +441,25 @@ export default function UserProfile() {
     </div>
 )}
 
+{isDeleteModalOpen && (
+    <div className="modal-overlay">
+        <div className="modal-content delete-modal">
+            <span className="close" onClick={closeDeleteModal}>&times;</span>
+            <h4>Are you sure you want to delete this interest point?</h4>
+            <div className="modal-footer">
+                <button className="delete-button" onClick={deleteInterestPoint}>
+                    Yes, Delete
+                </button>
+                <button className="cancel-button" onClick={closeDeleteModal}>
+                    No, Keep
+                </button>
+            </div>
+        </div>
+    </div>
+)}
+
+
             </div>
         </div>
     );
 }
-

@@ -53,7 +53,6 @@ router.get(
 router.put("/:id", upload.single('image'), authController.editUser);
 router.get("/:id", authController.getUserById);
 
-
 router.get('/github/callback', passport.authenticate('github', { failureRedirect: '/signin' }), (req, res) => {
   // Utilisateur récupéré après la redirection GitHub
   const user = req.user.user || req.user; // Correction pour s'assurer de récupérer l'utilisateur
