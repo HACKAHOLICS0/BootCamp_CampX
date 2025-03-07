@@ -95,9 +95,13 @@ export default function Signin() {
             Forgot Password? 
           </Link>
         </div>
-        <div className="error-message" style={{ color: "red", textAlign: "center" }}>
-          {errorDisplay}
-        </div>
+        <div 
+  className={`error-message ${errorDisplay ? "active" : ""}`} 
+  style={{ display: errorDisplay ? "block" : "none" }}
+>
+  {errorDisplay}
+</div>
+
         <button type="submit" className="btn btn-submit">Submit</button>
       </form>
       <div style={{ textAlign: "center", marginTop: "20px" }}>

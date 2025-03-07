@@ -29,6 +29,8 @@ cron.schedule("0 0 * * *", async () => {
     } catch (error) {
         console.error("❌ Erreur lors de la suppression:", error);
     }
+    console.log('Lancement du scraping...');
+    scrapeMarketInsights();
 });
 
 console.log("✅ CRON job planifié pour minuit.");

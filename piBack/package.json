@@ -11,14 +11,14 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@react-oauth/google": "^0.12.1",
-    "axios": "^1.8.1",
+    "axios": "^1.8.2",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.3",
+    "cheerio": "^1.0.0",
     "concurrently": "^9.1.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -27,15 +27,20 @@
     "express-session": "^1.18.1",
     "jsonwebtoken": "^9.0.2",
     "jwt-decode": "^4.0.0",
-    "mongoose": "^8.10.0",
+    "mongoose": "^8.12.1",
     "multer": "^1.4.5-lts.1",
     "node-cron": "^3.0.3",
     "nodemailer": "^6.10.0",
     "nodemon": "^3.1.9",
+    "openai": "^4.86.1",
     "passport": "^0.7.0",
     "passport-github2": "^0.1.12",
     "passport-google-oauth20": "^2.0.0",
     "piback": "file:",
-    "twilio": "^5.4.4"
-  }
+    "puppeteer": "^24.3.0",
+    "python-shell": "^5.0.0",
+    "socket.io": "^4.8.1",
+    "twilio": "^5.4.5"
+  },
+  "description": ""
 }
