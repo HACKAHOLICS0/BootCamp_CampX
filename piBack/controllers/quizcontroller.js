@@ -7,14 +7,19 @@ const Course = require('../Model/Course');
 module.exports.find = async (req, res) => {
   try {
     const quizzes = await quizModel.find()
-      .select('title description chronoVal Questions')
+      .select('title description chrono chronoVal Questions')
       .populate('course', 'title');
 
     // Format quizzes for frontend
-    const formattedQuizzes = quizzes.map(quiz => ({
-      ...quiz.toObject(),
-      questionCount: quiz.Questions.filter(q => q.activer).length
-    }));
+    const formattedQuizzes = quizzes.map(quiz => {
+      const quizObj = quiz.toObject();
+      return {
+        ...quizObj,
+        chrono: Boolean(quizObj.chrono),
+        chronoVal: quizObj.chrono ? Math.max(1, parseInt(quizObj.chronoVal) || 30) : 0,
+        questionCount: quiz.Questions.filter(q => q.activer).length
+      };
+    });
 
     res.status(200).json(formattedQuizzes);
   } catch (err) {
@@ -37,7 +42,12 @@ module.exports.findById = async (req, res) => {
       return res.status(404).json({ error: "Quiz not found" });
     }
 
-    res.status(200).json(quiz);
+    // Format quiz for frontend
+    const formattedQuiz = quiz.toObject();
+    formattedQuiz.chrono = Boolean(formattedQuiz.chrono);
+    formattedQuiz.chronoVal = formattedQuiz.chrono ? Math.max(1, parseInt(formattedQuiz.chronoVal) || 30) : 0;
+
+    res.status(200).json(formattedQuiz);
   } catch (err) {
     console.error("Find quiz by ID error:", err);
     res.status(500).json({ error: err.message });
@@ -52,7 +62,7 @@ module.exports.getQuizForStudent = async (req, res) => {
     }
 
     const quiz = await quizModel.findById(req.params.id)
-      .select('title description chronoVal Questions')
+      .select('title description chrono chronoVal Questions')
       .populate({
         path: 'Questions',
         select: 'texte points Responses activer',
@@ -71,7 +81,8 @@ module.exports.getQuizForStudent = async (req, res) => {
       _id: quiz._id,
       title: quiz.title,
       description: quiz.description,
-      chronoVal: quiz.chronoVal,
+      chrono: Boolean(quiz.chrono),
+      chronoVal: quiz.chrono ? Math.max(1, parseInt(quiz.chronoVal) || 30) : 0,
       Questions: quiz.Questions.filter(q => q.activer && q.Responses && q.Responses.length > 0).map(q => ({
         _id: q._id,
         texte: q.texte,
@@ -109,7 +120,7 @@ module.exports.submitQuiz = async (req, res) => {
     }
 
     const quiz = await quizModel.findById(quizId)
-      .select('Questions')
+      .select('Questions chrono chronoVal')
       .populate({
         path: 'Questions',
         select: 'texte points Responses activer',
@@ -170,7 +181,7 @@ module.exports.getQuizzesByCourse = async (req, res) => {
     }
 
     const quizzes = await quizModel.find({ course: courseId })
-      .select('title description chronoVal Questions')
+      .select('title description chrono chronoVal Questions')
       .populate({
         path: 'Questions',
         match: { activer: true },
@@ -182,7 +193,8 @@ module.exports.getQuizzesByCourse = async (req, res) => {
       _id: quiz._id,
       title: quiz.title,
       description: quiz.description,
-      chronoVal: quiz.chronoVal,
+      chrono: Boolean(quiz.chrono),
+      chronoVal: quiz.chrono ? Math.max(1, parseInt(quiz.chronoVal) || 30) : 0,
       questionCount: quiz.Questions.length,
       totalPoints: quiz.Questions.reduce((sum, q) => sum + q.points, 0)
     }));
@@ -213,10 +225,14 @@ module.exports.create = async (req, res) => {
             return res.status(404).json({ error: "Course not found" });
         }
 
+        // Ensure proper timer values
+        const isChrono = Boolean(chrono);
+        const timerValue = isChrono ? Math.max(1, parseInt(chronoVal) || 30) : 0;
+
         const newQuiz = new quizModel({
             title,
-            chrono,
-            chronoVal,
+            chrono: isChrono,
+            chronoVal: timerValue,
             course,
             Questions: []
         });
@@ -249,8 +265,20 @@ module.exports.update = async (req, res) => {
       return res.status(404).json({ error: "Quiz not found" });
     }
 
-    // Update only allowed fields
-    const allowedUpdates = ['title', 'description', 'chronoVal', 'Questions'];
+    // Handle timer updates
+    if ('chrono' in updates) {
+      quiz.chrono = Boolean(updates.chrono);
+      if (quiz.chrono && updates.chronoVal) {
+        quiz.chronoVal = Math.max(1, parseInt(updates.chronoVal) || 30);
+      } else if (!quiz.chrono) {
+        quiz.chronoVal = 0;
+      }
+    } else if ('chronoVal' in updates && quiz.chrono) {
+      quiz.chronoVal = Math.max(1, parseInt(updates.chronoVal) || 30);
+    }
+
+    // Update other allowed fields
+    const allowedUpdates = ['title', 'description', 'Questions'];
     Object.keys(updates).forEach(key => {
       if (allowedUpdates.includes(key)) {
         quiz[key] = updates[key];

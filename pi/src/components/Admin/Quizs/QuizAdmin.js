@@ -132,7 +132,7 @@ const QuizAdmin = () => {
                         },
                         body: JSON.stringify({
                             title: Quizselected.title,
-                            chrono: checked,
+                            chrono: true,
                             chronoVal: value
                         })
                     });
@@ -141,8 +141,13 @@ const QuizAdmin = () => {
                         throw new Error('Failed to update quiz timer');
                     }
                     
-                    await fetchQuizzes();
+                    const updatedQuizzes = quizzes.map(q =>
+                        q._id === Quizselected._id ? { ...q, chrono: true, chronoVal: value } : q
+                    );
+                    setQuizzes(updatedQuizzes);
+                    setChecked(true);
                     setSeTerroChronoval(false);
+                    setEditQuiz(false);
                 } catch (err) {
                     console.error('Error updating quiz timer:', err);
                     setError(err.message);
@@ -154,10 +159,14 @@ const QuizAdmin = () => {
     };
 
     const handleChange = async (event) => {
-        setChecked(event.target.checked);
-        if (!event.target.checked && Quizselected?._id) {
+        const isChecked = event.target.checked;
+        setChecked(isChecked);
+        
+        if (Quizselected?._id) {
             try {
                 const token = Cookies.get('token');
+                const timerValue = isChecked ? (Quizselected.chronoVal || 30) : 0;
+                
                 const response = await fetch(`${config.API_URL}/api/quiz/${Quizselected._id}`, {
                     method: 'PUT',
                     headers: { 
@@ -167,8 +176,8 @@ const QuizAdmin = () => {
                     },
                     body: JSON.stringify({
                         title: Quizselected.title,
-                        chrono: false,
-                        chronoVal: 0
+                        chrono: isChecked,
+                        chronoVal: timerValue
                     })
                 });
 
@@ -177,12 +186,14 @@ const QuizAdmin = () => {
                 }
                 
                 const updatedQuizzes = quizzes.map(q =>
-                    q._id === Quizselected._id ? { ...q, chrono: false, chronoVal: 0 } : q
+                    q._id === Quizselected._id ? { ...q, chrono: isChecked, chronoVal: timerValue } : q
                 );
                 setQuizzes(updatedQuizzes);
             } catch (err) {
                 console.error('Error updating quiz timer:', err);
                 setError(err.message);
+                // Revert the switch state if there's an error
+                setChecked(!isChecked);
             }
         }
     };
@@ -420,7 +431,7 @@ const QuizAdmin = () => {
                                                             setQuizselected(quiz);
                                                             setKeySelected(index);
                                                             setEditQuiz(true);
-                                                            setChecked(quiz.chrono);
+                                                            setChecked(Boolean(quiz.chrono));
                                                         }}
                                                     >
                                                         Edit
@@ -474,7 +485,10 @@ const QuizAdmin = () => {
                     {selectedQuizDetails && (
                         <div>
                             <div className="mb-3">
-                                <strong>Timer:</strong> {selectedQuizDetails.chrono ? `${selectedQuizDetails.chronoVal} minutes` : 'No timer'}
+                                <strong>Timer:</strong>{' '}
+                                {selectedQuizDetails.chrono && selectedQuizDetails.chronoVal > 0 
+                                    ? `${selectedQuizDetails.chronoVal} minutes` 
+                                    : 'No timer'}
                             </div>
                             <div className="mb-3">
                                 <strong>Total Questions:</strong> {selectedQuizDetails.Questions?.length || 0}

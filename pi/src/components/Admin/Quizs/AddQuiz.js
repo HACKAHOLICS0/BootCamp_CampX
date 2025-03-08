@@ -7,30 +7,37 @@ import { Form, Button, Alert } from 'react-bootstrap';
 import config from '../../../config';
 import Cookies from 'js-cookie';
 
-const schema = yup.object({
+const schema = yup.object().shape({
     title: yup.string().required('Quiz title is required'),
     courseId: yup.string().required('Course selection is required'),
-    chronoVal: yup.number().when('timer', {
-        is: true,
-        then: yup.number().min(1, 'Timer must be greater than 0').required('Timer value is required'),
-    }),
-}).required();
+    chrono: yup.boolean(),
+    chronoVal: yup.number()
+        .transform((value) => (isNaN(value) ? undefined : value))
+        .when('chrono', {
+            is: true,
+            then: () => yup.number()
+                .min(1, 'Timer must be greater than 0')
+                .required('Timer value is required'),
+            otherwise: () => yup.number().notRequired()
+        })
+});
 
 const AddQuiz = ({ onClose = () => {}, onSuccess = () => {} }) => {
-    const [timer, setTimer] = useState(false);
     const [error, setError] = useState(null);
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const { register, handleSubmit, formState: { errors }, watch } = useForm({
+    const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm({
         resolver: yupResolver(schema),
         defaultValues: {
             title: '',
             chronoVal: 30,
-            timer: false,
+            chrono: false,
             courseId: ''
         }
     });
+
+    const chrono = watch('chrono');
 
     useEffect(() => {
         fetchCourses();
@@ -60,7 +67,10 @@ const AddQuiz = ({ onClose = () => {}, onSuccess = () => {} }) => {
     };
 
     const handleTimerChange = (event) => {
-        setTimer(event.target.checked);
+        setValue('chrono', event.target.checked);
+        if (!event.target.checked) {
+            setValue('chronoVal', 0);
+        }
     };
 
     const onSubmit = async (data) => {
@@ -74,8 +84,8 @@ const AddQuiz = ({ onClose = () => {}, onSuccess = () => {} }) => {
                 },
                 body: JSON.stringify({
                     title: data.title,
-                    chrono: timer,
-                    chronoVal: timer ? data.chronoVal : 0,
+                    chrono: data.chrono,
+                    chronoVal: data.chrono ? Math.max(1, parseInt(data.chronoVal) || 30) : 0,
                     course: data.courseId
                 })
             });
@@ -139,7 +149,7 @@ const AddQuiz = ({ onClose = () => {}, onSuccess = () => {} }) => {
             <Form.Group className="mb-3">
                 <Form.Label className="d-flex align-items-center">
                     <Switch
-                        checked={timer}
+                        checked={chrono}
                         onChange={handleTimerChange}
                         color="primary"
                         size="small"
@@ -148,11 +158,11 @@ const AddQuiz = ({ onClose = () => {}, onSuccess = () => {} }) => {
                     Timer (Minutes)
                 </Form.Label>
                 
-                {timer && (
+                {chrono && (
                     <Form.Control
                         type="number"
+                        min="1"
                         placeholder="Enter time in minutes"
-                        defaultValue={30}
                         isInvalid={!!errors.chronoVal}
                         {...register("chronoVal")}
                     />
