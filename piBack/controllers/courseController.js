@@ -245,6 +245,32 @@ const getCourseDetailsWithVideosAndQuiz = async (req, res) => {
     }
 };
 
+// Save quiz response
+const saveQuizResponse = async (req, res) => {
+    const { userId, courseId, question, answer, videoProgress } = req.body;
+    try {
+        const course = await Course.findById(courseId);
+        if (!course) return res.status(404).json({ message: 'Course not found' });
+
+        const userProgress = course.userProgress.find(up => up.userId.toString() === userId);
+        if (!userProgress) {
+            course.userProgress.push({
+                userId,
+                videoProgress,
+                quizResponses: [{ question, answer }]
+            });
+        } else {
+            userProgress.videoProgress = videoProgress;
+            userProgress.quizResponses.push({ question, answer });
+        }
+
+        await course.save();
+        res.status(200).json({ message: 'Quiz response saved' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     getAllCourses,
     createCourse,
@@ -252,5 +278,6 @@ module.exports = {
     archiveCourse,
     getCoursesByModule,
     purchaseCourse,
-    getCourseDetails
+    getCourseDetails,
+    saveQuizResponse
 };

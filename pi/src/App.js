@@ -26,12 +26,14 @@ import Quiz from './components/Admin/Quizs/QuizAdmin';
 import Categories from './components/Admin/Categories';
 import Modules from './components/Admin/Modules';
 import Courses from './components/Admin/Courses';
+import VideoQuizStats from './components/Admin/VideoQuizStats';
 import UploadVideo from './components/user/UploadVideo';
 import CategoryList from './components/categories/CategoryList';
 import ModuleList from './components/modules/ModuleList';
 import CourseList from './components/courses/CourseList';
 import CourseView from './components/user/course/CourseView';
 import QuizView from './components/user/Quiz/QuizView';
+import ProtectedAdminRoute from './components/ProtectedAdminRoute';
 
 function App() {
   const location = useLocation();
@@ -46,7 +48,8 @@ function App() {
     "/profile",
     "/verify-code",
     "/reset-password",
-    "/verifycodeEmail"
+    "/verifycodeEmail",
+    "/checkout"
     ];
 
   // Vérifier les chemins dynamiques
@@ -70,7 +73,7 @@ function App() {
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/google/:token" element={<GoogleRedirectHandler />} />
           <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
-           <Route path="/upload-video" element={<UploadVideo />} />
+          <Route path="/upload-video" element={<UploadVideo />} />
 
           {/* Routes pour les catégories, modules et cours */}
           <Route path="/categories" element={<CategoryList />} />
@@ -82,23 +85,27 @@ function App() {
           <Route path="/quiz/:quizId" element={<QuizView />} />
           <Route path="/courses/:courseId/quiz/:quizId" element={<QuizView />} />
 
-          {/* Routes Admin */}
-          <Route path="/admin/*" element={<AdminLayout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="users" element={<Users />} />
-            <Route path="points" element={<Points />} />
-            <Route path="products" element={<Products />} />
-            <Route path="analytics" element={<Analytics />} />
-            <Route path="notifications" element={<Notifications />} />
-            <Route path="settings" element={<Settings />} />
-            <Route path="quizs" element={<Quiz />} />
-            <Route path="categories" element={<Categories />} />
-            <Route path="modules" element={<Modules />} />
-            <Route path="courses" element={<Courses />} />          </Route>
+          {/* Routes Admin protégées */}
+          <Route element={<ProtectedAdminRoute />}>
+            <Route path="/admin/*" element={<AdminLayout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="users" element={<Users />} />
+              <Route path="points" element={<Points />} />
+              <Route path="products" element={<Products />} />
+              <Route path="analytics" element={<Analytics />} />
+              <Route path="notifications" element={<Notifications />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="quizs" element={<Quiz />} />
+              <Route path="categories" element={<Categories />} />
+              <Route path="modules" element={<Modules />} />
+              <Route path="courses" element={<Courses />} />
+              <Route path="videoquiz-stats" element={<VideoQuizStats />} />
+            </Route>
+          </Route>
         </Routes>
 
-        {/* Affichage conditionnel du Template */}
-        {!excludedRoutes.includes(location.pathname) && !isExcludedDynamic && <Template />}
+        {/* Affichage conditionnel du Template uniquement sur la page d'accueil */}
+        {location.pathname === "/" && <Template />}
 
         {/* Ne pas afficher le Footer si c'est une route Admin */}
         {!isAdminRoute && <Footer />}

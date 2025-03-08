@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import GoogleLoginButton from "./GoogleLoginButton";
 import ReCAPTCHA from "react-google-recaptcha";
@@ -10,6 +10,20 @@ export default function Signin() {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errorDisplay, setErrorDisplay] = useState("");
   const [recaptchaToken, setRecaptchaToken] = useState("");
+  const [recaptchaKey, setRecaptchaKey] = useState("6LdMceMqAAAAAIvQOWZXdqzeX6EYouBNktOpVYj5");
+
+  useEffect(() => {
+    // Forcer le rendu des composants externes
+    const script = document.createElement('script');
+    script.src = 'https://www.google.com/recaptcha/api.js';
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+    
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
 
   const onChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -54,8 +68,15 @@ export default function Signin() {
   };
 
   return (
-    <div className="signin-container" style={{ marginTop: "100px", marginBottom: "100px" }}>
-      <h1 className="signin-logo text-center">Sign In</h1>
+    <div className="signin-container">
+      <h1 className="signin-logo">Sign In</h1>
+      
+      {errorDisplay && (
+        <div className="error-message">
+          {errorDisplay}
+        </div>
+      )}
+      
       <form className="signin-form" onSubmit={onSubmit}>
         <div className="form-group">
           <input 
@@ -65,9 +86,11 @@ export default function Signin() {
             placeholder="Enter Email" 
             onChange={onChange} 
             value={formData.email}
+            required
           />
         </div>
-        <div className="form-group my-2">
+        
+        <div className="form-group">
           <input 
             type="password" 
             name="password" 
@@ -75,47 +98,48 @@ export default function Signin() {
             placeholder="Enter Password" 
             onChange={onChange} 
             value={formData.password}
+            required
           />
         </div>
    
-        {/* ✅ Correction du composant ReCAPTCHA */}
-        <div>
+        <div className="recaptcha-container">
           <ReCAPTCHA 
-            sitekey="6LdMceMqAAAAAIvQOWZXdqzeX6EYouBNktOpVYj5"
+            sitekey={recaptchaKey}
             onChange={(token) => {
               console.log("ReCAPTCHA Token:", token);
               setRecaptchaToken(token);
             }}
           />
-          {recaptchaToken && <p>✅ reCAPTCHA validé !</p>}
+          {recaptchaToken && <p className="recaptcha-success">✅ reCAPTCHA validé !</p>}
         </div>
 
         <div className="forgot-password-container">
           <Link to="/resetpasswordemail" className="forgot-password-btn">
-            Forgot Password? 
+            Mot de passe oublié ?
           </Link>
         </div>
-        <div 
-  className={`error-message ${errorDisplay ? "active" : ""}`} 
-  style={{ display: errorDisplay ? "block" : "none" }}
->
-  {errorDisplay}
-</div>
 
-        <button type="submit" className="btn btn-submit">Submit</button>
+        <button type="submit" className="btn-submit">
+          Se connecter
+        </button>
       </form>
-      <div style={{ textAlign: "center", marginTop: "20px" }}>
-        <GoogleLoginButton onSuccess={handleGoogleLoginSuccess} />
+      
+      <div className="divider">
+        <span>Ou connectez-vous avec</span>
       </div>
-      <div style={{ textAlign: "center", marginTop: "20px" }}>
+      
+      <div className="social-login">
+        <div style={{ marginBottom: '15px' }}>
+          <GoogleLoginButton onSuccess={handleGoogleLoginSuccess} />
+        </div>
+        
         <button 
           onClick={handleGitHubLogin} 
-          style={{ backgroundColor: "white", color: "black", border: "1px solid black", display: "flex", alignItems: "center", padding: "8px" }}
+          className="social-btn github-login-btn"
         >
           <img 
             src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" 
             alt="GitHub Logo" 
-            style={{ width: "20px", height: "20px", marginRight: "8px" }}
           />
           Sign in with GitHub
         </button>
