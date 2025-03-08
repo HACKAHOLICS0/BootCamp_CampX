@@ -4,9 +4,9 @@ const config = {
     endpoints: {
         courses: '/api/courses',
         quizzes: '/api/quiz',
-        modules: '/api/modules',
-        categories: '/api/categories',
-        users: '/api/users'
+        modules: '/api/module',
+        categories: '/api/category',
+        users: '/api/user'
     }
 };
 

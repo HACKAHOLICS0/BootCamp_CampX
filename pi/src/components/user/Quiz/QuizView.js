@@ -13,7 +13,7 @@ const QuizView = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const { quizId } = useParams();
+  const { quizId, courseId, moduleId, categoryId } = useParams();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -78,14 +78,20 @@ const QuizView = () => {
     try {
       setSubmitting(true);
       
-      const response = await axios.post(`${config.API_URL}${config.endpoints.quizzes}/submit`, {
-        quizId: quiz._id,
-        userId: '000000000000000000000000', // Placeholder user ID
+      const response = await axios.post(`${config.API_URL}${config.endpoints.quizzes}/submit/${quizId}`, {
         answers: selectedAnswers
       });
 
       // Navigate to results page with the response data
-      navigate(`results`, { state: { result: response.data } });
+      if (courseId && moduleId && categoryId) {
+        navigate(`/categories/${categoryId}/modules/${moduleId}/courses/${courseId}/quiz/${quizId}/result`, {
+          state: { result: response.data }
+        });
+      } else {
+        navigate(`/quiz/${quizId}/result`, {
+          state: { result: response.data }
+        });
+      }
     } catch (err) {
       console.error('Error submitting quiz:', err);
       setError(err.response?.data?.error || 'Failed to submit quiz');

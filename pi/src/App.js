@@ -81,7 +81,7 @@ function App() {
             <Route path="categories" element={<Categories />} />
             <Route path="modules" element={<Modules />} />
             <Route path="courses" element={<Courses />} />
-            <Route path="quizzes" element={<QuizAdmin />} />
+            <Route path="quizs" element={<QuizAdmin />} />
             <Route path="products" element={<Products />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="notifications" element={<Notifications />} />

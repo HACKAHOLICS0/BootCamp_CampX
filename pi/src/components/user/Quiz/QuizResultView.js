@@ -6,8 +6,16 @@ import './QuizResultView.css';
 const QuizResultView = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { categoryId, moduleId, courseId } = useParams();
+  const { categoryId, moduleId, courseId, quizId } = useParams();
   const result = location.state?.result;
+
+  const handleReturn = () => {
+    if (categoryId && moduleId && courseId) {
+      navigate(`/categories/${categoryId}/modules/${moduleId}/courses/${courseId}`);
+    } else {
+      navigate('/categories'); // Or wherever you want to redirect for standalone quizzes
+    }
+  };
 
   if (!result) {
     return (
@@ -19,9 +27,9 @@ const QuizResultView = () => {
             <div className="text-center">
               <Button 
                 variant="primary"
-                onClick={() => navigate(`/categories/${categoryId}/modules/${moduleId}/courses/${courseId}`)}
+                onClick={handleReturn}
               >
-                Return to Course
+                Return to {courseId ? 'Course' : 'Categories'}
               </Button>
             </div>
           </Card.Body>
@@ -36,6 +44,30 @@ const QuizResultView = () => {
     return 'danger';
   };
 
+  const getFeedback = (percentage) => {
+    if (percentage >= 80) {
+      return {
+        title: 'Excellent work! 🎉',
+        message: "You've demonstrated a strong understanding of the material.",
+        variant: 'success'
+      };
+    } else if (percentage >= 60) {
+      return {
+        title: 'Good effort! 👍',
+        message: "You're on the right track, but there's room for improvement.",
+        variant: 'warning'
+      };
+    } else {
+      return {
+        title: 'Keep practicing! 💪',
+        message: 'Review the course material and try again to improve your score.',
+        variant: 'danger'
+      };
+    }
+  };
+
+  const feedback = getFeedback(result.percentage);
+
   return (
     <Container className="mt-4">
       <Card className="result-card">
@@ -43,12 +75,12 @@ const QuizResultView = () => {
         <Card.Body>
           <div className="text-center mb-4">
             <h2>
-              <Badge bg={getScoreColor(result.percentage)}>
+              <Badge bg={getScoreColor(result.percentage)} className="score-badge">
                 Score: {result.score} / {result.totalPoints}
               </Badge>
             </h2>
             <h3>
-              <Badge bg={getScoreColor(result.percentage)}>
+              <Badge bg={getScoreColor(result.percentage)} className="percentage-badge">
                 {result.percentage}%
               </Badge>
             </h3>
@@ -74,34 +106,28 @@ const QuizResultView = () => {
           </div>
 
           <div className="feedback-section mt-4">
-            {result.percentage >= 80 && (
-              <div className="alert alert-success">
-                <h5>Excellent work! 🎉</h5>
-                <p>You've demonstrated a strong understanding of the material.</p>
-              </div>
-            )}
-            {result.percentage >= 60 && result.percentage < 80 && (
-              <div className="alert alert-warning">
-                <h5>Good effort! 👍</h5>
-                <p>You're on the right track, but there's room for improvement.</p>
-              </div>
-            )}
-            {result.percentage < 60 && (
-              <div className="alert alert-danger">
-                <h5>Keep practicing! 💪</h5>
-                <p>Review the course material and try again to improve your score.</p>
-              </div>
-            )}
+            <div className={`alert alert-${feedback.variant}`}>
+              <h5>{feedback.title}</h5>
+              <p>{feedback.message}</p>
+            </div>
           </div>
         </Card.Body>
         <Card.Footer className="text-center">
           <Button 
             variant="primary"
-            onClick={() => navigate(`/categories/${categoryId}/modules/${moduleId}/courses/${courseId}`)}
+            onClick={handleReturn}
             className="me-2"
           >
-            Return to Course
+            Return to {courseId ? 'Course' : 'Categories'}
           </Button>
+          {quizId && (
+            <Button 
+              variant="outline-primary"
+              onClick={() => window.location.reload()}
+            >
+              Try Again
+            </Button>
+          )}
         </Card.Footer>
       </Card>
     </Container>

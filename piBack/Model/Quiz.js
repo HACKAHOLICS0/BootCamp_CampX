@@ -38,14 +38,17 @@ const QuizSchema = new mongoose.Schema({
         type: String,
         default: 'No description available'
     },
+    chrono: {
+        type: Boolean,
+        default: false
+    },
     chronoVal: {
         type: Number,
         default: 30 // Default 30 minutes
     },
     course: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Course',
-        required: true
+        ref: 'Course'
     },
     Questions: [QuestionSchema],
     createdAt: {

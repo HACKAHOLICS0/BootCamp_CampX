@@ -4,7 +4,7 @@ const quizController = require('../controllers/quizcontroller');
 
 // Student quiz routes
 router.get('/student/:id', quizController.getQuizForStudent);
-router.post('/submit', quizController.submitQuiz);
+router.post('/submit/:quizId', quizController.submitQuiz);
 
 // Quiz course management
 router.get('/course/:courseId', quizController.getQuizzesByCourse);
