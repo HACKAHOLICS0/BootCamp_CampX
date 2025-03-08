@@ -13,6 +13,8 @@ const { Server } = require("socket.io");
 const quizRoutes=require('./routes/quizRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const courseRoutes = require('./routes/courseRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
+const videoQuizRoutes = require('./routes/videoQuizRoutes');
 
 require("dotenv").config({ path: "./config/.env" }); // Load .env from config folder
 
@@ -45,11 +47,19 @@ app.use(session({
   cookie: { secure: false } // Mettre 'true' si vous utilisez HTTPS
 }));
 
-
 app.use(cookieParser());
 app.use(passport.initialize());
 
-app.use(bodyParser.json());
+// Middleware pour traiter les requêtes JSON
+// Configuration spéciale pour les webhooks Stripe
+app.use((req, res, next) => {
+  if (req.originalUrl === '/api/payments/webhook') {
+    next();
+  } else {
+    bodyParser.json()(req, res, next);
+  }
+});
+
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // MongoDB Connection
@@ -77,6 +87,8 @@ app.use('/api/quiz', quizRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/modules', moduleRoutes);
 app.use('/api/courses', courseRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/videoquiz', videoQuizRoutes);
 
 
 app.get('/api/points', async (req, res) => {

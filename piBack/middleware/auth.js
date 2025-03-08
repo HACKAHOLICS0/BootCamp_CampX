@@ -15,6 +15,11 @@ const auth = (req, res, next) => {
             return res.status(401).json({ message: 'Token verification failed, authorization denied' });
         }
 
+        // Check user type
+        if (verified.userType !== 'admin') {
+            return res.status(403).json({ message: 'Access denied, admin only' });
+        }
+
         // Add user from payload
         req.user = verified;
         next();

@@ -1,3 +1,4 @@
+
 const mongoose = require('mongoose');
 
 const courseSchema = new mongoose.Schema({
@@ -14,6 +15,10 @@ const courseSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Module',
         required: true
+    },
+    quiz: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Quiz'
     },
     price: {
         type: Number,
@@ -42,6 +47,11 @@ const courseSchema = new mongoose.Schema({
     purchasedBy: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
+    }],
+    videos: [{
+        title: String,
+        url: String,
+        description: String
     }]
 });
 

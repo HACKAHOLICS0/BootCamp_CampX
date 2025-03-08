@@ -1,20 +1,15 @@
 const mongoose = require('mongoose');
 
-const QuizSchema = new mongoose.Schema({
-    title: {
-        type: String,
+const VideoQuizSchema = new mongoose.Schema({
+    videoId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Video',
         required: true
     },
-    description: {
-        type: String
-    },
-    chronoVal: {
-        type: Number,
-        default: 30 // Default 30 minutes
-    },
-    course: {
+    courseId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Course'
+        ref: 'Course',
+        required: true
     },
     questions: [{
         question: {
@@ -28,17 +23,16 @@ const QuizSchema = new mongoose.Schema({
             },
             isCorrect: {
                 type: Boolean,
-                required: true,
-                select: false // Hide correct answers from frontend
+                required: true
             }
         }],
+        timeStamp: {
+            type: Number, // En secondes dans la vidéo
+            required: true
+        },
         points: {
             type: Number,
             default: 1
-        },
-        activer: {
-            type: Boolean,
-            default: true
         }
     }],
     createdAt: {
@@ -51,10 +45,4 @@ const QuizSchema = new mongoose.Schema({
     }
 });
 
-// Update the updatedAt field before saving
-QuizSchema.pre('save', function(next) {
-    this.updatedAt = Date.now();
-    next();
-});
-
-module.exports = mongoose.model('Quiz', QuizSchema);
+module.exports = mongoose.model('VideoQuiz', VideoQuizSchema);
