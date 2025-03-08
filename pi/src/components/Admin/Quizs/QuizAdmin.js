@@ -30,6 +30,8 @@ const QuizAdmin = () => {
     const [selectedCourse, setSelectedCourse] = useState('');
     const [selectedCourseTemp, setSelectedCourseTemp] = useState('');
     const [reloadquiz, setreloadquiz] = useState(false);
+    const [showDetails, setShowDetails] = useState(false);
+    const [selectedQuizDetails, setSelectedQuizDetails] = useState(null);
 
     useEffect(() => {
         fetchQuizzes();
@@ -277,6 +279,11 @@ const QuizAdmin = () => {
         });
     };
 
+    const handleShowDetails = (quiz) => {
+        setSelectedQuizDetails(quiz);
+        setShowDetails(true);
+    };
+
     return (
         <div className="content-section">
             <h2>Quiz Management</h2>
@@ -429,6 +436,12 @@ const QuizAdmin = () => {
                                                     Questions
                                                 </button>
                                                 <button
+                                                    className="btn btn-success"
+                                                    onClick={() => handleShowDetails(quiz)}
+                                                >
+                                                    Details
+                                                </button>
+                                                <button
                                                     className="btn btn-danger"
                                                     onClick={() => confirmDelete(quiz._id)}
                                                 >
@@ -451,6 +464,63 @@ const QuizAdmin = () => {
                 <Modal.Body>
                     <AddQuestion onAddQuestion={addQuestionEvent} quiz={Quizselected} />
                 </Modal.Body>
+            </Modal>
+
+            <Modal show={showDetails} onHide={() => setShowDetails(false)} size="lg">
+                <Modal.Header closeButton>
+                    <Modal.Title>{selectedQuizDetails?.title} - Details</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {selectedQuizDetails && (
+                        <div>
+                            <div className="mb-3">
+                                <strong>Timer:</strong> {selectedQuizDetails.chrono ? `${selectedQuizDetails.chronoVal} minutes` : 'No timer'}
+                            </div>
+                            <div className="mb-3">
+                                <strong>Total Questions:</strong> {selectedQuizDetails.Questions?.length || 0}
+                            </div>
+                            <div>
+                                <strong>Questions:</strong>
+                                {selectedQuizDetails.Questions?.length > 0 ? (
+                                    <div className="mt-3">
+                                        {selectedQuizDetails.Questions.map((question, index) => (
+                                            <Card key={question._id} className="mb-3">
+                                                <Card.Header>
+                                                    <strong>Question {index + 1}</strong>
+                                                    {question.points > 1 && (
+                                                        <Badge bg="info" className="ms-2">
+                                                            {question.points} points
+                                                        </Badge>
+                                                    )}
+                                                </Card.Header>
+                                                <Card.Body>
+                                                    <p>{question.texte}</p>
+                                                    <div className="ms-3">
+                                                        <strong>Responses:</strong>
+                                                        <ul className="list-unstyled mt-2">
+                                                            {question.Responses.map((response, rIndex) => (
+                                                                <li key={rIndex} className={`mb-1 ${response.isCorrect ? 'text-success' : ''}`}>
+                                                                    {response.isCorrect && '✓ '}{response.texte}
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                </Card.Body>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-muted mt-2">No questions added yet</p>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowDetails(false)}>
+                        Close
+                    </Button>
+                </Modal.Footer>
             </Modal>
         </div>
     );
