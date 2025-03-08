@@ -1,7 +1,9 @@
 .quiz-container {
   padding: 2rem;
-  max-width: 1200px;
+  max-width: 900px;
   margin: 0 auto;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: none;
 }
 
 .quiz-loading {
@@ -202,6 +204,215 @@ code {
   color: #666;
 }
 
+.quiz-container .card-header {
+  background-color: #fff;
+  border-bottom: 1px solid #eee;
+  padding: 1rem;
+}
+
+.quiz-container .card-body {
+  padding: 2rem;
+}
+
+.quiz-container .card-footer {
+  background-color: #fff;
+  border-top: 1px solid #eee;
+  padding: 1rem;
+}
+
+.timer {
+  font-size: 1.1rem;
+  padding: 0.5rem 1rem;
+}
+
+.options-container .btn {
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.options-container .btn:hover {
+  transform: translateY(-1px);
+}
+
+.options-container .btn-outline-primary:hover {
+  background-color: #0d6efd15;
+  color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.progress {
+  height: 0.5rem;
+  border-radius: 0;
+}
+
+.card-footer {
+  background-color: #f8f9fa;
+  padding: 1rem;
+}
+
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+  margin: 2rem auto;
+}
+
+.question-container {
+  padding: 1rem;
+}
+
+.question-text {
+  color: #495057;
+  margin-bottom: 1.5rem;
+}
+
+.answers-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.answer-button {
+  padding: 1rem;
+  text-align: left;
+  white-space: normal;
+  height: auto;
+  transition: all 0.2s ease;
+}
+
+.answer-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Quiz Result Styles */
+.quiz-result {
+  max-width: 800px;
+  margin: 0 auto;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.score-display {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem 0;
+}
+
+.score-circle {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.score-circle.passed {
+  background-color: #28a745;
+  box-shadow: 0 0 20px rgba(40, 167, 69, 0.2);
+}
+
+.score-circle.failed {
+  background-color: #dc3545;
+  box-shadow: 0 0 20px rgba(220, 53, 69, 0.2);
+}
+
+.stats-container {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  margin: 2rem 0;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin-top: 0.5rem;
+  color: #495057;
+}
+
+.feedback-message {
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  background-color: #f8f9fa;
+}
+
+.feedback-message h4 {
+  margin-bottom: 0.5rem;
+}
+
+.feedback-message p {
+  margin-bottom: 0;
+  color: #6c757d;
+}
+
+.quiz-card {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border: none;
+  border-radius: 10px;
+}
+
+.quiz-card .card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+  padding: 1rem;
+}
+
+.timer {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #dc3545;
+}
+
+.question-counter {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.question-text {
+  font-size: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.response-option {
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.response-option:hover {
+  background-color: #f8f9fa;
+}
+
+.response-option input[type="radio"] {
+  margin-right: 1rem;
+}
+
+.navigation-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.progress {
+  height: 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.progress-bar {
+  background-color: #28a745;
+}
+
 @media (max-width: 768px) {
   .quiz-container {
     padding: 1rem;
@@ -224,5 +435,47 @@ code {
     width: 35px;
     height: 35px;
     font-size: 0.9rem;
+  }
+
+  .quiz-container .card-body {
+    padding: 1rem;
+  }
+  
+  .options-container .btn {
+    padding: 0.75rem;
+  }
+
+  .quiz-card .card-header h3 {
+    font-size: 1.25rem;
+  }
+
+  .timer {
+    font-size: 1rem;
+  }
+
+  .question-text {
+    font-size: 1.1rem;
+  }
+
+  .navigation-buttons {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .navigation-buttons button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .score-circle {
+    width: 120px;
+    height: 120px;
+    font-size: 2rem;
+  }
+
+  .stats-container {
+    flex-direction: column;
+    gap: 1.5rem;
   }
 }

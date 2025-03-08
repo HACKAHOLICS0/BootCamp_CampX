@@ -1,12 +1,42 @@
 const mongoose = require('mongoose');
 
-const QuizSchema = new mongoose.Schema({
-    title: {
+const ResponseSchema = new mongoose.Schema({
+    texte: {
         type: String,
         required: true
     },
+    isCorrect: {
+        type: Boolean,
+        required: true,
+        select: false // Hide correct answers from frontend by default
+    }
+});
+
+const QuestionSchema = new mongoose.Schema({
+    texte: {
+        type: String,
+        required: true
+    },
+    Responses: [ResponseSchema],
+    points: {
+        type: Number,
+        default: 1
+    },
+    activer: {
+        type: Boolean,
+        default: true
+    }
+});
+
+const QuizSchema = new mongoose.Schema({
+    title: {
+        type: String,
+        required: true,
+        trim: true
+    },
     description: {
-        type: String
+        type: String,
+        default: 'No description available'
     },
     chronoVal: {
         type: Number,
@@ -14,33 +44,10 @@ const QuizSchema = new mongoose.Schema({
     },
     course: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Course'
+        ref: 'Course',
+        required: true
     },
-    questions: [{
-        question: {
-            type: String,
-            required: true
-        },
-        options: [{
-            text: {
-                type: String,
-                required: true
-            },
-            isCorrect: {
-                type: Boolean,
-                required: true,
-                select: false // Hide correct answers from frontend
-            }
-        }],
-        points: {
-            type: Number,
-            default: 1
-        },
-        activer: {
-            type: Boolean,
-            default: true
-        }
-    }],
+    Questions: [QuestionSchema],
     createdAt: {
         type: Date,
         default: Date.now
@@ -55,6 +62,21 @@ const QuizSchema = new mongoose.Schema({
 QuizSchema.pre('save', function(next) {
     this.updatedAt = Date.now();
     next();
+});
+
+// Add index for better query performance
+QuizSchema.index({ course: 1 });
+
+// Add virtual for total points
+QuizSchema.virtual('totalPoints').get(function() {
+    return this.Questions.reduce((total, question) => {
+        return question.activer ? total + question.points : total;
+    }, 0);
+});
+
+// Add virtual for active question count
+QuizSchema.virtual('activeQuestionCount').get(function() {
+    return this.Questions.filter(q => q.activer).length;
 });
 
 module.exports = mongoose.model('Quiz', QuizSchema);

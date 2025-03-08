@@ -1,159 +1,136 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Container, Row, Col, Card, Button, Badge, Spinner, Alert } from 'react-bootstrap';
 import Cookies from 'js-cookie';
-import './CourseStyle.css';
+
+
+const backendURL = "http://localhost:5001/api";
 
 const CourseList = () => {
+  const { categoryId, moduleId } = useParams();
+  const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [module, setModule] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { moduleId } = useParams();
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = Cookies.get('token');
-        const config = {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        };
-
-        const [courseRes, moduleRes] = await Promise.all([
-          axios.get(`http://localhost:5001/api/courses/module/${moduleId}`, config),
-          axios.get(`http://localhost:5001/api/modules/${moduleId}`, config)
-        ]);
-
-        if (courseRes.data && moduleRes.data) {
-          setCourses(courseRes.data);
-          setModule(moduleRes.data);
-        } else {
-          setError('No data found');
-        }
-        setLoading(false);
-      } catch (error) {
-        console.error('Failed to fetch data:', error);
-        setError(error.response?.data?.message || 'Failed to load courses. Please try again later.');
-        setLoading(false);
-      }
-    };
-
-    if (moduleId) {
-      fetchData();
-    }
+    fetchData();
   }, [moduleId]);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const token = Cookies.get('token');
+      
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+
+      const config = {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      };
+
+      const [coursesRes, moduleRes] = await Promise.all([
+        fetch(`${backendURL}/courses/module/${moduleId}`, config),
+        fetch(`${backendURL}/modules/${moduleId}`, config)
+      ]);
+
+      if (!coursesRes.ok || !moduleRes.ok) {
+        throw new Error('Failed to fetch data');
+      }
+
+      const [coursesData, moduleData] = await Promise.all([
+        coursesRes.json(),
+        moduleRes.json()
+      ]);
+
+      setCourses(coursesData);
+      setModule(moduleData);
+      setLoading(false);
+    } catch (error) {
+      console.error('Failed to fetch data:', error);
+      setError(error.message || 'Failed to load courses');
+      setLoading(false);
+    }
+  };
+
+  const navigateToCourse = (courseId) => {
+    navigate(`/categories/${categoryId}/modules/${moduleId}/courses/${courseId}`);
+  };
 
   if (loading) {
     return (
-      <div className="course-list-container">
-        <div className="loading">Loading courses...</div>
-      </div>
+      <Container className="mt-4 text-center">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Chargement...</span>
+        </Spinner>
+      </Container>
     );
   }
 
   if (error) {
     return (
-      <div className="course-list-container">
-        <div className="error-message">{error}</div>
-      </div>
+      <Container className="mt-4">
+        <Alert variant="danger">
+          {error}
+        </Alert>
+      </Container>
     );
   }
 
   return (
-    <div className="course-list-container">
-      <div className="course-header">
-        <h2>{module ? module.name : 'Courses'}</h2>
-        <p>
-          {module?.description || 'Discover our comprehensive collection of courses'}
+    <Container className="mt-4">
+      <div className="course-header mb-4">
+        <h2>{module?.name || 'Cours'}</h2>
+        <p className="text-muted">
+          {module?.description || 'Explorez nos cours interactifs'}
         </p>
       </div>
       
       {courses.length === 0 ? (
-        <div className="no-courses">
-          <p>No courses available for this module yet.</p>
-          <p>Check back soon for new content!</p>
-        </div>
+        <Alert variant="info">
+          <p className="mb-0">Aucun cours disponible pour ce module.</p>
+          <p className="mb-0">Revenez bientôt pour du nouveau contenu!</p>
+        </Alert>
       ) : (
-        <div className="course-grid">
+        <Row xs={1} md={2} lg={3} className="g-4">
           {courses.map(course => (
-            <div key={course._id} className="course-card">
-              <div className="course-card-content">
-                <div className="course-info">
-                  <h3>{course.name}</h3>
-                  <p>{course.description}</p>
-                </div>
-                <div className="course-meta">
-                  <div className="course-stats">
-                    <span>
-                      <i className="far fa-clock"></i>
-                      {course.duration || '0h'}
-                    </span>
-                    <span>
-                      <i className="far fa-star"></i>
-                      {course.rating || '0.0'}
-                    </span>
-                    <span>
-                      <i className="fas fa-users"></i>
-                      {course.enrollments || 0} students
-                    </span>
+            <Col key={course._id}>
+              <Card className="h-100 course-card">
+                <Card.Body>
+                  <Card.Title>{course.title}</Card.Title>
+                  <Card.Text>{course.description}</Card.Text>
+                  <div className="course-stats mb-3">
+                    {course.quizzes?.length > 0 && (
+                      <Badge bg="info" className="me-2">
+                        {course.quizzes.length} Quiz
+                      </Badge>
+                    )}
+                    {course.duration && (
+                      <Badge bg="secondary">
+                        {course.duration}
+                      </Badge>
+                    )}
                   </div>
-                  <div className="course-tags">
-                    {course.tags && course.tags.map((tag, index) => (
-                      <span key={index} className="tag">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                {course.quiz && (
-                  <div className="course-quiz">
-                    <div className="quiz-info">
-                      <i className="fas fa-question-circle"></i>
-                      <span>Quiz Available</span>
-                      <span>{course.quiz.questions?.length || 0} questions</span>
-                      <span>{course.quiz.timeLimit} minutes</span>
-                    </div>
-                    <Link 
-                      to={`/quiz/${course.quiz._id}`}
-                      className="btn btn-quiz"
-                    >
-                      Take Quiz
-                    </Link>
-                  </div>
-                )}
-                <div className="course-progress">
-                  <div className="progress-bar">
-                    <div 
-                      className="progress" 
-                      style={{ width: `${course.progress || 0}%` }}
-                    ></div>
-                  </div>
-                  <span className="progress-text">
-                    {course.progress || 0}% Complete
-                  </span>
-                </div>
-              </div>
-              <div className="course-actions">
-                <Link 
-                  to={`/courses/${course._id}`}
-                  className="btn btn-primary"
-                >
-                  Start Learning
-                </Link>
-                {course.certificate && (
-                  <button className="btn btn-secondary">
-                    <i className="fas fa-certificate"></i>
-                    Certificate Available
-                  </button>
-                )}
-              </div>
-            </div>
+                  <Button 
+                    variant="primary"
+                    onClick={() => navigateToCourse(course._id)}
+                    className="w-100"
+                  >
+                    Accéder au cours
+                  </Button>
+                </Card.Body>
+              </Card>
+            </Col>
           ))}
-        </div>
+        </Row>
       )}
-    </div>
+    </Container>
   );
 };
 

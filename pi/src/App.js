@@ -32,6 +32,7 @@ import Notifications from './components/Admin/Notifications';
 import Settings from './components/Admin/Settings';
 import CourseView from './components/user/Course/CourseView';
 import QuizView from './components/user/Quiz/QuizView';
+import QuizResultView from './components/user/Quiz/QuizResultView';
 
 function App() {
   const location = useLocation();
@@ -50,34 +51,38 @@ function App() {
           <Route path="/home" element={<Template />} />
           <Route path="/signin" element={<Signin />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/forget-password" element={<ForgotPassword />} />
           <Route path="/verify-code" element={<VerifyCode />} />
-          <Route path="/reset-password" element={<ResetPassword />} />   
-          <Route path="/resetpasswordemail" element={<ResetPasswordEmail />} />      
-          <Route path="/verifycodeEmail" element={<VerifyCodeEmail />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password-email" element={<ResetPasswordEmail />} />
+          <Route path="/verify-code-email" element={<VerifyCodeEmail />} />
+          <Route path="/oauth/google/callback" element={<GoogleRedirectHandler />} />
           <Route path="/profile" element={<UserProfile />} />
-          <Route path="/google/:token" element={<GoogleRedirectHandler />} />
-          <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/upload-video" element={<UploadVideo />} />
 
-          {/* Routes pour les catégories, modules et cours */}
+          {/* Categories, Modules, and Courses Routes */}
           <Route path="/categories" element={<CategoryList />} />
           <Route path="/categories/:categoryId/modules" element={<ModuleList />} />
-          <Route path="/modules/:moduleId/courses" element={<CourseList />} />
-          
-          {/* Routes pour les cours et quiz */}
-          <Route path="/courses/:courseId" element={<CourseView />} />
-          <Route path="/quiz/:courseId/:quizId" element={<QuizView />} />
+          <Route path="/categories/:categoryId/modules/:moduleId" element={<CourseList />} />
+          <Route path="/categories/:categoryId/modules/:moduleId/courses/:courseId" element={<CourseView />} />
+          <Route path="/categories/:categoryId/modules/:moduleId/courses/:courseId/quiz/:quizId" element={<QuizView />} />
+          <Route path="/categories/:categoryId/modules/:moduleId/courses/:courseId/quiz/:quizId/result" element={<QuizResultView />} />
 
-          {/* Routes Admin */}
+          {/* Quiz Routes */}
+          <Route path="/quiz/:quizId" element={<QuizView />} />
+          <Route path="/quiz/:quizId/result" element={<QuizResultView />} />
+
+          {/* Admin Routes */}
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="users" element={<Users />} />
-            <Route path="quizs" element={<QuizAdmin />} />
+            <Route path="points" element={<Points />} />
             <Route path="categories" element={<Categories />} />
             <Route path="modules" element={<Modules />} />
             <Route path="courses" element={<Courses />} />
-            <Route path="points" element={<Points />} />
+            <Route path="quizzes" element={<QuizAdmin />} />
+            <Route path="products" element={<Products />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="notifications" element={<Notifications />} />
             <Route path="settings" element={<Settings />} />

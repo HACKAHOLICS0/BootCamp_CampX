@@ -1,35 +1,32 @@
 const express = require('express');
-const router = express.Router();
+const router = require('express').Router();
 const {
+    getAllCourses,
+    getCoursesByModule,
+    getCourseById,
     createCourse,
     updateCourse,
-    archiveCourse,
-    getCoursesByModule,
     purchaseCourse,
-    getAllCourses,
-    getCourseDetails
+    addQuizToCourse,
+    removeQuizFromCourse,
+    archiveCourse
 } = require('../controllers/courseController');
 
-// Get all courses (Public)
-router.get('/getAll', getAllCourses);
-router.get('/getAllcourses', getAllCourses);
-
-// Get courses by module
+// Course listing routes
+router.get('/', getAllCourses);
 router.get('/module/:moduleId', getCoursesByModule);
+router.get('/:id', getCourseById);
 
-// Get course details with quiz
-router.get('/:id', getCourseDetails);
-
-// Add a course to a module 
+// Course management routes
 router.post('/', createCourse);
-
-// Edit a course 
-router.patch('/:id', updateCourse);
-
-// Archive a course 
+router.put('/:id', updateCourse);
 router.patch('/:id/archive', archiveCourse);
 
-// Purchase a course
-router.post('/:id/purchase', purchaseCourse);
+// Course purchase route
+router.post('/purchase/:courseId', purchaseCourse);
+
+// Quiz management routes
+router.post('/:courseId/quiz/:quizId', addQuizToCourse);
+router.delete('/:courseId/quiz/:quizId', removeQuizFromCourse);
 
 module.exports = router;

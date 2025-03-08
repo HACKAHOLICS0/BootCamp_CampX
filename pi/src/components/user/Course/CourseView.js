@@ -1,39 +1,56 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button } from 'react-bootstrap';
-import Cookies from 'js-cookie';
+import { Container, Card, Row, Col, Button, Alert } from 'react-bootstrap';
+import axios from 'axios';
+import config from '../../../config';
 import './CourseView.css';
 
-const backendURL = "http://localhost:5001/api";
-
 const CourseView = () => {
-  const { courseId } = useParams();
-  const navigate = useNavigate();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('content');
+  const { categoryId, moduleId, courseId } = useParams();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCourse = async () => {
       try {
-        const token = Cookies.get('token');
-        const response = await fetch(`${backendURL}/courses/${courseId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        setLoading(true);
+        setError(null);
+        console.log('Fetching course:', courseId); // Debug log
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch course');
+        const response = await axios.get(`${config.API_URL}${config.endpoints.courses}/${courseId}`);
+        console.log('Course response:', response.data); // Debug log
+
+        if (!response.data) {
+          throw new Error('No course data received');
         }
 
-        const data = await response.json();
-        setCourse(data);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching course:', error);
-        setError(error.message);
+        // Get quizzes for this course
+        const quizzesResponse = await axios.get(`${config.API_URL}${config.endpoints.quizzes}/course/${courseId}`);
+        console.log('Quizzes response:', quizzesResponse.data); // Debug log
+
+        // Format course data with quizzes
+        const formattedCourse = {
+          ...response.data,
+          quizzes: quizzesResponse.data.map(quiz => ({
+            _id: quiz._id,
+            title: quiz.title,
+            description: quiz.description,
+            chronoVal: quiz.chronoVal,
+            questionCount: quiz.questionCount || 0
+          }))
+        };
+
+        setCourse(formattedCourse);
+      } catch (err) {
+        console.error('Error fetching course:', err);
+        setError(
+          err.response?.data?.error || 
+          err.message || 
+          'Failed to load course. Please try again later.'
+        );
+      } finally {
         setLoading(false);
       }
     };
@@ -43,140 +60,108 @@ const CourseView = () => {
     }
   }, [courseId]);
 
+  const handleStartQuiz = (quizId) => {
+    navigate(`/categories/${categoryId}/modules/${moduleId}/courses/${courseId}/quiz/${quizId}`);
+  };
+
   if (loading) {
     return (
-      <Container className="course-loading">
-        <div className="spinner"></div>
-        <p>Chargement du cours...</p>
+      <Container className="mt-4">
+        <div className="text-center">
+          <div className="spinner-border" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
       </Container>
     );
   }
 
   if (error) {
     return (
-      <Container>
-        <Card className="error-card">
-          <Card.Body>
-            <Card.Title className="text-danger">Erreur</Card.Title>
-            <Card.Text>{error}</Card.Text>
-            <Button variant="primary" onClick={() => navigate('/courses')}>
-              Retourner à la liste des cours
+      <Container className="mt-4">
+        <Alert variant="danger">
+          <Alert.Heading>Error Loading Course</Alert.Heading>
+          <p>{error}</p>
+          <div className="d-flex justify-content-end">
+            <Button 
+              variant="outline-danger"
+              onClick={() => navigate(`/categories/${categoryId}/modules/${moduleId}`)}
+            >
+              Return to Module
             </Button>
-          </Card.Body>
-        </Card>
+          </div>
+        </Alert>
       </Container>
     );
   }
 
   if (!course) {
     return (
-      <Container>
-        <Card className="error-card">
-          <Card.Body>
-            <Card.Title>Cours non trouvé</Card.Title>
-            <Card.Text>Le cours que vous cherchez n'existe pas ou n'est pas accessible.</Card.Text>
-            <Button variant="primary" onClick={() => navigate('/courses')}>
-              Retourner à la liste des cours
+      <Container className="mt-4">
+        <Alert variant="warning">
+          <Alert.Heading>Course Not Found</Alert.Heading>
+          <p>The requested course could not be found.</p>
+          <div className="d-flex justify-content-end">
+            <Button 
+              variant="outline-warning"
+              onClick={() => navigate(`/categories/${categoryId}/modules/${moduleId}`)}
+            >
+              Return to Module
             </Button>
-          </Card.Body>
-        </Card>
+          </div>
+        </Alert>
       </Container>
     );
   }
 
   return (
-    <Container fluid className="course-container">
-      <Container>
-        <Row>
-          <Col md={3}>
-            <div className="course-sidebar">
-              <h2 className="course-title">{course.title}</h2>
-              <div className="nav-buttons">
-                <Button
-                  variant={activeTab === 'content' ? 'primary' : 'outline-primary'}
-                  className="nav-button"
-                  onClick={() => setActiveTab('content')}
-                >
-                  Contenu du cours
-                </Button>
-                {course.quiz && (
-                  <Button
-                    variant={activeTab === 'quiz' ? 'primary' : 'outline-primary'}
-                    className="nav-button"
-                    onClick={() => setActiveTab('quiz')}
-                  >
-                    Quiz
-                  </Button>
-                )}
-              </div>
+    <Container className="mt-4">
+      <Card className="course-card">
+        <Card.Header as="h2" className="text-center">{course.title}</Card.Header>
+        <Card.Body>
+          <Card.Text>{course.description}</Card.Text>
+
+          {course.videoUrl && (
+            <div className="video-container mb-4">
+              <iframe
+                src={course.videoUrl}
+                title={course.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
             </div>
-          </Col>
+          )}
 
-          <Col md={9} className="course-main">
-            {activeTab === 'content' ? (
-              <>
-                <Card className="content-card">
-                  <Card.Body>
-                    <Card.Title>Description du cours</Card.Title>
-                    <div className="course-description">
-                      {course.description}
-                    </div>
-                  </Card.Body>
-                </Card>
-
-                {course.videos && course.videos.length > 0 ? (
-                  course.videos.map((video, index) => (
-                    <div key={video._id || index} className="video-item">
-                      <div className="video-container">
-                        <iframe
-                          src={video.url}
-                          title={video.title}
-                          width="100%"
-                          height="100%"
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                        ></iframe>
+          <h3 className="mt-4 mb-3">Available Quizzes</h3>
+          {course.quizzes && course.quizzes.length > 0 ? (
+            <Row xs={1} md={2} lg={3} className="g-4">
+              {course.quizzes.map((quiz) => (
+                <Col key={quiz._id}>
+                  <Card className="quiz-card h-100">
+                    <Card.Body>
+                      <Card.Title>{quiz.title || 'Untitled Quiz'}</Card.Title>
+                      <Card.Text>{quiz.description || 'No description available'}</Card.Text>
+                      <div className="quiz-info d-flex justify-content-between mb-3">
+                        <span>Questions: {quiz.questionCount || 0}</span>
+                        <span>Time: {quiz.chronoVal || 0} min</span>
                       </div>
-                      <h4>{video.title}</h4>
-                      {video.description && <p>{video.description}</p>}
-                    </div>
-                  ))
-                ) : (
-                  <div className="no-content">
-                    Aucune vidéo disponible pour ce cours.
-                  </div>
-                )}
-              </>
-            ) : (
-              <Card className="quiz-info-card">
-                <Card.Body>
-                  {course.quiz ? (
-                    <div className="quiz-details">
-                      <h4>{course.quiz.title}</h4>
-                      <p>Nombre de questions: {course.quiz.questions?.length || 0}</p>
-                      {course.quiz.chronoVal && (
-                        <p>Temps alloué: {course.quiz.chronoVal} minutes</p>
-                      )}
                       <Button
                         variant="primary"
-                        className="start-quiz-btn"
-                        onClick={() => navigate(`/courses/${courseId}/quiz/${course.quiz._id}`)}
+                        onClick={() => handleStartQuiz(quiz._id)}
+                        className="mt-3 w-100"
                       >
-                        Commencer le Quiz
+                        Start Quiz
                       </Button>
-                    </div>
-                  ) : (
-                    <div className="no-content">
-                      Aucun quiz disponible pour ce cours.
-                    </div>
-                  )}
-                </Card.Body>
-              </Card>
-            )}
-          </Col>
-        </Row>
-      </Container>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+          ) : (
+            <Alert variant="info">No quizzes available for this course.</Alert>
+          )}
+        </Card.Body>
+      </Card>
     </Container>
   );
 };

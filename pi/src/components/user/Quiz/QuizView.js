@@ -1,78 +1,45 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Card, Button, ProgressBar, Badge } from 'react-bootstrap';
-import Cookies from 'js-cookie';
+import { Container, Card, Form, Button, Alert, ProgressBar } from 'react-bootstrap';
+import axios from 'axios';
+import config from '../../../config';
 import './QuizView.css';
 
-const backendURL = "http://localhost:5001/api";
-
 const QuizView = () => {
-  const { courseId, quizId } = useParams();
-  const navigate = useNavigate();
   const [quiz, setQuiz] = useState(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState({});
+  const [selectedAnswers, setSelectedAnswers] = useState({});
   const [timeLeft, setTimeLeft] = useState(null);
-  const [isQuizStarted, setIsQuizStarted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const submitQuiz = useCallback(async () => {
-    try {
-      const token = Cookies.get('token');
-      const response = await fetch(`${backendURL}/quiz/submit`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          quizId,
-          courseId,
-          answers,
-          timeSpent: quiz.chronoVal * 60 - timeLeft
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to submit quiz');
-      }
-      
-      const result = await response.json();
-      navigate(`/quiz-result/${quizId}`, { state: { result } });
-    } catch (error) {
-      console.error('Error submitting quiz:', error);
-      setError('Failed to submit quiz. Please try again.');
-    }
-  }, [quizId, courseId, answers, timeLeft, quiz, navigate]);
+  const [submitting, setSubmitting] = useState(false);
+  const { quizId } = useParams();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchQuiz = async () => {
       try {
-        const token = Cookies.get('token');
-        const response = await fetch(`${backendURL}/quiz/${quizId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch quiz');
+        setLoading(true);
+        setError(null);
+        console.log('Fetching quiz:', quizId); // Debug log
+
+        const response = await axios.get(`${config.API_URL}${config.endpoints.quizzes}/student/${quizId}`);
+        console.log('Quiz response:', response.data); // Debug log
+
+        if (!response.data || !response.data.Questions || response.data.Questions.length === 0) {
+          throw new Error('No questions available for this quiz');
         }
-        
-        const data = await response.json();
-        setQuiz(data);
-        if (data.chronoVal) {
-          setTimeLeft(data.chronoVal * 60); // Convert minutes to seconds
-        }
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching quiz:', error);
-        setError(error.message);
+
+        setQuiz(response.data);
+        setTimeLeft(response.data.chronoVal * 60); // Convert minutes to seconds
+      } catch (err) {
+        console.error('Error fetching quiz:', err);
+        setError(err.response?.data?.error || err.message || 'Failed to load quiz');
+      } finally {
         setLoading(false);
       }
     };
-    
+
     if (quizId) {
       fetchQuiz();
     }
@@ -80,12 +47,12 @@ const QuizView = () => {
 
   useEffect(() => {
     let timer;
-    if (isQuizStarted && timeLeft > 0) {
+    if (timeLeft > 0 && quiz && !submitting) {
       timer = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
             clearInterval(timer);
-            submitQuiz();
+            handleSubmit();
             return 0;
           }
           return prev - 1;
@@ -93,59 +60,38 @@ const QuizView = () => {
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [isQuizStarted, timeLeft, submitQuiz]);
+  }, [timeLeft, quiz, submitting]);
 
-  const startQuiz = () => {
-    setIsQuizStarted(true);
-  };
-
-  const handleAnswerSelect = (questionId, answer) => {
-    setAnswers(prev => ({
+  const handleAnswerSelect = (questionId, answerId) => {
+    setSelectedAnswers(prev => ({
       ...prev,
-      [questionId]: answer
+      [questionId]: answerId
     }));
   };
 
-  if (loading) {
-    return (
-      <Container className="quiz-loading">
-        <div className="spinner"></div>
-        <p>Chargement du quiz...</p>
-      </Container>
-    );
-  }
+  const handleSubmit = async () => {
+    if (!quiz || !quiz.Questions || quiz.Questions.length === 0) {
+      setError('No questions available to submit');
+      return;
+    }
 
-  if (error) {
-    return (
-      <Container className="quiz-error">
-        <Card>
-          <Card.Body>
-            <Card.Title className="text-danger">Erreur</Card.Title>
-            <Card.Text>{error}</Card.Text>
-            <Button variant="primary" onClick={() => navigate(`/courses/${courseId}`)}>
-              Retourner au cours
-            </Button>
-          </Card.Body>
-        </Card>
-      </Container>
-    );
-  }
+    try {
+      setSubmitting(true);
+      
+      const response = await axios.post(`${config.API_URL}${config.endpoints.quizzes}/submit`, {
+        quizId: quiz._id,
+        userId: '000000000000000000000000', // Placeholder user ID
+        answers: selectedAnswers
+      });
 
-  if (!quiz) {
-    return (
-      <Container className="quiz-not-found">
-        <Card>
-          <Card.Body>
-            <Card.Title>Quiz non trouvé</Card.Title>
-            <Card.Text>Le quiz que vous cherchez n'existe pas ou n'est pas accessible.</Card.Text>
-            <Button variant="primary" onClick={() => navigate(`/courses/${courseId}`)}>
-              Retourner au cours
-            </Button>
-          </Card.Body>
-        </Card>
-      </Container>
-    );
-  }
+      // Navigate to results page with the response data
+      navigate(`results`, { state: { result: response.data } });
+    } catch (err) {
+      console.error('Error submitting quiz:', err);
+      setError(err.response?.data?.error || 'Failed to submit quiz');
+      setSubmitting(false);
+    }
+  };
 
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
@@ -153,144 +99,119 @@ const QuizView = () => {
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  if (!isQuizStarted) {
+  if (loading) {
     return (
-      <Container className="quiz-intro">
-        <div className="quiz-intro-card">
-          <Card>
-            <Card.Body>
-              <Card.Title className="quiz-title">{quiz.title}</Card.Title>
-              <div className="quiz-info">
-                <Badge bg="info">
-                  {quiz.questions?.length || 0} Questions
-                </Badge>
-                {quiz.chronoVal && (
-                  <Badge bg="warning">
-                    Temps: {quiz.chronoVal} minutes
-                  </Badge>
-                )}
-              </div>
-              <Card.Text className="quiz-instructions">
-                Prenez votre temps pour lire attentivement chaque question.
-                Une fois commencé, le chronomètre ne peut pas être mis en pause.
-              </Card.Text>
-              <Button 
-                variant="primary" 
-                size="lg" 
-                onClick={startQuiz}
-                className="start-button"
-              >
-                Commencer le Quiz
-              </Button>
-            </Card.Body>
-          </Card>
+      <Container className="mt-4">
+        <div className="text-center">
+          <div className="spinner-border" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
         </div>
       </Container>
     );
   }
 
-  const currentQuestionData = quiz.questions?.[currentQuestion];
-  const progress = quiz.questions ? ((currentQuestion + 1) / quiz.questions.length) * 100 : 0;
-
-  if (!currentQuestionData) {
+  if (error) {
     return (
-      <Container className="quiz-error">
-        <Card>
-          <Card.Body>
-            <Card.Title>Erreur de chargement</Card.Title>
-            <Card.Text>Impossible de charger la question actuelle.</Card.Text>
-            <Button variant="primary" onClick={() => navigate(`/courses/${courseId}`)}>
-              Retourner au cours
+      <Container className="mt-4">
+        <Alert variant="danger">
+          <Alert.Heading>Error</Alert.Heading>
+          <p>{error}</p>
+          <div className="d-flex justify-content-end">
+            <Button variant="outline-danger" onClick={() => navigate(-1)}>
+              Go Back
             </Button>
-          </Card.Body>
-        </Card>
+          </div>
+        </Alert>
       </Container>
     );
   }
+
+  if (!quiz || !quiz.Questions || quiz.Questions.length === 0) {
+    return (
+      <Container className="mt-4">
+        <Alert variant="warning">
+          <Alert.Heading>No Questions Available</Alert.Heading>
+          <p>This quiz has no questions available.</p>
+          <div className="d-flex justify-content-end">
+            <Button variant="outline-warning" onClick={() => navigate(-1)}>
+              Go Back
+            </Button>
+          </div>
+        </Alert>
+      </Container>
+    );
+  }
+
+  const question = quiz.Questions[currentQuestion];
+  const progress = ((currentQuestion + 1) / quiz.Questions.length) * 100;
 
   return (
-    <Container className="quiz-container">
-      <div className="quiz-header">
-        <div className="quiz-progress">
-          <span>Question {currentQuestion + 1}/{quiz.questions.length}</span>
-          <ProgressBar now={progress} variant="success" />
-        </div>
-        {timeLeft !== null && (
-          <div className="quiz-timer">
-            <span className={timeLeft < 60 ? 'time-warning' : ''}>
-              ⏱️ {formatTime(timeLeft)}
-            </span>
+    <Container className="mt-4">
+      <Card className="quiz-card">
+        <Card.Header>
+          <div className="d-flex justify-content-between align-items-center">
+            <h3>{quiz.title}</h3>
+            <div className="timer">Time Left: {formatTime(timeLeft)}</div>
           </div>
-        )}
-      </div>
+          <ProgressBar now={progress} label={`${Math.round(progress)}%`} className="mt-2" />
+        </Card.Header>
+        <Card.Body>
+          <div className="question-counter mb-3">
+            Question {currentQuestion + 1} of {quiz.Questions.length}
+          </div>
 
-      <div className="question-card">
-        <Card>
-          <Card.Body>
-            <Card.Title>{currentQuestionData.texte || currentQuestionData.question}</Card.Title>
-            {currentQuestionData.code && (
-              <pre className={`language-${currentQuestionData.language || 'plaintext'}`}>
-                <code>{currentQuestionData.code}</code>
-              </pre>
+          <Card.Title className="question-text">
+            {question.texte}
+          </Card.Title>
+
+          <Form>
+            {question.Responses && question.Responses.map((response) => (
+              <Form.Check
+                key={response._id}
+                type="radio"
+                id={response._id}
+                label={response.texte}
+                name={`question-${question._id}`}
+                checked={selectedAnswers[question._id] === response._id}
+                onChange={() => handleAnswerSelect(question._id, response._id)}
+                className="response-option mb-2"
+              />
+            ))}
+          </Form>
+
+          <div className="navigation-buttons mt-4">
+            <Button
+              variant="secondary"
+              disabled={currentQuestion === 0}
+              onClick={() => setCurrentQuestion(prev => prev - 1)}
+            >
+              Previous
+            </Button>
+            {currentQuestion < quiz.Questions.length - 1 ? (
+              <Button
+                variant="primary"
+                onClick={() => setCurrentQuestion(prev => prev + 1)}
+                disabled={!selectedAnswers[question._id]}
+              >
+                Next
+              </Button>
+            ) : (
+              <Button
+                variant="success"
+                onClick={handleSubmit}
+                disabled={
+                  submitting ||
+                  !selectedAnswers[question._id] ||
+                  Object.keys(selectedAnswers).length !== quiz.Questions.length
+                }
+              >
+                {submitting ? 'Submitting...' : 'Submit Quiz'}
+              </Button>
             )}
-            <div className="options-container">
-              {currentQuestionData.Responses?.map((option, index) => (
-                <Button
-                  key={index}
-                  variant={
-                    answers[currentQuestionData._id] === option
-                      ? 'primary'
-                      : 'outline-primary'
-                  }
-                  className="option-button"
-                  onClick={() => handleAnswerSelect(currentQuestionData._id, option)}
-                >
-                  {option.text || option}
-                </Button>
-              ))}
-            </div>
-          </Card.Body>
-        </Card>
-      </div>
-
-      <div className="quiz-navigation">
-        <Button
-          variant="outline-primary"
-          onClick={() => setCurrentQuestion(prev => prev - 1)}
-          disabled={currentQuestion === 0}
-        >
-          Précédent
-        </Button>
-        
-        {currentQuestion < quiz.questions.length - 1 ? (
-          <Button
-            variant="outline-primary"
-            onClick={() => setCurrentQuestion(prev => prev + 1)}
-          >
-            Suivant
-          </Button>
-        ) : (
-          <Button
-            variant="success"
-            onClick={submitQuiz}
-          >
-            Terminer le Quiz
-          </Button>
-        )}
-      </div>
-
-      <div className="question-dots">
-        {quiz.questions.map((_, index) => (
-          <Button
-            key={index}
-            variant={currentQuestion === index ? 'primary' : 'outline-primary'}
-            className={`question-dot ${answers[quiz.questions[index]._id] ? 'answered' : ''}`}
-            onClick={() => setCurrentQuestion(index)}
-          >
-            {index + 1}
-          </Button>
-        ))}
-      </div>
+          </div>
+        </Card.Body>
+      </Card>
     </Container>
   );
 };
