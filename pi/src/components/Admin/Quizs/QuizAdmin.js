@@ -18,8 +18,10 @@ const QuizAdmin = () => {
     const [Quizselected, setQuizselected] = useState(null);
 const [reloadquiz, setReloadquiz] = useState(false);
 const [seTerroChronoval, setSeTerroChronoval] = useState(null);
-
-
+const [selectedQuizId, setSelectedQuizId] = useState(null);
+const [selectedCourse, setSelectedCourse] = useState('');
+const [selectedCourseTemp, setSelectedCourseTemp] = useState('');
+const [courses, setCourses] = useState([]);
 
     const history = useNavigate();
     let { idModule } = useParams();
@@ -37,6 +39,140 @@ const [seTerroChronoval, setSeTerroChronoval] = useState(null);
     const [keySelected, setKeySelected] = useState(false);
     const [checked, setChecked] = useState(false);
     const [erroChronoval, setErroChronoval] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
+
+    useEffect(() => {
+      const fetchCourses = async () => {
+        try {
+          const response = await fetch(`${backendURL}/courses/getAllcourses`); // Utiliser l'endpoint getAll
+          if (!response.ok) {
+            throw new Error('Failed to fetch courses');
+          }
+          const data = await response.json();
+          console.log('Fetched courses:', data); // Log fetched data
+          setCourses(data);
+        } catch (error) {
+          console.error('Error fetching courses:', error);
+        }
+      };
+      fetchCourses();
+    }, []);
+
+    const CoursePopup = ({ isOpen, onClose }) => {
+      return (
+        isOpen && (
+          <div className="popup" style={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            backgroundColor: 'white',
+            padding: '20px',
+            borderRadius: '8px',
+            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+            zIndex: 1000,
+            minWidth: '300px'
+          }}>
+            <h2 style={{ marginBottom: '20px', color: '#333' }}>Sélectionner un Cours</h2>
+            <select 
+              onChange={(e) => setSelectedCourseTemp(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px',
+                marginBottom: '20px',
+                borderRadius: '4px',
+                border: '1px solid #ddd'
+              }}
+              value={selectedCourseTemp}
+            >
+              <option value="">Sélectionner un cours</option>
+              {courses && courses.length > 0 ? (
+                courses.map(course => (
+                  <option key={course._id} value={course._id}>
+                    {course.title || course.name || 'Cours sans titre'}
+                  </option>
+                ))
+              ) : (
+                <option disabled>Aucun cours disponible</option>
+              )}
+            </select>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button 
+                onClick={() => {
+                  if (selectedCourseTemp) {
+                    handleCourseSelection(selectedCourseTemp);
+                  }
+                }}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#28a745',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  opacity: selectedCourseTemp ? 1 : 0.6
+                }}
+                disabled={!selectedCourseTemp}
+              >
+                Sauvegarder
+              </button>
+              <button 
+                onClick={() => {
+                  setSelectedCourseTemp('');
+                  onClose();
+                }}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#6c757d',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        )
+      );
+    };
+
+    const openPopup = (quizId) => {
+      setSelectedQuizId(quizId);
+      setIsOpen(true);
+    };
+
+    const handleCourseSelection = async (courseId) => {
+      try {
+        const response = await fetch(`${backendURL}/quiz/assign/${selectedQuizId}/course/${courseId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to assign course');
+        }
+
+        const result = await response.json();
+        console.log('Quiz assigned to course successfully:', result);
+        setSelectedCourse(courseId);
+        setSelectedCourseTemp('');
+        setIsOpen(false);
+        
+        // Show success message
+        alert('Le quiz a été affecté au cours avec succès');
+        
+        // Refresh the quiz list
+        window.location.reload();
+      } catch (error) {
+        console.error('Error assigning course:', error);
+        alert('Erreur lors de l\'affectation du cours au quiz');
+      }
+    };
+
 // Fonctions manquantes
 const ShowAddQuestion = () => {
     console.log("ShowAddQuestion function called");
@@ -502,7 +638,7 @@ return (
                   <th>Title</th>
                   <th>Link</th>
                   <th>Duration</th>
-                  <th style={{ textAlign: "center" }}>Actions</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -535,6 +671,7 @@ return (
                       >
                         Manage Questions
                       </button>
+                      <button onClick={() => openPopup(quiz._id)}>Choisir un cours</button>
                     </td>
                   </tr>
                    ):(<tr key={index}>
@@ -572,7 +709,7 @@ return (
 
           {/* Modal pour gérer les questions */}
 
-
+          <CoursePopup isOpen={isOpen} onClose={() => setIsOpen(false)} />
         </div>
       </div>
     }
@@ -580,5 +717,6 @@ return (
   </div>
 );
 
-    }      
-export default QuizAdmin; 
+}
+
+export default QuizAdmin;

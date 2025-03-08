@@ -8,13 +8,9 @@ const QuizSchema = new mongoose.Schema({
     description: {
         type: String
     },
-    chrono: {
-        type: Boolean,
-        default: false
-    },
     chronoVal: {
         type: Number,
-        default: 0
+        default: 30 // Default 30 minutes
     },
     course: {
         type: mongoose.Schema.Types.ObjectId,
@@ -32,7 +28,8 @@ const QuizSchema = new mongoose.Schema({
             },
             isCorrect: {
                 type: Boolean,
-                required: true
+                required: true,
+                select: false // Hide correct answers from frontend
             }
         }],
         points: {
@@ -44,12 +41,20 @@ const QuizSchema = new mongoose.Schema({
             default: true
         }
     }],
-    dateQuiz: {
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    updatedAt: {
         type: Date,
         default: Date.now
     }
-}, {
-    timestamps: true
+});
+
+// Update the updatedAt field before saving
+QuizSchema.pre('save', function(next) {
+    this.updatedAt = Date.now();
+    next();
 });
 
 module.exports = mongoose.model('Quiz', QuizSchema);

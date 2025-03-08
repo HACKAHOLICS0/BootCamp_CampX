@@ -394,3 +394,79 @@ module.exports.toggleQuestionActivation = async (req, res) => {
 
   res.status(200).send(`Question ${question.activer ? 'activated' : 'deactivated'}`);
 };
+
+// Submit a quiz
+module.exports.submitQuiz = async (req, res) => {
+  try {
+    const { quizId, answers, timeSpent } = req.body;
+    const quiz = await quizModel.findById(quizId);
+    
+    if (!quiz) {
+      return res.status(404).json({ error: "Quiz not found" });
+    }
+
+    // Calculate score
+    let score = 0;
+    let totalQuestions = quiz.Questions.length;
+    
+    for (const questionId in answers) {
+      const question = quiz.Questions.find(q => q._id.toString() === questionId);
+      if (question && question.correctAnswer === answers[questionId]) {
+        score++;
+      }
+    }
+
+    const percentage = (score / totalQuestions) * 100;
+
+    // Save quiz result
+    const result = {
+      score,
+      totalQuestions,
+      percentage,
+      timeSpent,
+      submittedAt: new Date(),
+      answers
+    };
+
+    // Update user's quiz results if you have user authentication
+    // await UserModel.findByIdAndUpdate(req.user._id, {
+    //   $push: { quizResults: result }
+    // });
+
+    res.status(200).json(result);
+  } catch (err) {
+    console.error("Submit error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Get quiz for student
+module.exports.getQuizForStudent = async (req, res) => {
+  try {
+    const quiz = await quizModel.findById(req.params.id)
+      .select('title Questions chronoVal')
+      .populate('Questions', 'texte code language QuestionType Responses'); // Exclude correctAnswer
+
+    if (!quiz) {
+      return res.status(404).json({ error: "Quiz not found" });
+    }
+
+    // Remove correct answers from questions
+    const safeQuiz = {
+      ...quiz.toObject(),
+      Questions: quiz.Questions.map(q => ({
+        _id: q._id,
+        texte: q.texte,
+        code: q.code,
+        language: q.language,
+        QuestionType: q.QuestionType,
+        Responses: q.Responses
+      }))
+    };
+
+    res.status(200).json(safeQuiz);
+  } catch (err) {
+    console.error("Get quiz error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};

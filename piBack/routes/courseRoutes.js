@@ -6,14 +6,19 @@ const {
     archiveCourse,
     getCoursesByModule,
     purchaseCourse,
-    getAllCourses
+    getAllCourses,
+    getCourseDetails
 } = require('../controllers/courseController');
 
 // Get all courses (Public)
-router.get('/', getAllCourses);
+router.get('/getAll', getAllCourses);
+router.get('/getAllcourses', getAllCourses);
 
 // Get courses by module
 router.get('/module/:moduleId', getCoursesByModule);
+
+// Get course details with quiz
+router.get('/:id', getCourseDetails);
 
 // Add a course to a module 
 router.post('/', createCourse);

@@ -30,6 +30,8 @@ import Products from './components/Admin/Products';
 import Analytics from './components/Admin/Analytics';
 import Notifications from './components/Admin/Notifications';
 import Settings from './components/Admin/Settings';
+import CourseView from './components/user/Course/CourseView';
+import QuizView from './components/user/Quiz/QuizView';
 
 function App() {
   const location = useLocation();
@@ -62,6 +64,10 @@ function App() {
           <Route path="/categories" element={<CategoryList />} />
           <Route path="/categories/:categoryId/modules" element={<ModuleList />} />
           <Route path="/modules/:moduleId/courses" element={<CourseList />} />
+          
+          {/* Routes pour les cours et quiz */}
+          <Route path="/courses/:courseId" element={<CourseView />} />
+          <Route path="/quiz/:courseId/:quizId" element={<QuizView />} />
 
           {/* Routes Admin */}
           <Route path="/admin" element={<AdminLayout />}>

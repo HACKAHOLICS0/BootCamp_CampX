@@ -5,15 +5,24 @@ const Module = require('../Model/Module');
 // Get all courses
 const getAllCourses = async (req, res) => {
     try {
-        const courses = await Course.find()
+        const courses = await Course.find({ isArchived: false })
             .populate('module')
+            .select('title name description module')
             .sort({ createdAt: -1 });
         res.json(courses);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
-
+const getAll = async (req, res) => {
+    try {
+        const courses = await Course.find()
+          
+        res.json(courses);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
 // Add a course
 const createCourse = async (req, res) => {
     try {
@@ -87,11 +96,58 @@ const purchaseCourse = async (req, res) => {
     }
 };
 
+// Get course details with videos and quiz
+const getCourseDetails = async (req, res) => {
+    try {
+        const course = await Course.findById(req.params.id)
+            .populate({
+                path: 'quiz',
+                select: 'title description chronoVal questions',
+                populate: {
+                    path: 'questions',
+                    select: 'question options points activer'
+                }
+            });
+        
+        if (!course) {
+            return res.status(404).json({ error: 'Course not found' });
+        }
+
+        // Format quiz data for frontend
+        if (course.quiz && course.quiz.questions) {
+            const formattedQuiz = {
+                _id: course.quiz._id,
+                title: course.quiz.title,
+                description: course.quiz.description,
+                chronoVal: course.quiz.chronoVal,
+                questions: course.quiz.questions.map(q => ({
+                    _id: q._id,
+                    question: q.question,
+                    options: q.options.map(opt => ({
+                        text: opt.text,
+                        _id: opt._id
+                    })),
+                    points: q.points,
+                    activer: q.activer
+                }))
+            };
+            course.quiz = formattedQuiz;
+        }
+
+        res.json(course);
+    } catch (error) {
+        console.error('Error in getCourseDetails:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
 module.exports = {
     getAllCourses,
     createCourse,
     updateCourse,
     archiveCourse,
     getCoursesByModule,
-    purchaseCourse
+    purchaseCourse,
+    getAll,
+    getCourseDetails
 };
