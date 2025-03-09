@@ -29,10 +29,19 @@ var User = new Schema({
     state : {
         type:Number
     },
+    googleId: {
+        type: String,
+        unique: true, // Un utilisateur GitHub doit être unique
+        sparse: true, // Permet d'avoir des utilisateurs sans GitHub ID (Google, Email, etc.)
+      },
     githubId: {
         type: String,
         unique: true, // Un utilisateur GitHub doit être unique
         sparse: true, // Permet d'avoir des utilisateurs sans GitHub ID (Google, Email, etc.)
+      },
+      authProvider: {
+        type: String,
+        enum: ['auth', 'github', 'local'],
       },
     coursepreferences : {
         type:[String]
@@ -45,17 +54,28 @@ var User = new Schema({
     },
     reffriends : {
         type:[String]
-    },
+    },   
+    typeUser : {
+        type:String,
+    } ,
     isVerified: { 
         type: Boolean, 
         default: false  // <-- Add this field
     },  
     emailVerificationToken: {
         type: String
-    }, 
-    typeUser : {
-        type:String,
-    } 
+    },
+    verificationCode: {
+        type: String
+    },enrolledCourses: [
+        {
+          courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' },
+          progress: { type: Number, default: 0 }, // En pourcentage
+          timeSpent: { type: Number, default: 0 }, // Temps passé en minutes
+          quizzesCompleted: { type: Number, default: 0 } 
+        }
+      ]
+      
     
 });
 

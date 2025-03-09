@@ -2,7 +2,6 @@ import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';  // Assurez-vous que Bootstrap est installé
  // Assurez-vous que vous avez le fichier CSS dans votre projet
 import 'font-awesome/css/font-awesome.min.css';  // Assurez-vous que vous avez installé FontAwesome via npm si nécessaire
-import 'bootstrap/dist/css/bootstrap.min.css';  // Si Bootstrap est installé via npm
 import './assets/css/imagehover.min.css';  // Si le fichier imagehover.min.css est dans un dossier local 'src/css/'
 import './assets/css/style.css';
 
