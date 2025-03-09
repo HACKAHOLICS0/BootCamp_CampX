@@ -5,12 +5,14 @@ const authController = require('../controllers/authController');
 const upload = require('../config/multerConfig'); // Middleware pour gérer l'upload d'images
 const passport = require("passport");
 
+
 // Vérification de l'email
 router.get('/check/:email', authController.checkEmailExists);
 
 // Inscription (avec upload d'image)
 router.post('/signup', upload.single('image'), authController.signup);
 router.post('/verify-email/:token', authController.verifyEmail);
+router.get('/profile/:id', authController.getCurrentUser);
 
 // Connexion
 router.post('/signin', authController.signin);

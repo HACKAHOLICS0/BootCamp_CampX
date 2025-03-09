@@ -4,6 +4,25 @@ const twilio = require('twilio');
 const User = require('../Model/User');
 require('dotenv').config();
 const sendEmail = require('../utils/email');
+
+// Get current user profile
+const getCurrentUser = async (req, res) => {
+  try {
+    const userId = req.params.id; // Get the user ID from the URL parameters
+    const user = await User.findById(userId); // Fetch the user from the database
+
+    if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Return the user data you need, e.g., image
+    res.json({ image: user.image }); // Adjust according to your user model
+} catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+}
+};
+
 // Check if an email exists
 const checkEmailExists = async (req, res) => {
   const { email } = req.params;
@@ -17,78 +36,115 @@ const checkEmailExists = async (req, res) => {
 };
 
 const signup = async (req, res) => {
-  const { name, lastName, birthDate, phone, email, password } = req.body; // 'lastName' ici
-  const imagePath = req.file ? req.file.path : null; // Récupère le chemin de l'image téléchargée
+  const { name, lastName, birthDate, phone, email, password } = req.body;
+  const imagePath = req.file ? req.file.path : null;
 
-  // Validation des champs nécessaires
-  if (!name || !lastName || !birthDate || !phone || !email || !password) {  // 'lastName' ici
-      return res.status(400).json({ error: 'All fields are required' });
+  if (!name || !lastName || !birthDate || !phone || !email || !password) {
+    return res.status(400).json({ error: 'Tous les champs sont requis' });
   }
 
   try {
-      // Vérifie si l'utilisateur existe déjà
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-          return res.status(400).json({ error: 'Email already exists' });
-      }
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: 'Cet email est déjà utilisé' });
+    }
 
-      // Hacher le mot de passe avant de le sauvegarder
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const verificationToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const verificationToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-      // Créer un nouvel utilisateur
-      const newUser = new User({
-          name,
-          lastName, // 'lastName' ici
-          birthDate,
-          phone,
-          email,
-          typeUser: "user", // Ajouter le type d'utilisateur
-          password: hashedPassword, // Mot de passe haché
-          image: imagePath, // Ajouter l'image
-          emailVerificationToken: verificationToken, // Stocke le token
+    const newUser = new User({
+      name,
+      lastName,
+      birthDate,
+      phone,
+      email,
+      typeUser: "user",
+      password: hashedPassword,
+      image: imagePath,
+      emailVerificationToken: verificationToken,
+    });
 
-      });
+    await newUser.save();
 
-      await newUser.save();
-          // Envoyer l'email de vérification
-          const verificationLink = `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
-          const emailSubject = 'Verify Your Email';
-          const emailBody = `
-                <html>
-                <head>
-                    <style>
-                        body { font-family: Arial, sans-serif; }
-                        .container { padding: 20px; }
-                        .button {
-                            background-color: #007bff;
-                            color: white;
-                            padding: 10px 15px;
-                            text-decoration: none;
-                            display: inline-block;
-                            border-radius: 5px;
-                            margin-top: 10px;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="container">
-                        <p>Hello ${newUser.name},</p>
-                        <p>Thank you for registering. Please click the button below to verify your email address:</p>
-                        <p><a href="${verificationLink}" class="button">Verify Email</a></p>
-                        <p>If you did not request this, please ignore this email.</p>
-                        <p>Best regards,</p>
-                        <p>Your Team</p>
-                    </div>
-                </body>
-                </html>
-            `;
-          await sendEmail(newUser.email, emailSubject, emailBody);
-    
-          res.status(201).json({ message: 'User registered successfully. Please check your email to verify your account.' });
+    const verificationLink = `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
+    const emailSubject = 'Vérification de votre email';
+    const emailBody = `
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; }
+            .container { padding: 20px; }
+            .button {
+              background-color: #007bff;
+              color: white;
+              padding: 10px 15px;
+              text-decoration: none;
+              display: inline-block;
+              border-radius: 5px;
+              margin-top: 10px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <p>Bonjour ${newUser.name},</p>
+            <p>Merci pour votre inscription. Veuillez cliquer sur le bouton ci-dessous pour vérifier votre adresse email :</p>
+            <p><a href="${verificationLink}" class="button">Vérifier l'email</a></p>
+            <p>Si vous n'avez pas demandé cette vérification, veuillez ignorer cet email.</p>
+            <p>Cordialement,</p>
+            <p>L'équipe BootCamp Center</p>
+          </div>
+        </body>
+      </html>
+    `;
+    await sendEmail(newUser.email, emailSubject, emailBody);
+
+    res.status(201).json({ message: 'Inscription réussie. Veuillez vérifier votre email pour activer votre compte.' });
   } catch (error) {
-      console.error('Error during signup:', error);
-      res.status(500).json({ error: 'Internal server error' });
+    console.error('Erreur lors de l\'inscription:', error);
+    res.status(500).json({ error: 'Erreur interne du serveur' });
+  }
+};
+
+const signin = async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email et mot de passe requis' });
+  }
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ msg: 'Utilisateur non trouvé' });
+    }
+
+    if (!user.isVerified) {
+      return res.status(400).json({ msg: 'Veuillez vérifier votre email avant de vous connecter' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ msg: 'Mot de passe incorrect' });
+    }
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+    // Retourner la réponse avec les informations de l'utilisateur et le token
+    res.status(200).json({
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        lastName: user.lastName,
+        email: user.email,
+        typeUser: user.typeUser,
+        image: user.image ? user.image.replace(/\\/g, '/') : null
+      }
+    });
+  } catch (error) {
+    console.error('Erreur lors de la connexion:', error);
+    res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 };
 
@@ -125,68 +181,6 @@ const verifyEmail = async (req, res) => {
 };
   
 
-
-const signin = async (req, res) => {
-  const { email, password } = req.body;
-
-  // Validation des champs nécessaires
-  if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
-  }
-
-  try {
-      // Vérifier si l'utilisateur existe
-      const user = await User.findOne({ email });
-      if (!user) {
-          return res.status(400).json({ msg: 'User not found' });
-      }
-      if (!user.isVerified) {
-        return res.status(400).json({ msg: 'Please verify your email first' });
-    }
-      // Vérifier le mot de passe
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-          return res.status(400).json({ msg: 'Incorrect password' });
-      }
-
-      // Générer un token JWT
-      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
-      // Enregistrer le token JWT dans un cookie sécurisé (HTTPOnly)
-      res.cookie('token', token, {
-          httpOnly: true,  // Ne peut être accédé par JavaScript
-          secure: process.env.NODE_ENV === 'production',  // Utilise 'secure' en mode production
-          sameSite: 'Strict', // Empêche les attaques CSRF
-          maxAge: 3600000, // Durée du cookie (1 heure)
-      });
-
-      // Retourner la réponse avec les informations de l'utilisateur
-      res.status(200).json({
-          msg: 'Login successful',
-          token,
-          user: {
-              id: user._id,
-              name: user.name,
-              lastName: user.lastName, // Nom de famille
-              birthDate: user.birthDate, // Date de naissance
-              phone: user.phone, // Numéro de téléphone
-              email: user.email, // Email
-              image: user.image, // Image de profil
-              state: user.state, // État de l'utilisateur (par exemple actif, inactif, etc.)
-              coursepreferences: user.coursepreferences, // Préférences de cours
-              refinterestpoints: user.refinterestpoints, // Points d'intérêt
-              refmodules: user.refmodules, // Modules de référence
-              reffriends: user.reffriends, // Amis de référence
-              typeUser: user.typeUser,
-              isVerified: user.isVerified
-
-          },
-      });
-  } catch (err) {
-      console.error(err);
-      res.status(500).json({ msg: 'Server error' });
-  }
-};
 
 const authenticate = (req, res, next) => {
   const token = req.cookies.token;
@@ -488,5 +482,19 @@ const forgotPasswordEmail = async (req, res) => {
 
 
   
-  module.exports = { googleTokenAuth,signup,authenticate, signin, checkEmailExists,verifyEmail, sendVerificationCode,editUser,getUserById, verifyCode, resetPassword, resetPasswordEmail, forgotPasswordEmail };
-  
+  module.exports = { 
+    googleTokenAuth,
+    signup,
+    signin,
+    verifyEmail,
+    authenticate,
+    editUser,
+    getUserById,
+    sendVerificationCode,
+    verifyCode,
+    resetPassword,
+    forgotPasswordEmail,
+    resetPasswordEmail,
+    checkEmailExists,
+    getCurrentUser
+  };
