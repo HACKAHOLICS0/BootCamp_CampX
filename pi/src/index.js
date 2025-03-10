@@ -9,9 +9,8 @@ import { UserProvider } from './JS/UserProvider';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
+  
 <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-<UserProvider>
       <App />
-    </UserProvider>
   </BrowserRouter>
 );
