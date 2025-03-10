@@ -34,6 +34,8 @@ import CourseList from './components/courses/CourseList';
 import CourseView from './components/user/course/CourseView';
 import QuizView from './components/user/Quiz/QuizView';
 import ProtectedAdminRoute from './components/ProtectedAdminRoute';
+import Chatbot from './components/chatbot/Chatbot';
+import ChatbotAdmin from './components/Admin/ChatbotAdmin';
 
 function App() {
   const location = useLocation();
@@ -49,7 +51,8 @@ function App() {
     "/verify-code",
     "/reset-password",
     "/verifycodeEmail",
-    "/checkout"
+    "/checkout",
+    "/chatbot"
     ];
 
   // Vérifier les chemins dynamiques
@@ -84,6 +87,9 @@ function App() {
           <Route path="/courses/:courseId" element={<CourseView />} />
           <Route path="/quiz/:quizId" element={<QuizView />} />
           <Route path="/courses/:courseId/quiz/:quizId" element={<QuizView />} />
+          
+          {/* Route pour le chatbot */}
+          <Route path="/chatbot" element={<Chatbot />} />
 
           {/* Routes Admin protégées */}
           <Route element={<ProtectedAdminRoute />}>
@@ -100,6 +106,7 @@ function App() {
               <Route path="modules" element={<Modules />} />
               <Route path="courses" element={<Courses />} />
               <Route path="videoquiz-stats" element={<VideoQuizStats />} />
+              <Route path="chatbot" element={<ChatbotAdmin />} />
             </Route>
           </Route>
         </Routes>

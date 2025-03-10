@@ -13,8 +13,8 @@ const { Server } = require("socket.io");
 const quizRoutes=require('./routes/quizRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const courseRoutes = require('./routes/courseRoutes');
-const paymentRoutes = require('./routes/paymentRoutes');
 const videoQuizRoutes = require('./routes/videoQuizRoutes');
+const chatRoutes = require('./routes/chatRoutes'); // Importation des routes du chatbot
 
 require("dotenv").config({ path: "./config/.env" }); // Load .env from config folder
 
@@ -34,7 +34,6 @@ const interestPointRoutes = require("./routes/intrestRoutes");
 
 const app = express();
 
-const server = http.createServer(app);
 app.use(cors({
   origin: 'http://localhost:3000',
   credentials: true
@@ -50,15 +49,8 @@ app.use(session({
 app.use(cookieParser());
 app.use(passport.initialize());
 
-// Middleware pour traiter les requêtes JSON
-// Configuration spéciale pour les webhooks Stripe
-app.use((req, res, next) => {
-  if (req.originalUrl === '/api/payments/webhook') {
-    next();
-  } else {
-    bodyParser.json()(req, res, next);
-  }
-});
+app.use(express.json()); // Activer le parsing JSON
+
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
@@ -87,9 +79,8 @@ app.use('/api/quiz', quizRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/modules', moduleRoutes);
 app.use('/api/courses', courseRoutes);
-app.use('/api/payments', paymentRoutes);
 app.use('/api/videoquiz', videoQuizRoutes);
-
+app.use('/api/chat', chatRoutes); // Ajout des routes du chatbot
 
 app.get('/api/points', async (req, res) => {
   try {

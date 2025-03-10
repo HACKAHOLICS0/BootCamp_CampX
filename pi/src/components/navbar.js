@@ -172,6 +172,9 @@ export default function Navbar() {
                 <Link to="/profile" className="nav-link text-dark hover-effect">
                   Profile
                 </Link>
+                <Link to="/chatbot" className="nav-link text-dark hover-effect">
+                  chatbot
+                </Link>
                 <button
                   onClick={handleSignOut}
                   className="nav-link btn btn-link text-dark hover-effect"
@@ -191,6 +194,7 @@ export default function Navbar() {
                     Sign Up
                   </Link>
                 </li>
+               
               </>
             )}
           </ul>

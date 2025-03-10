@@ -47,7 +47,7 @@ const Template = () => {
                                 </div>
                               </div>
                               <div className="col-xs-12">
-                                <button type="button" className="btn btn-green btn-block btn-flat" onclick="userlogin()">Sign In</button>
+                                <button type="button" className="btn btn-green btn-block btn-flat" onClick="userlogin()">Sign In</button>
                               </div>
                             </div>
                           </form>
@@ -325,7 +325,7 @@ const Template = () => {
                   <div className="row">
                     <div className="col-md-4 col-sm-6 padleft-right">
                       <figure className="imghvr-fold-up">
-                        <img src="/src/assets/img/course01.jpg" className="img-responsive" />
+                        {/* <img src="/src/assets/img/course01.jpg" className="img-responsive" /> */}
                         <figcaption>
                           <h3>Course Name</h3>
                           <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Magnam atque, nostrum veniam consequatur libero fugiat, similique quis.</p>
@@ -335,7 +335,7 @@ const Template = () => {
                     </div>
                     <div className="col-md-4 col-sm-6 padleft-right">
                       <figure className="imghvr-fold-up">
-                        <img src="/src/assets/img/course02.jpg" className="img-responsive" />
+                        {/* <img src="/src/assets/img/course02.jpg" className="img-responsive" /> */}
                         <figcaption>
                           <h3>Course Name</h3>
                           <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Magnam atque, nostrum veniam consequatur libero fugiat, similique quis.</p>
@@ -345,7 +345,7 @@ const Template = () => {
                     </div>
                     <div className="col-md-4 col-sm-6 padleft-right">
                       <figure className="imghvr-fold-up">
-                        <img src="/src/assets/img/course03.jpg" className="img-responsive" />
+                        {/* <img src="/src/assets/img/course03.jpg" className="img-responsive" /> */}
                         <figcaption>
                           <h3>Course Name</h3>
                           <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Magnam atque, nostrum veniam consequatur libero fugiat, similique quis.</p>
@@ -355,7 +355,7 @@ const Template = () => {
                     </div>
                     <div className="col-md-4 col-sm-6 padleft-right">
                       <figure className="imghvr-fold-up">
-                        <img src="/src/assets/img/course04.jpg" className="img-responsive" />
+                        {/* <img src="/src/assets/img/course04.jpg" className="img-responsive" /> */}
                         <figcaption>
                           <h3>Course Name</h3>
                           <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Magnam atque, nostrum veniam consequatur libero fugiat, similique quis.</p>
@@ -365,7 +365,7 @@ const Template = () => {
                     </div>
                     <div className="col-md-4 col-sm-6 padleft-right">
                       <figure className="imghvr-fold-up">
-                        <img src="/src/assets/img/course05.jpg" className="img-responsive" />
+                        {/* <img src="/src/assets/img/course05.jpg" className="img-responsive" /> */}
                         <figcaption>
                           <h3>Course Name</h3>
                           <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Magnam atque, nostrum veniam consequatur libero fugiat, similique quis.</p>
@@ -375,7 +375,7 @@ const Template = () => {
                     </div>
                     <div className="col-md-4 col-sm-6 padleft-right">
                       <figure className="imghvr-fold-up">
-                        <img src="/src/assets/img/course06.jpg" className="img-responsive" />
+                        {/* <img src="/src/assets/img/course06.jpg" className="img-responsive" /> */}
                         <figcaption>
                           <h3>Course Name</h3>
                           <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Magnam atque, nostrum veniam consequatur libero fugiat, similique quis.</p>
