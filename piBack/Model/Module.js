@@ -39,7 +39,10 @@ const moduleSchema = new mongoose.Schema({
         totalStudents: { type: Number, default: 0 },
         averageRating: { type: Number, default: 0 },
         completionRate: { type: Number, default: 0 }
-    }
+    },
+    completionCount: { type: Number, default: 0 }, // NEW: Track module engagement
+    mostPopularCourse: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' } // NEW: Highlight high-demand modules
+
 });
 
 module.exports = mongoose.model('Module', moduleSchema);

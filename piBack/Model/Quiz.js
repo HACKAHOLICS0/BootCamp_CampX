@@ -58,7 +58,11 @@ const QuizSchema = new mongoose.Schema({
     updatedAt: {
         type: Date,
         default: Date.now
-    }
+    },
+    
+    attemptCount: { type: Number, default: 0 }, // NEW: Track quiz engagement
+    averageScore: { type: Number, default: 0 }, // NEW: Measure difficulty
+    passRate: { type: Number, default: 0 } // NEW: Assess effectiveness
 });
 
 // Update the updatedAt field before saving

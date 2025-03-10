@@ -21,7 +21,9 @@ const categorySchema = new mongoose.Schema({
     updatedAt: {
         type: Date,
         default: Date.now
-    }
+    },
+    totalCourses: { type: Number, default: 0 }, // NEW: Track category popularity
+    totalStudents: { type: Number, default: 0 } // NEW: Track student interest
 });
 
 module.exports = mongoose.model('Category', categorySchema);

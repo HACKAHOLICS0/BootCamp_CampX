@@ -52,7 +52,12 @@ const courseSchema = new mongoose.Schema({
         url: String,
         duration: Number,
         description: String
-    }]
+    }],
+    categories: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }], // NEW: Multiple categories
+    enrolledStudentsCount: { type: Number, default: 0 }, // NEW: Track course popularity
+    completionCount: { type: Number, default: 0 }, // NEW: Measure effectiveness
+    averageRating: { type: Number, default: 0 }, // NEW: Rank courses
+    totalRevenue: { type: Number, default: 0 } // NEW: Earnings per course
 });
 
 module.exports = mongoose.model('Course', courseSchema);
