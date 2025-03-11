@@ -15,6 +15,7 @@ const categoryRoutes = require('./routes/categoryRoutes');
 const courseRoutes = require('./routes/courseRoutes');
 const videoQuizRoutes = require('./routes/videoQuizRoutes');
 const chatRoutes = require('./routes/chatRoutes'); // Importation des routes du chatbot
+const ChatRoom = require("./Model/ChatRoom");
 
 require("dotenv").config({ path: "./config/.env" }); // Load .env from config folder
 
@@ -33,10 +34,21 @@ const interestPointRoutes = require("./routes/intrestRoutes");
 
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"],
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"]
+  }
+});
 
 app.use(cors({
-  origin: 'http://localhost:3000',
-  credentials: true
+  origin: "http://localhost:3000",
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
 // Attacher io à l'application pour qu'il soit accessible dans les routes
 app.use(session({
@@ -82,6 +94,121 @@ app.use('/api/courses', courseRoutes);
 app.use('/api/videoquiz', videoQuizRoutes);
 app.use('/api/chat', chatRoutes); // Ajout des routes du chatbot
 
+// Socket.IO events
+io.on('connection', (socket) => {
+  console.log('Un utilisateur s\'est connecté');
+  let currentUser = null;
+
+  // Authentification du socket
+  socket.on('authenticate', async (data) => {
+    try {
+      const { token, userId, displayName } = data;
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      
+      currentUser = { ...decoded, userId, displayName };
+      socket.userId = userId;
+      socket.displayName = displayName;
+      console.log(`Utilisateur ${displayName} (${userId}) authentifié`);
+    } catch (error) {
+      console.error('Erreur d\'authentification:', error);
+      socket.emit('auth_error', { message: 'Authentification échouée' });
+    }
+  });
+
+  // Rejoindre une room
+  socket.on('join_room', async (data) => {
+    try {
+      const { roomId, userId, displayName } = data;
+      console.log('Join room data:', data);
+      
+      if (!roomId || !userId || !displayName) {
+        console.error('Données manquantes:', data);
+        return;
+      }
+
+      // Vérifier si la room existe, sinon la créer
+      let chatRoom = await ChatRoom.findOne({ name: roomId });
+      
+      try {
+        if (!chatRoom) {
+          chatRoom = new ChatRoom({
+            name: roomId,
+            createdBy: userId
+          });
+          console.log('Nouvelle room créée:', roomId);
+        }
+
+        // Ajouter l'utilisateur aux participants
+        chatRoom.addParticipant(userId, displayName);
+        await chatRoom.save();
+
+        socket.join(roomId);
+        console.log(`Utilisateur ${displayName} (${userId}) a rejoint la room: ${roomId}`);
+
+        // Envoyer l'historique des messages
+        socket.emit('message_history', chatRoom.messages || []);
+      } catch (saveError) {
+        if (saveError.code === 11000) {
+          // Si erreur de duplication, réessayer de récupérer la room
+          chatRoom = await ChatRoom.findOne({ name: roomId });
+          if (chatRoom) {
+            chatRoom.addParticipant(userId, displayName);
+            await chatRoom.save();
+            
+            socket.join(roomId);
+            console.log(`Utilisateur ${displayName} (${userId}) a rejoint la room existante: ${roomId}`);
+            
+            // Envoyer l'historique des messages
+            socket.emit('message_history', chatRoom.messages || []);
+          }
+        } else {
+          throw saveError;
+        }
+      }
+    } catch (error) {
+      console.error('Erreur lors de la jointure de la room:', error);
+      socket.emit('room_error', { message: 'Erreur lors de la jointure de la room' });
+    }
+  });
+
+  // Envoyer un message
+  socket.on('send_message', async (data) => {
+    try {
+      const { roomId, userId, message } = data;
+      console.log('Message reçu:', data);
+      
+      if (!userId || !roomId || !socket.displayName || !message) {
+        console.error('Données manquantes:', data);
+        return;
+      }
+
+      // Trouver la room et ajouter le message
+      const chatRoom = await ChatRoom.findOne({ name: roomId });
+      if (!chatRoom) {
+        console.error('Room non trouvée:', roomId);
+        return;
+      }
+
+      // Ajouter le message avec le displayName
+      chatRoom.addMessage(userId, socket.displayName, message);
+      await chatRoom.save();
+
+      const newMessage = chatRoom.messages[chatRoom.messages.length - 1];
+      console.log('Message ajouté à la room:', roomId);
+
+      // Émettre le message à tous les membres de la room
+      io.to(roomId).emit('receive_message', newMessage);
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi du message:', error);
+      socket.emit('message_error', { message: 'Erreur lors de l\'envoi du message' });
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log(`Utilisateur ${socket.displayName || 'inconnu'} s'est déconnecté`);
+  });
+});
+
 app.get('/api/points', async (req, res) => {
   try {
       const interestPointModel = require('./Model/Interestpoint'); 
@@ -103,6 +230,6 @@ app.all("*", (req, res) => {
 
 // Start Server
 const port = process.env.PORT || 5000;
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
