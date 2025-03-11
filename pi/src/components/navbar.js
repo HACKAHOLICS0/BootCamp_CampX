@@ -175,6 +175,9 @@ export default function Navbar() {
                 <Link to="/chatbot" className="nav-link text-dark hover-effect">
                   chatbot
                 </Link>
+                <Link to="/chat" className="nav-link text-dark hover-effect">
+                  Chat
+                </Link>
                 <button
                   onClick={handleSignOut}
                   className="nav-link btn btn-link text-dark hover-effect"

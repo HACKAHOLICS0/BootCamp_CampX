@@ -36,6 +36,7 @@ import QuizView from './components/user/Quiz/QuizView';
 import ProtectedAdminRoute from './components/ProtectedAdminRoute';
 import Chatbot from './components/chatbot/Chatbot';
 import ChatbotAdmin from './components/Admin/ChatbotAdmin';
+import ChatTest from './components/chatbot/ChatTest';
 
 function App() {
   const location = useLocation();
@@ -52,7 +53,8 @@ function App() {
     "/reset-password",
     "/verifycodeEmail",
     "/checkout",
-    "/chatbot"
+    "/chatbot",
+    "/chat"
     ];
 
   // Vérifier les chemins dynamiques
@@ -88,8 +90,9 @@ function App() {
           <Route path="/quiz/:quizId" element={<QuizView />} />
           <Route path="/courses/:courseId/quiz/:quizId" element={<QuizView />} />
           
-          {/* Route pour le chatbot */}
+          {/* Routes pour le chat et le chatbot */}
           <Route path="/chatbot" element={<Chatbot />} />
+          <Route path="/chat" element={<ChatTest />} />
 
           {/* Routes Admin protégées */}
           <Route element={<ProtectedAdminRoute />}>
