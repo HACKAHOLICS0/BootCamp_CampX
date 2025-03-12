@@ -4,7 +4,7 @@ import { Container, Row, Col, Card, Button, Badge, Spinner, Alert } from 'react-
 import Cookies from 'js-cookie';
 
 
-const backendURL = "http://localhost:5001/api";
+const backendURL = "http://localhost:5000/api";
 
 const CourseList = () => {
   const { categoryId, moduleId } = useParams();

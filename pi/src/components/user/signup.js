@@ -108,7 +108,7 @@ export default function Signup() {
     const addUser = async () => {
         try {
             // Vérifie si l'email existe déjà
-            const emailCheckResponse = await fetch(`http://localhost:5001/api/auth/check/${formData.email}`);
+            const emailCheckResponse = await fetch(`http://localhost:5000/api/auth/check/${formData.email}`);
             const emailExists = await emailCheckResponse.json();
     
             if (emailExists.exists) {
@@ -121,7 +121,7 @@ export default function Signup() {
                 formDataToSend.append(key, formData[key]);
             }
     
-            const signupResponse = await fetch("http://localhost:5001/api/auth/signup", {
+            const signupResponse = await fetch("http://localhost:5000/api/auth/signup", {
                 method: "POST",
                 body: formDataToSend, // Utilisez FormData ici
             });

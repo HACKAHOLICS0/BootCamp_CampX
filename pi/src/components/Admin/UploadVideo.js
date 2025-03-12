@@ -12,7 +12,7 @@ const UploadVideo = () => {
     formData.append("video", video);
     formData.append("quiz", JSON.stringify(quiz));
 
-    await axios.post("http://localhost:5001/api/videos/upload", formData);
+    await axios.post("http://localhost:5000/api/videos/upload", formData);
     alert("Vidéo uploadée !");
   };
 

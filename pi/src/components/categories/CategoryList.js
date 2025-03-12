@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Spinner, Alert } from 'react-bootstrap';
 import './CategoryStyle.css';
 
-const backendURL = "http://localhost:5001/api";
+const backendURL = "http://localhost:5000/api";
 
 const CategoryList = () => {
   const navigate = useNavigate();

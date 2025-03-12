@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./styles/AdminPointsStyle.css";
 
-const backendURL = "http://localhost:5001"; // URL de base pour l'API
+const backendURL = "http://localhost:5000"; // URL de base pour l'API
 
 const InterestPoints = () => {
   const [pointsOfInterest, setPointsOfInterest] = useState([]); // Liste des points d'intérêt

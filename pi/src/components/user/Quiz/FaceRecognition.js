@@ -102,7 +102,7 @@ export const FaceRecognition = ({ userImage, onVerificationComplete }) => {
                 if (remaining <= 0) {
                     clearInterval(timer);
                     
-                    if (matchPercentage >= 60) {
+                    if (matchPercentage >= 70) {
                         setScanStatus('✅ Visage vérifié !');
                         setIsVerified(true);
                         setTimeout(() => {

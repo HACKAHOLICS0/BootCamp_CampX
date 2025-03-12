@@ -4,7 +4,7 @@ import { Container, Row, Col, Card, Button, Spinner, Alert } from 'react-bootstr
 import Cookies from 'js-cookie';
 import './ModuleStyle.css';
 
-const backendURL = "http://localhost:5001/api";
+const backendURL = "http://localhost:5000/api";
 
 const ModuleList = () => {
   const { categoryId } = useParams();

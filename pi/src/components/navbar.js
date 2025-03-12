@@ -27,7 +27,7 @@ export default function Navbar() {
     const fetchCategories = async () => {
       try {
         const token = Cookies.get('token');
-        const response = await axios.get('http://localhost:5001/api/categories', {
+        const response = await axios.get('http://localhost:5000/api/categories', {
           headers: {
             'Authorization': `Bearer ${token}`
           }

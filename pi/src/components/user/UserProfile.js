@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
-const backendURL = "http://localhost:5001";
+const backendURL = "http://localhost:5000";
 
 const getImageUrl = (imagePath) => {
     return imagePath ? `${backendURL}/${imagePath.replace(/\\/g, "/")}` : "/uploads/avatar7.png";

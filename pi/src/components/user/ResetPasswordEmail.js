@@ -9,7 +9,7 @@ const ResetPasswordEmail= () => {
     const handleSendEmail = async () => {
       setMessage("");
       try {
-        const response = await fetch("http://localhost:5001/api/auth/forgotpasswordemail", {
+        const response = await fetch("http://localhost:5000/api/auth/forgotpasswordemail", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

@@ -15,7 +15,7 @@ export default function Signin() {
     e.preventDefault();
 
     try {
-      const response = await fetch("http://localhost:5001/api/auth/signin", {
+      const response = await fetch("http://localhost:5000/api/auth/signin", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -44,11 +44,11 @@ export default function Signin() {
   };
 
   const handleGoogleLoginSuccess = async (credentialResponse) => {
-    window.location.href = "http://localhost:5001/api/auth/google";
+    window.location.href = "http://localhost:5000/api/auth/google";
   };
 
   const handleGitHubLogin = () => {
-    window.location.href = "http://localhost:5001/api/auth/github/callback";
+    window.location.href = "http://localhost:5000/api/auth/github/callback";
   };
 
   return (

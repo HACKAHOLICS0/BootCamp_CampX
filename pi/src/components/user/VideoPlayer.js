@@ -40,7 +40,7 @@ const VideoPlayer = ({ videoUrl, quiz }) => {
   return (
     <div>
       <video ref={videoRef} controls width="500">
-        <source src={`http://localhost:5001${videoUrl}`} type="video/mp4" />
+        <source src={`http://localhost:5000${videoUrl}`} type="video/mp4" />
         Votre navigateur ne supporte pas la lecture des vidéos.
       </video>
 

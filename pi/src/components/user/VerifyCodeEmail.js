@@ -17,7 +17,7 @@ const VerifyCodeEmail = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:5001/api/auth/resetpasswordemail", {
+      const response = await fetch("http://localhost:5000/api/auth/resetpasswordemail", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

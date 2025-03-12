@@ -90,8 +90,11 @@ const QuizView = () => {
 
     try {
       setSubmitting(true);
-      const response = await axios.post(`${config.API_URL}/api/quiz/${quizId}/submit`, {
+      const token = Cookies.get('token');
+      const response = await axios.post(`${config.API_URL}/api/quiz/submit/${quizId}`, {
         answers: selectedAnswers
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
 
       navigate(`/quiz/${quizId}/result`, { state: { result: response.data } });
