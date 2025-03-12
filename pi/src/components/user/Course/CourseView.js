@@ -1,168 +1,296 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Card, Row, Col, Button, Alert } from 'react-bootstrap';
-import axios from 'axios';
+import { Container, Spinner, Alert } from 'react-bootstrap';
+import { FaPlay, FaQuestionCircle, FaComments, FaClock, FaTrophy, FaChartLine } from 'react-icons/fa';
+import Cookies from 'js-cookie';
 import config from '../../../config';
 import './CourseView.css';
 
 const CourseView = () => {
+  const { courseId } = useParams();
+  const navigate = useNavigate();
   const [course, setCourse] = useState(null);
+  const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { categoryId, moduleId, courseId } = useParams();
-  const navigate = useNavigate();
-
+  const [activeTab, setActiveTab] = useState('quiz');
+  const [progress, setProgress] = useState(0);
+  const { categoryId, moduleId } = useParams();
   useEffect(() => {
-    const fetchCourse = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        console.log('Fetching course:', courseId); // Debug log
-
-        const response = await axios.get(`${config.API_URL}${config.endpoints.courses}/${courseId}`);
-        console.log('Course response:', response.data); // Debug log
-
-        if (!response.data) {
-          throw new Error('No course data received');
-        }
-
-        // Get quizzes for this course
-        const quizzesResponse = await axios.get(`${config.API_URL}${config.endpoints.quizzes}/course/${courseId}`);
-        console.log('Quizzes response:', quizzesResponse.data); // Debug log
-
-        // Format course data with quizzes
-        const formattedCourse = {
-          ...response.data,
-          quizzes: quizzesResponse.data.map(quiz => ({
-            _id: quiz._id,
-            title: quiz.title,
-            description: quiz.description,
-            chronoVal: quiz.chronoVal,
-            questionCount: quiz.questionCount || 0
-          }))
-        };
-
-        setCourse(formattedCourse);
-      } catch (err) {
-        console.error('Error fetching course:', err);
-        setError(
-          err.response?.data?.error || 
-          err.message || 
-          'Failed to load course. Please try again later.'
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (courseId) {
-      fetchCourse();
-    }
+    fetchCourseData();
   }, [courseId]);
 
-  const handleStartQuiz = (quizId) => {
+  const fetchCourseData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const token = Cookies.get('token');
+      
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+
+      // Récupérer les données du cours
+      const response = await fetch(`${config.API_URL}/api/courses/${courseId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch course data');
+      }
+
+      const data = await response.json();
+      console.log("Course data received:", data);
+      setCourse(data);
+
+      // Extraire les IDs des quiz correctement
+      const quizIds = data.quizzes || [];
+      // S'assurer que nous avons des IDs valides
+      const validQuizIds = quizIds.map(quiz => {
+        if (typeof quiz === 'string') return quiz;
+        if (quiz._id) return quiz._id;
+        if (quiz._doc && quiz._doc._id) return quiz._doc._id;
+        return null;
+      }).filter(id => id !== null);
+
+      console.log("Quiz IDs to fetch:", validQuizIds);
+
+      if (validQuizIds.length > 0) {
+        try {
+          const quizPromises = validQuizIds.map(quizId =>
+            fetch(`${config.API_URL}/api/quiz/${quizId}`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+              }
+            }).then(async (res) => {
+              if (!res.ok) {
+                console.warn(`Impossible de récupérer le quiz ${quizId}:`, res.status);
+                return null;
+              }
+              const quizData = await res.json();
+              console.log(`Quiz ${quizId} data:`, quizData);
+              return {
+                ...quizData,
+                _id: quizId,
+                title: quizData.title || quizData.nom || 'Quiz sans titre',
+                duration: quizData.duration || quizData.duree || quizData.chronoVal || 0
+              };
+            }).catch(error => {
+              console.warn(`Erreur lors de la récupération du quiz ${quizId}:`, error);
+              return null;
+            })
+          );
+
+          const quizDetails = await Promise.all(quizPromises);
+          console.log("All quiz details received:", quizDetails);
+          
+          // Filtrer les quiz valides
+          const validQuizzes = quizDetails.filter(quiz => quiz !== null);
+          console.log("Valid quizzes after processing:", validQuizzes);
+          setQuizzes(validQuizzes);
+
+          // Calculer la progression
+          if (validQuizzes.length > 0) {
+            const completedQuizzes = validQuizzes.filter(quiz => quiz.completed).length;
+            const progressPercentage = (completedQuizzes / validQuizzes.length) * 100;
+            setProgress(progressPercentage);
+          }
+        } catch (error) {
+          console.error('Error fetching quiz details:', error);
+          setError('Erreur lors de la récupération des quiz. Veuillez rafraîchir la page.');
+        }
+      } else {
+        console.log("No quizzes found for this course");
+        setQuizzes([]);
+        setProgress(0);
+      }
+
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching course:', error);
+      setError(error.message);
+      setLoading(false);
+    }
+  };
+
+  const startQuiz = (quizId) => {
     navigate(`/categories/${categoryId}/modules/${moduleId}/courses/${courseId}/quiz/${quizId}`);
+
+  };
+
+  const formatDuration = (duration) => {
+    if (!duration && duration !== 0) return 'Durée non définie';
+    return `${duration} ${duration <= 1 ? 'minute' : 'minutes'}`;
   };
 
   if (loading) {
     return (
-      <Container className="mt-4">
-        <div className="text-center">
-          <div className="spinner-border" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
+      <div className="course-view-container">
+        <div className="loading-container" style={{ textAlign: 'center', padding: '3rem' }}>
+          <Spinner animation="border" variant="success" />
+          <p className="mt-3">Chargement du cours...</p>
         </div>
-      </Container>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Container className="mt-4">
+      <div className="course-view-container">
         <Alert variant="danger">
-          <Alert.Heading>Error Loading Course</Alert.Heading>
+          <Alert.Heading>Erreur</Alert.Heading>
           <p>{error}</p>
-          <div className="d-flex justify-content-end">
-            <Button 
-              variant="outline-danger"
-              onClick={() => navigate(`/categories/${categoryId}/modules/${moduleId}`)}
-            >
-              Return to Module
-            </Button>
-          </div>
         </Alert>
-      </Container>
+      </div>
     );
   }
 
   if (!course) {
     return (
-      <Container className="mt-4">
-        <Alert variant="warning">
-          <Alert.Heading>Course Not Found</Alert.Heading>
-          <p>The requested course could not be found.</p>
-          <div className="d-flex justify-content-end">
-            <Button 
-              variant="outline-warning"
-              onClick={() => navigate(`/categories/${categoryId}/modules/${moduleId}`)}
-            >
-              Return to Module
-            </Button>
-          </div>
+      <div className="course-view-container">
+        <Alert variant="info">
+          <Alert.Heading>Cours non trouvé</Alert.Heading>
+          <p>Le cours que vous recherchez n'existe pas ou n'est pas accessible.</p>
         </Alert>
-      </Container>
+      </div>
     );
   }
 
   return (
-    <Container className="mt-4">
-      <Card className="course-card">
-        <Card.Header as="h2" className="text-center">{course.title}</Card.Header>
-        <Card.Body>
-          <Card.Text>{course.description}</Card.Text>
+    <div className="course-view-container">
+      <div className="course-header">
+        <h1>{course.titre}</h1>
+        <p>{course.description}</p>
+      </div>
 
-          {course.videoUrl && (
-            <div className="video-container mb-4">
-              <iframe
-                src={course.videoUrl}
-                title={course.title}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              ></iframe>
+      <div className="course-content">
+        <div className="main-content">
+          <div className="content-tabs">
+            <div 
+              className={`content-tab ${activeTab === 'video' ? 'active' : ''}`}
+              onClick={() => setActiveTab('video')}
+            >
+              <FaPlay /> Vidéos
             </div>
-          )}
+            <div 
+              className={`content-tab ${activeTab === 'quiz' ? 'active' : ''}`}
+              onClick={() => setActiveTab('quiz')}
+            >
+              <FaQuestionCircle /> Quiz
+            </div>
+            <div 
+              className={`content-tab ${activeTab === 'chat' ? 'active' : ''}`}
+              onClick={() => setActiveTab('chat')}
+            >
+              <FaComments /> Discussion
+            </div>
+          </div>
 
-          <h3 className="mt-4 mb-3">Available Quizzes</h3>
-          {course.quizzes && course.quizzes.length > 0 ? (
-            <Row xs={1} md={2} lg={3} className="g-4">
-              {course.quizzes.map((quiz) => (
-                <Col key={quiz._id}>
-                  <Card className="quiz-card h-100">
-                    <Card.Body>
-                      <Card.Title>{quiz.title || 'Untitled Quiz'}</Card.Title>
-                      <Card.Text>{quiz.description || 'No description available'}</Card.Text>
-                      <div className="quiz-info d-flex justify-content-between mb-3">
-                        <span>Questions: {quiz.questionCount || 0}</span>
-                        <span>Time: {quiz.chronoVal || 0} min</span>
+          <div className="content-section">
+            {activeTab === 'video' && (
+              <div>
+                <div className="video-section">
+                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+                    <FaPlay size={48} />
+                  </div>
+                </div>
+                <h3>Contenu vidéo à venir</h3>
+                <p>Les vidéos seront bientôt disponibles pour ce cours.</p>
+              </div>
+            )}
+
+            {activeTab === 'quiz' && (
+              <div className="quiz-list">
+                {quizzes && quizzes.length > 0 ? (
+                  quizzes.map((quiz, index) => (
+                    <div key={quiz._id} className="quiz-card">
+                      <div className="quiz-info">
+                        <h3>{quiz.title}</h3>
+                        <div className="quiz-meta">
+                          <span>
+                            <FaClock /> 
+                            {formatDuration(quiz.duration)}
+                          </span>
+                          <span>
+                            <FaQuestionCircle /> 
+                            {quiz.questions ? quiz.questions.length : 0} questions
+                          </span>
+                          {quiz.completed && (
+                            <span className="completed-badge">
+                              ✓ Complété
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <Button
-                        variant="primary"
-                        onClick={() => handleStartQuiz(quiz._id)}
-                        className="mt-3 w-100"
+                      <button 
+                        className="start-quiz-btn"
+                        onClick={() => startQuiz(quiz._id)}
                       >
-                        Start Quiz
-                      </Button>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-          ) : (
-            <Alert variant="info">No quizzes available for this course.</Alert>
-          )}
-        </Card.Body>
-      </Card>
-    </Container>
+                        <FaPlay /> {quiz.completed ? 'Recommencer' : 'Commencer'}
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <div className="no-quiz-message">
+                    <FaQuestionCircle size={48} />
+                    <h3>Aucun quiz disponible</h3>
+                    <p>Les quiz pour ce cours seront bientôt disponibles.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'chat' && (
+              <div className="chatroom-placeholder">
+                <FaComments size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
+                <h3>Chat room</h3>
+                <p>Cette fonctionnalité sera bientôt disponible...</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="sidebar">
+          <div className="sidebar-card">
+            <h2>Progression</h2>
+            <div className="progress-info">
+              <div className="progress-bar">
+                <div 
+                  className="progress-fill" 
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>{Math.round(progress)}% complété</span>
+                <span>{quizzes.length} quiz</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="sidebar-card">
+            <h2>Statistiques</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Temps estimé</span>
+                <span>{course.duree || 'N/A'}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Niveau</span>
+                <span style={{ color: '#28a745' }}>{course.niveau || 'Intermédiaire'}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Quiz complétés</span>
+                <span>{quizzes.filter(q => q.completed).length}/{quizzes.length}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

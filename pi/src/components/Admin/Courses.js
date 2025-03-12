@@ -201,39 +201,42 @@ const Courses = () => {
 
       {/* Add/Update Modal */}
       {isModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3>{isAdding ? "Add New Course" : "Update Course"}</h3>
+        <div className="modal-overlay" onClick={handleModalClose}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <h3>{isAdding ? "Ajouter un nouveau cours" : "Modifier le cours"}</h3>
+            
             <div className="form-group">
-              <label>Title:</label>
+              <label>Titre :</label>
               <input
                 type="text"
                 name="title"
                 value={formData.title}
                 onChange={handleInputChange}
-                placeholder="Enter course title"
+                placeholder="Entrez le titre du cours"
                 required
               />
             </div>
+
             <div className="form-group">
-              <label>Description:</label>
+              <label>Description :</label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleInputChange}
-                placeholder="Enter course description"
+                placeholder="Entrez la description du cours"
                 required
               />
             </div>
+
             <div className="form-group">
-              <label>Module:</label>
+              <label>Module :</label>
               <select
                 name="module"
                 value={formData.module}
                 onChange={handleInputChange}
                 required
               >
-                <option value="">Select a module</option>
+                <option value="">Sélectionnez un module</option>
                 {modules.map(module => (
                   <option key={module._id} value={module._id}>
                     {module.title}
@@ -241,51 +244,50 @@ const Courses = () => {
                 ))}
               </select>
             </div>
+
             <div className="form-group">
-              <label>Content:</label>
+              <label>Contenu :</label>
               <textarea
                 name="content"
                 value={formData.content}
                 onChange={handleInputChange}
-                placeholder="Enter course content"
-                required
-                rows="6"
+                placeholder="Entrez le contenu du cours"
               />
             </div>
+
             <div className="form-group">
-              <label>Price ($):</label>
+              <label>Prix :</label>
               <input
                 type="number"
                 name="price"
                 value={formData.price}
                 onChange={handleInputChange}
-                placeholder="Enter course price"
+                placeholder="Entrez le prix du cours"
                 required
               />
             </div>
+
             <div className="form-group">
-              <label>Duration (hours):</label>
+              <label>Durée (en heures) :</label>
               <input
                 type="number"
                 name="duration"
                 value={formData.duration}
                 onChange={handleInputChange}
-                placeholder="Enter duration in hours"
+                placeholder="Entrez la durée du cours"
                 required
               />
             </div>
+
             <div className="modal-actions">
-              <button 
-                className="action-btn cancel" 
-                onClick={handleModalClose}
-              >
-                Cancel
+              <button className="cancel" onClick={handleModalClose}>
+                Annuler
               </button>
-              <button 
-                className="action-btn submit" 
+              <button
+                className={isAdding ? "add" : "update"}
                 onClick={isAdding ? handleAddCourse : handleUpdateCourse}
               >
-                {isAdding ? "Add" : "Update"}
+                {isAdding ? "Ajouter" : "Mettre à jour"}
               </button>
             </div>
           </div>

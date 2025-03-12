@@ -16,6 +16,7 @@ const QuizView = () => {
   const [verificationComplete, setVerificationComplete] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   // Récupérer l'image utilisateur pour la vérification
@@ -48,12 +49,51 @@ const QuizView = () => {
   // Charger le quiz après la vérification faciale
   useEffect(() => {
     if (verificationComplete) {
-      axios.get(`${config.API_URL}/api/quiz/${quizId}`)
+      setLoading(true);
+      const token = Cookies.get('token');
+      
+      axios.get(`${config.API_URL}/api/quiz/${quizId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
         .then(res => {
-          setQuiz(res.data);
-          setTimeLeft(res.data.chronoVal * 60); // Convertir minutes en secondes
+          console.log("Quiz data received:", res.data);
+          if (!res.data) {
+            throw new Error('Aucune donnée de quiz reçue');
+          }
+
+          // Normaliser les données du quiz
+          const normalizedQuiz = {
+            ...res.data,
+            title: res.data.title || res.data.nom || 'Quiz sans titre',
+            Questions: Array.isArray(res.data.questions) ? res.data.questions : 
+                      Array.isArray(res.data.Questions) ? res.data.Questions : []
+          };
+
+          if (normalizedQuiz.Questions.length === 0) {
+            throw new Error('Aucune question trouvée dans ce quiz');
+          }
+
+          // S'assurer que chaque question a le bon format
+          normalizedQuiz.Questions = normalizedQuiz.Questions.map(q => ({
+            _id: q._id,
+            texte: q.texte || q.text || q.question || 'Question sans texte',
+            Responses: Array.isArray(q.Responses) ? q.Responses :
+                      Array.isArray(q.responses) ? q.responses.map(r => ({
+                        _id: r._id,
+                        texte: r.texte || r.text || r.response || 'Réponse sans texte'
+                      })) : []
+          }));
+
+          console.log("Normalized quiz data:", normalizedQuiz);
+          setQuiz(normalizedQuiz);
+          setTimeLeft((normalizedQuiz.chronoVal || normalizedQuiz.duration || 10) * 60);
+          setLoading(false);
         })
-        .catch(() => setError("Erreur lors du chargement du quiz"));
+        .catch((err) => {
+          console.error("Error loading quiz:", err);
+          setError(err.message || "Erreur lors du chargement du quiz");
+          setLoading(false);
+        });
     }
   }, [verificationComplete, quizId]);
 
@@ -118,9 +158,9 @@ const QuizView = () => {
     );
   }
 
-  return (
-    <Container>
-      {!verificationComplete ? (
+  if (!verificationComplete) {
+    return (
+      <Container>
         <Card>
           <Card.Header>Vérification d'identité</Card.Header>
           <Card.Body>
@@ -131,72 +171,122 @@ const QuizView = () => {
             )}
           </Card.Body>
         </Card>
-      ) : quiz ? (
-        <Card className="mt-4">
-          <Card.Header>
-            <div className="d-flex justify-content-between align-items-center">
-              <h3>{quiz.title}</h3>
-              <div className="timer">Temps restant : {formatTime(timeLeft)}</div>
-            </div>
-            <ProgressBar now={((currentQuestion + 1) / quiz.Questions.length) * 100} className="mt-2" />
-          </Card.Header>
-          <Card.Body>
-            <div className="question-counter mb-3">
-              Question {currentQuestion + 1} sur {quiz.Questions.length}
-            </div>
+      </Container>
+    );
+  }
 
-            <Card.Title className="question-text">{quiz.Questions[currentQuestion].texte}</Card.Title>
+  if (loading || !quiz || !quiz.Questions) {
+    return (
+      <Container>
+        <div className="text-center mt-4">
+          <Spinner animation="border" />
+          <p>Chargement du quiz...</p>
+        </div>
+      </Container>
+    );
+  }
 
-            <Form>
-              {quiz.Questions[currentQuestion].Responses.map(response => (
-                <Form.Check
-                  key={response._id}
-                  type="radio"
-                  id={response._id}
-                  label={response.texte}
-                  name={`question-${quiz.Questions[currentQuestion]._id}`}
-                  checked={selectedAnswers[quiz.Questions[currentQuestion]._id] === response._id}
-                  onChange={() => handleAnswerSelect(quiz.Questions[currentQuestion]._id, response._id)}
-                  className="response-option mb-2"
-                />
-              ))}
-            </Form>
+  const currentQuestionData = quiz.Questions[currentQuestion];
+  if (!currentQuestionData) {
+    return (
+      <Container>
+        <Alert variant="danger">
+          <Alert.Heading>Erreur</Alert.Heading>
+          <p>Question non trouvée. Veuillez réessayer ou contacter l'administrateur.</p>
+          <hr />
+          <p className="mb-0">
+            {`Question ${currentQuestion + 1}/${quiz.Questions.length}`}
+          </p>
+        </Alert>
+      </Container>
+    );
+  }
 
-            <div className="navigation-buttons mt-4">
+  return (
+    <Container>
+      <Card className="mt-4">
+        <Card.Header>
+          <div className="d-flex justify-content-between align-items-center">
+            <h3>{quiz.title}</h3>
+            <div className="timer">Temps restant : {formatTime(timeLeft)}</div>
+          </div>
+          <ProgressBar now={((currentQuestion + 1) / quiz.Questions.length) * 100} className="mt-2" />
+        </Card.Header>
+        <Card.Body>
+          <div className="question-counter mb-3">
+            Question {currentQuestion + 1} sur {quiz.Questions.length}
+          </div>
+
+          <Card.Title className="question-text">
+            {currentQuestionData.texte}
+          </Card.Title>
+
+          <Form>
+            {Array.isArray(currentQuestionData.Responses) && currentQuestionData.Responses.map(response => (
+              <Form.Check
+                key={response._id}
+                type="radio"
+                id={response._id}
+                label={response.texte}
+                name={`question-${currentQuestionData._id}`}
+                checked={selectedAnswers[currentQuestionData._id] === response._id}
+                onChange={() => handleAnswerSelect(currentQuestionData._id, response._id)}
+                className="response-option mb-2"
+              />
+            ))}
+            {(!currentQuestionData.Responses || currentQuestionData.Responses.length === 0) && (
+              <Alert variant="warning">
+                Aucune réponse disponible pour cette question.
+              </Alert>
+            )}
+          </Form>
+
+          <div className="navigation-buttons mt-4 d-flex justify-content-between">
+            <Button
+              variant="secondary"
+              disabled={currentQuestion === 0}
+              onClick={() => setCurrentQuestion(prev => prev - 1)}
+            >
+              Précédent
+            </Button>
+            {currentQuestion < quiz.Questions.length - 1 ? (
               <Button
-                variant="secondary"
-                disabled={currentQuestion === 0}
-                onClick={() => setCurrentQuestion(prev => prev - 1)}
+                variant="primary"
+                onClick={() => setCurrentQuestion(prev => prev + 1)}
+                disabled={!selectedAnswers[currentQuestionData._id]}
               >
-                Précédent
+                Suivant
               </Button>
-              {currentQuestion < quiz.Questions.length - 1 ? (
-                <Button
-                  variant="primary"
-                  onClick={() => setCurrentQuestion(prev => prev + 1)}
-                  disabled={!selectedAnswers[quiz.Questions[currentQuestion]._id]}
-                >
-                  Suivant
-                </Button>
-              ) : (
-                <Button
-                  variant="success"
-                  onClick={handleSubmit}
-                  disabled={
-                    submitting ||
-                    !selectedAnswers[quiz.Questions[currentQuestion]._id] ||
-                    Object.keys(selectedAnswers).length !== quiz.Questions.length
-                  }
-                >
-                  {submitting ? 'Soumission en cours...' : 'Soumettre le quiz'}
-                </Button>
-              )}
-            </div>
-          </Card.Body>
-        </Card>
-      ) : (
-        <Spinner animation="border" className="mt-4" />
-      )}
+            ) : (
+              <Button
+                variant="success"
+                onClick={handleSubmit}
+                disabled={
+                  submitting ||
+                  !selectedAnswers[currentQuestionData._id] ||
+                  Object.keys(selectedAnswers).length !== quiz.Questions.length
+                }
+              >
+                {submitting ? (
+                  <>
+                    <Spinner
+                      as="span"
+                      animation="border"
+                      size="sm"
+                      role="status"
+                      aria-hidden="true"
+                      className="me-2"
+                    />
+                    Soumission en cours...
+                  </>
+                ) : (
+                  'Soumettre le quiz'
+                )}
+              </Button>
+            )}
+          </div>
+        </Card.Body>
+      </Card>
     </Container>
   );
 };

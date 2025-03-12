@@ -33,6 +33,7 @@ import Settings from './components/Admin/Settings';
 import CourseView from './components/user/Course/CourseView';
 import QuizView from './components/user/Quiz/QuizView';
 import QuizResultView from './components/user/Quiz/QuizResultView';
+import { FaceRecognition } from './components/user/Quiz/FaceRecognition';
 
 function App() {
   const location = useLocation();
@@ -66,6 +67,7 @@ function App() {
           <Route path="/categories/:categoryId/modules" element={<ModuleList />} />
           <Route path="/categories/:categoryId/modules/:moduleId" element={<CourseList />} />
           <Route path="/categories/:categoryId/modules/:moduleId/courses/:courseId" element={<CourseView />} />
+          <Route path="/categories/:categoryId/modules/:moduleId/courses/:courseId/face-recognition" element={<FaceRecognition />} />
           <Route path="/categories/:categoryId/modules/:moduleId/courses/:courseId/quiz/:quizId" element={<QuizView />} />
           <Route path="/categories/:categoryId/modules/:moduleId/courses/:courseId/quiz/:quizId/result" element={<QuizResultView />} />
 

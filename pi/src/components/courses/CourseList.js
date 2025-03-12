@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Badge, Spinner, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Spinner, Alert } from 'react-bootstrap';
+import { FaUsers, FaClock, FaBook, FaGraduationCap, FaStar, FaChartLine } from 'react-icons/fa';
 import Cookies from 'js-cookie';
-
+import './CourseStyle.css';
 
 const backendURL = "http://localhost:5000/api";
 
@@ -85,46 +86,96 @@ const CourseList = () => {
 
   return (
     <Container className="mt-4">
-      <div className="course-header mb-4">
-        <h2>{module?.name || 'Cours'}</h2>
+      <div className="course-header">
+        <h2>{module?.name || 'Cours disponibles'}</h2>
         <p className="text-muted">
-          {module?.description || 'Explorez nos cours interactifs'}
+          {module?.description || 'Découvrez nos cours interactifs et enrichissants'}
         </p>
       </div>
       
       {courses.length === 0 ? (
         <Alert variant="info">
-          <p className="mb-0">Aucun cours disponible pour ce module.</p>
-          <p className="mb-0">Revenez bientôt pour du nouveau contenu!</p>
+          <p className="mb-0">Aucun cours n'est disponible pour ce module.</p>
+          <p className="mb-0">Revenez bientôt pour découvrir notre nouveau contenu !</p>
         </Alert>
       ) : (
         <Row xs={1} md={2} lg={3} className="g-4">
           {courses.map(course => (
             <Col key={course._id}>
-              <Card className="h-100 course-card">
+              <Card className="course-card">
                 <Card.Body>
                   <Card.Title>{course.title}</Card.Title>
                   <Card.Text>{course.description}</Card.Text>
-                  <div className="course-stats mb-3">
+                  
+                  <div className="course-meta">
+                    <div className="course-stats-grid">
+                      <div className="stat-item">
+                        <div className="stat-icon">
+                          <FaUsers />
+                        </div>
+                        <div className="stat-info">
+                          <span className="stat-label">Participants</span>
+                          <span className="stat-value">{course.purchasedBy?.length || 0}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="stat-item">
+                        <div className="stat-icon">
+                          <FaClock />
+                        </div>
+                        <div className="stat-info">
+                          <span className="stat-label">Durée</span>
+                          <span className="stat-value">{course.duration}h</span>
+                        </div>
+                      </div>
+
+                      <div className="stat-item">
+                        <div className="stat-icon">
+                          <FaBook />
+                        </div>
+                        <div className="stat-info">
+                          <span className="stat-label">Quiz</span>
+                          <span className="stat-value">{course.quizzes?.length || 0}</span>
+                        </div>
+                      </div>
+
+                      <div className="stat-item">
+                        <div className="stat-icon">
+                          <FaChartLine />
+                        </div>
+                        <div className="stat-info">
+                          <span className="stat-label">Niveau</span>
+                          <span className="stat-value">Intermédiaire</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="course-tags">
                     {course.quizzes?.length > 0 && (
-                      <Badge bg="info" className="me-2">
+                      <span className="course-tag">
+                        <FaGraduationCap className="me-1" />
                         {course.quizzes.length} Quiz
-                      </Badge>
+                      </span>
                     )}
-                    {course.duration && (
-                      <Badge bg="secondary">
-                        {course.duration}
-                      </Badge>
-                    )}
+                    <span className="course-tag">
+                      <FaStar className="me-1" />
+                      Certifiant
+                    </span>
+                  </div>
+                </Card.Body>
+
+                <div className="course-footer">
+                  <div className="course-price">
+                    {course.price} €
                   </div>
                   <Button 
-                    variant="primary"
                     onClick={() => navigateToCourse(course._id)}
-                    className="w-100"
                   >
+                    <FaBook className="me-2" />
                     Accéder au cours
                   </Button>
-                </Card.Body>
+                </div>
               </Card>
             </Col>
           ))}

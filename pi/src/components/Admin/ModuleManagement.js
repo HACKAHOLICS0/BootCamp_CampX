@@ -193,7 +193,7 @@ const ModuleManagement = () => {
         ))}
       </Grid>
 
-      <Dialog open={open} onClose={handleClose}>
+      <Dialog open={open} onClose={handleClose} >
         <DialogTitle>{editMode ? 'Edit Module' : 'Add Module'}</DialogTitle>
         <form onSubmit={handleSubmit}>
           <DialogContent>

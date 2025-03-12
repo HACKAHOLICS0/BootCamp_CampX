@@ -239,6 +239,13 @@ module.exports.create = async (req, res) => {
 
         const savedQuiz = await newQuiz.save();
         
+        // Ajouter le quiz au tableau quizzes du cours
+        await Course.findByIdAndUpdate(
+            course,
+            { $push: { quizzes: savedQuiz._id } },
+            { new: true }
+        );
+        
         // Populate course details for response
         const populatedQuiz = await quizModel.findById(savedQuiz._id)
             .populate('course', 'title');
