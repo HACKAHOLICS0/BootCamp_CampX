@@ -1,6 +1,5 @@
-// src/App.js
 import React from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, matchPath } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import Footer from './components/Footer';
 import Navbar from './components/navbar';
@@ -14,39 +13,113 @@ import ResetPasswordEmail from './components/user/ResetPasswordEmail';
 import VerifyCodeEmail from './components/user/VerifyCodeEmail';
 import GoogleRedirectHandler from './components/user/GoogleRedirectHandler';
 import UserProfile from './components/user/UserProfile';
-
-import LearnerHelpCenter from "./components/helpcenter/LearnerHelpCenter"; // Add this import
-import AccountNotifications from "./components/helpcenter/AccountNotifications"; // Import the new component
-import PaymentsSubscriptions from "./components/helpcenter/PaymentsSubscriptions"; // Import the new component
+import VerifyEmailPage from './components/user/VerifyEmailPage';
+import AdminLayout from './components/Admin/AdminLayout';
+import Dashboard from './components/Admin/Dashboard';
+import Users from './components/Admin/Users';
+import Products from './components/Admin/Products';
+import Analytics from './components/Admin/Analytics';
+import Points from './components/Admin/PointsOfIntrest';
+import Settings from './components/Admin/Settings';
+import Notifications from './components/Admin/Notifications';
+import Quiz from './components/Admin/Quizs/QuizAdmin';
+import Categories from './components/Admin/Categories';
+import Modules from './components/Admin/Modules';
+import Courses from './components/Admin/Courses';
+import VideoQuizStats from './components/Admin/VideoQuizStats';
+import UploadVideo from './components/user/UploadVideo';
+import CategoryList from './components/categories/CategoryList';
+import ModuleList from './components/modules/ModuleList';
+import CourseList from './components/courses/CourseList';
+import CourseView from './components/user/course/CourseView';
+import QuizView from './components/user/Quiz/QuizView';
+import ProtectedAdminRoute from './components/ProtectedAdminRoute';
+import Chatbot from './components/chatbot/Chatbot';
+import ChatbotAdmin from './components/Admin/ChatbotAdmin';
+import ChatTest from './components/chatbot/ChatTest';
+import LearnerHelpCenter from "./components/helpcenter/LearnerHelpCenter";
+import AccountNotifications from "./components/helpcenter/AccountNotifications";
+import PaymentsSubscriptions from "./components/helpcenter/PaymentsSubscriptions";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 function App() {
   const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith("/admin");
+
+  // Routes à exclure de l'affichage du Template
+  const excludedRoutes = [
+    "/signin",
+    "/resetpasswordemail",
+    "/signup",
+    "/forget-password",
+    "/profile",
+    "/verify-code",
+    "/reset-password",
+    "/verifycodeEmail",
+    "/checkout",
+    "/chatbot",
+    "/chat"
+  ];
+
+  // Vérifier les chemins dynamiques
+  const isExcludedDynamic = matchPath("/google/:token", location.pathname) ||
+    matchPath("/verify-email/:token", location.pathname);
 
   return (
     <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
       <div className="App">
-        <Navbar />
+        {/* Afficher Navbar uniquement si ce n'est pas une route admin */}
+        {!isAdminRoute && <Navbar />}
+
         <Routes>
           <Route path="/signin" element={<Signin />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/forget-password" element={<ForgotPassword />} />
           <Route path="/verify-code" element={<VerifyCode />} />
-          <Route path="/reset-password" element={<ResetPassword />} />   
-          <Route path="/resetpasswordemail" element={<ResetPasswordEmail />} />      
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/resetpasswordemail" element={<ResetPasswordEmail />} />
           <Route path="/verifycodeEmail" element={<VerifyCodeEmail />} />
           <Route path="/profile" element={<UserProfile />} />
-          {/* Route for handling the Google redirect */}
           <Route path="/google/:token" element={<GoogleRedirectHandler />} />
-          
+          <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
+          <Route path="/upload-video" element={<UploadVideo />} />
           <Route path="/learner-help-center" element={<LearnerHelpCenter />} />
           <Route path="/account-notifications" element={<AccountNotifications />} />
-        <Route path="/payments-subscriptions" element={<PaymentsSubscriptions />} />
-      
-        </Routes>
-        {location.pathname !== "/signin" && location.pathname !== "/signup" && location.pathname !== "/forget-password" && location.pathname !== "/profile" && <Template />}
+          <Route path="/payments-subscriptions" element={<PaymentsSubscriptions />} />
+          <Route path="/categories" element={<CategoryList />} />
+          <Route path="/categories/:categoryId/modules" element={<ModuleList />} />
+          <Route path="/modules/:moduleId/courses" element={<CourseList />} />
+          <Route path="/courses/:courseId" element={<CourseView />} />
+          <Route path="/quiz/:quizId" element={<QuizView />} />
+          <Route path="/courses/:courseId/quiz/:quizId" element={<QuizView />} />
+          <Route path="/chatbot" element={<Chatbot />} />
+          <Route path="/chat" element={<ChatTest />} />
 
-        <Footer />
+          {/* Routes Admin protégées */}
+          <Route element={<ProtectedAdminRoute />}>
+            <Route path="/admin/*" element={<AdminLayout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="users" element={<Users />} />
+              <Route path="points" element={<Points />} />
+              <Route path="products" element={<Products />} />
+              <Route path="analytics" element={<Analytics />} />
+              <Route path="notifications" element={<Notifications />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="quizs" element={<Quiz />} />
+              <Route path="categories" element={<Categories />} />
+              <Route path="modules" element={<Modules />} />
+              <Route path="courses" element={<Courses />} />
+              <Route path="videoquiz-stats" element={<VideoQuizStats />} />
+              <Route path="chatbot" element={<ChatbotAdmin />} />
+            </Route>
+          </Route>
+
+          {/* Route for the home page */}
+          <Route path="/" element={<Template />} />
+        </Routes>
+
+        {/* Ne pas afficher le Footer si c'est une route Admin */}
+        {!isAdminRoute && <Footer />}
       </div>
     </GoogleOAuthProvider>
   );
