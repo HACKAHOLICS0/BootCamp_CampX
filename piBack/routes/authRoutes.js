@@ -5,6 +5,10 @@ const authController = require('../controllers/authController');
 const upload = require('../config/multerConfig'); // Middleware pour gérer l'upload d'images
 const passport = require("passport");
 
+
+
+
+
 // Vérification de l'email
 router.get('/check/:email', authController.checkEmailExists);
 
@@ -53,6 +57,9 @@ router.get(
 router.put("/:id", upload.single('image'), authController.editUser);
 router.get("/:id", authController.getUserById);
 
+
+
+module.exports = router;
 router.get('/github/callback', passport.authenticate('github', { failureRedirect: '/signin' }), (req, res) => {
   // Utilisateur récupéré après la redirection GitHub
   const user = req.user.user || req.user; // Correction pour s'assurer de récupérer l'utilisateur

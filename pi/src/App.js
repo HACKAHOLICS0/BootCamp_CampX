@@ -40,6 +40,8 @@ import ChatTest from './components/chatbot/ChatTest';
 import LearnerHelpCenter from "./components/helpcenter/LearnerHelpCenter";
 import AccountNotifications from "./components/helpcenter/AccountNotifications";
 import PaymentsSubscriptions from "./components/helpcenter/PaymentsSubscriptions";
+import Enrollment from './components/helpcenter/Enrollment';
+import Community from './components/helpcenter/Community'
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 function App() {
@@ -86,6 +88,8 @@ function App() {
           <Route path="/learner-help-center" element={<LearnerHelpCenter />} />
           <Route path="/account-notifications" element={<AccountNotifications />} />
           <Route path="/payments-subscriptions" element={<PaymentsSubscriptions />} />
+          <Route path="/community" element={<Community />} />
+          <Route path="/enrollment" element={<Enrollment />} />
           <Route path="/categories" element={<CategoryList />} />
           <Route path="/categories/:categoryId/modules" element={<ModuleList />} />
           <Route path="/modules/:moduleId/courses" element={<CourseList />} />
