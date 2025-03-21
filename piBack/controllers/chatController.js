@@ -15,17 +15,9 @@ exports.createConversation = async (req, res) => {
             return res.status(404).json({ message: "Utilisateur non trouvé" });
         }
 
-        // Envoyer le message au modèle IA pour obtenir une réponse
-        const aiResponse = await axios.post(PYTHON_SERVICE_URL, {
-            message: message,
-            context: { userId: userId }
-        });
-
-        // Vérifier si une conversation existe déjà pour cet utilisateur
+        // Récupérer la conversation existante ou en créer une nouvelle
         let conversation = await Conversation.findOne({ userId });
-
         if (!conversation) {
-            // Si aucune conversation n'existe, en créer une nouvelle
             conversation = new Conversation({
                 userId,
                 title: 'Nouvelle conversation',
@@ -33,18 +25,37 @@ exports.createConversation = async (req, res) => {
             });
         }
 
-        // Ajouter les messages (utilisateur + assistant) à la conversation existante
+        // Envoyer le message au modèle IA avec le contexte complet
+        const aiResponse = await axios.post(PYTHON_SERVICE_URL, {
+            message: message,
+            context: {
+                userId: userId,
+                previousMessages: conversation.messages.map(m => ({
+                    role: m.role,
+                    content: m.content
+                }))
+            }
+        });
+
+        // Ajouter les messages à la conversation
         conversation.messages.push(
             { role: 'user', content: message },
             { role: 'assistant', content: aiResponse.data.response }
         );
 
-        // Sauvegarder la conversation mise à jour
+        // Mettre à jour le titre si c'est le premier message
+        if (conversation.messages.length === 2) {
+            conversation.title = message.substring(0, 50);
+        }
+
         await conversation.save();
 
         res.status(200).json({
             success: true,
-            data: conversation
+            data: {
+                conversation,
+                aiResponse: aiResponse.data
+            }
         });
 
     } catch (error) {
@@ -57,17 +68,19 @@ exports.createConversation = async (req, res) => {
     }
 };
 
-// Obtenir la conversation d'un utilisateur (une seule conversation désormais)
 exports.getUserConversations = async (req, res) => {
     try {
         const { userId } = req.params;
         
-        const conversation = await Conversation.findOne({ userId });
+        const conversation = await Conversation.findOne({ userId })
+            .sort({ updatedAt: -1 });
 
         if (!conversation) {
-            return res.status(404).json({
-                success: false,
-                message: "Aucune conversation trouvée pour cet utilisateur."
+            return res.status(200).json({
+                success: true,
+                data: {
+                    messages: []
+                }
             });
         }
 
@@ -86,7 +99,6 @@ exports.getUserConversations = async (req, res) => {
     }
 };
 
-// Obtenir une conversation spécifique avec ses messages
 exports.getConversation = async (req, res) => {
     try {
         const { conversationId } = req.params;
@@ -114,13 +126,11 @@ exports.getConversation = async (req, res) => {
     }
 };
 
-// Envoyer un message et obtenir une réponse
 exports.sendMessage = async (req, res) => {
     try {
         const { conversationId } = req.params;
         const { message } = req.body;
         
-        // Récupérer la conversation
         const conversation = await Conversation.findById(conversationId);
         if (!conversation) {
             return res.status(404).json({
@@ -128,62 +138,41 @@ exports.sendMessage = async (req, res) => {
                 message: "Conversation non trouvée"
             });
         }
-        
-        // Récupérer les informations de l'utilisateur pour le contexte
-        const user = await User.findById(conversation.userId);
-        const userCourses = await Course.find({
-            purchasedBy: { $in: [conversation.userId] }
-        }).select('title');
-        
-        const userInfo = {
-            name: user ? user.name : undefined,
-            courses: userCourses ? userCourses.map(course => course.title) : undefined
-        };
-        
-        // Ajouter le nouveau message de l'utilisateur
+
+        // Envoyer le message au modèle IA avec le contexte complet
+        const aiResponse = await axios.post(PYTHON_SERVICE_URL, {
+            message: message,
+            context: {
+                userId: conversation.userId,
+                previousMessages: conversation.messages.map(m => ({
+                    role: m.role,
+                    content: m.content
+                }))
+            }
+        });
+
+        // Ajouter les messages à la conversation
         const userMessage = {
             role: 'user',
             content: message,
             timestamp: new Date()
         };
         
-        conversation.messages.push(userMessage);
-        
-        // Générer une réponse via notre modèle Python
-        const aiResponse = await getPrediction(message, userInfo);
-        
-        if (!aiResponse || !aiResponse.response) {
-            return res.status(500).json({
-                success: false,
-                message: "Erreur lors de la génération de la réponse"
-            });
-        }
-        
-        // Ajouter la réponse à la conversation
         const assistantMessage = {
             role: 'assistant',
-            content: aiResponse.response,
+            content: aiResponse.data.response,
             timestamp: new Date()
         };
-        
-        conversation.messages.push(assistantMessage);
-        
-        // Mettre à jour le titre de la conversation s'il s'agit du premier message utilisateur
-        if (conversation.messages.filter(msg => msg.role === 'user').length === 1) {
-            // Créer un titre basé sur le premier message (limité à 40 caractères)
-            const titlePreview = message.length > 40 ? message.substring(0, 37) + '...' : message;
-            conversation.title = titlePreview;
-        }
-        
+
+        conversation.messages.push(userMessage, assistantMessage);
         await conversation.save();
-        
+
         res.status(200).json({
             success: true,
             data: {
                 userMessage,
                 assistantMessage,
-                intent: aiResponse.intent,
-                confidence: aiResponse.confidence
+                aiResponse: aiResponse.data
             }
         });
     } catch (error) {
@@ -196,7 +185,6 @@ exports.sendMessage = async (req, res) => {
     }
 };
 
-// Supprimer une conversation
 exports.deleteConversation = async (req, res) => {
     try {
         const { conversationId } = req.params;

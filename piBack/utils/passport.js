@@ -26,15 +26,14 @@ passport.use(
             name: profile.displayName,
             email: profile.emails && profile.emails[0].value,
             image: profile.photos?.[0]?.value || null,
-            authProvider: 'auth',
+            authProvider: 'google',
             typeUser: 'user',
+            isVerified: true // Les utilisateurs Google sont automatiquement vérifiés
           });
           await user.save();
         }
 
-        
-
-        return done(null, { user,  });
+        return done(null, { user });
       } catch (error) {
         return done(error, null);
       }

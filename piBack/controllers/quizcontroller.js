@@ -1,158 +1,442 @@
+const mongoose = require('mongoose');
 const quizModel = require('../Model/Quiz');
+const QuizResult = require('../Model/QuizResult');
 const Course = require('../Model/Course');
-const mongoose = require("mongoose");
-const ObjectID = mongoose.Types.ObjectId;
-const UserModel = require('../Model/User');
-const { spawn } = require('child_process');
-const {PythonShell} = require('python-shell');
-
-// Create controller functions object
-const quizController = {};
 
 // Récupérer tous les quiz
-quizController.find = async (req, res) => {
+module.exports.find = async (req, res) => {
   try {
-    const quizzes = await quizModel.find({}).populate('course');
-    res.status(200).json(quizzes);
+    const quizzes = await quizModel.find()
+      .select('title description chrono chronoVal Questions')
+      .populate('course', 'title');
+
+    // Format quizzes for frontend
+    const formattedQuizzes = quizzes.map(quiz => {
+      const quizObj = quiz.toObject();
+      return {
+        ...quizObj,
+        chrono: Boolean(quizObj.chrono),
+        chronoVal: quizObj.chrono ? Math.max(1, parseInt(quizObj.chronoVal) || 30) : 0,
+        questionCount: quiz.Questions.filter(q => q.activer).length
+      };
+    });
+
+    res.status(200).json(formattedQuizzes);
   } catch (err) {
-    console.error("Find error:", err);
+    console.error("Find all quizzes error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Get quiz by ID
+module.exports.findById = async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: "Invalid quiz ID" });
+    }
+
+    const quiz = await quizModel.findById(req.params.id)
+      .populate('course', 'title');
+
+    if (!quiz) {
+      return res.status(404).json({ error: "Quiz not found" });
+    }
+
+    // Format quiz for frontend
+    const formattedQuiz = quiz.toObject();
+    formattedQuiz.chrono = Boolean(formattedQuiz.chrono);
+    formattedQuiz.chronoVal = formattedQuiz.chrono ? Math.max(1, parseInt(formattedQuiz.chronoVal) || 30) : 0;
+
+    res.status(200).json(formattedQuiz);
+  } catch (err) {
+    console.error("Find quiz by ID error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Get quiz for student
+module.exports.getQuizForStudent = async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: "Invalid quiz ID" });
+    }
+
+    const quiz = await quizModel.findById(req.params.id)
+      .select('title description chrono chronoVal Questions')
+      .populate({
+        path: 'Questions',
+        select: 'texte points Responses activer',
+        populate: {
+          path: 'Responses',
+          select: 'texte'
+        }
+      });
+
+    if (!quiz) {
+      return res.status(404).json({ error: "Quiz not found" });
+    }
+
+    // Format quiz for student view
+    const formattedQuiz = {
+      _id: quiz._id,
+      title: quiz.title,
+      description: quiz.description,
+      chrono: Boolean(quiz.chrono),
+      chronoVal: quiz.chrono ? Math.max(1, parseInt(quiz.chronoVal) || 30) : 0,
+      Questions: quiz.Questions.filter(q => q.activer && q.Responses && q.Responses.length > 0).map(q => ({
+        _id: q._id,
+        texte: q.texte,
+        points: q.points,
+        Responses: q.Responses.map(r => ({
+          _id: r._id,
+          texte: r.texte
+        }))
+      }))
+    };
+
+    if (formattedQuiz.Questions.length === 0) {
+      return res.status(404).json({ error: "No active questions available for this quiz" });
+    }
+
+    res.status(200).json(formattedQuiz);
+  } catch (err) {
+    console.error("Get quiz for student error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Submit quiz
+module.exports.submitQuiz = async (req, res) => {
+  try {
+    const { quizId } = req.params;
+    const { answers } = req.body;
+
+    if (!answers || Object.keys(answers).length === 0) {
+      return res.status(400).json({ error: "No answers provided" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(quizId)) {
+      return res.status(400).json({ error: "Invalid quiz ID" });
+    }
+
+    const quiz = await quizModel.findById(quizId)
+      .select('Questions chrono chronoVal')
+      .populate({
+        path: 'Questions',
+        select: 'texte points Responses activer',
+        populate: {
+          path: 'Responses',
+          select: 'texte isCorrect'
+        }
+      });
+
+    if (!quiz) {
+      return res.status(404).json({ error: "Quiz not found" });
+    }
+
+    const activeQuestions = quiz.Questions.filter(q => q.activer && q.Responses && q.Responses.length > 0);
+    
+    if (activeQuestions.length === 0) {
+      return res.status(400).json({ error: "No active questions found in the quiz" });
+    }
+
+    let score = 0;
+    let totalPoints = 0;
+
+    // Calculate score
+    activeQuestions.forEach(question => {
+      const userAnswer = answers[question._id];
+      const correctResponse = question.Responses.find(r => r.isCorrect);
+      
+      totalPoints += question.points;
+      
+      if (userAnswer && correctResponse && userAnswer === correctResponse._id.toString()) {
+        score += question.points;
+      }
+    });
+
+    // Prepare result
+    const result = {
+      score,
+      totalPoints,
+      totalQuestions: activeQuestions.length,
+      percentage: Math.round((score / totalPoints) * 100),
+      message: score >= totalPoints * 0.6 ? "Congratulations! You passed the quiz!" : "Keep practicing to improve your score."
+    };
+
+    res.status(200).json(result);
+  } catch (err) {
+    console.error("Submit quiz error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Get quizzes by course
+module.exports.getQuizzesByCourse = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(courseId)) {
+      return res.status(400).json({ error: "Invalid course ID" });
+    }
+
+    const quizzes = await quizModel.find({ course: courseId })
+      .select('title description chrono chronoVal Questions')
+      .populate({
+        path: 'Questions',
+        match: { activer: true },
+        select: 'points'
+      });
+
+    // Format quizzes for frontend
+    const formattedQuizzes = quizzes.map(quiz => ({
+      _id: quiz._id,
+      title: quiz.title,
+      description: quiz.description,
+      chrono: Boolean(quiz.chrono),
+      chronoVal: quiz.chrono ? Math.max(1, parseInt(quiz.chronoVal) || 30) : 0,
+      questionCount: quiz.Questions.length,
+      totalPoints: quiz.Questions.reduce((sum, q) => sum + q.points, 0)
+    }));
+
+    res.status(200).json(formattedQuizzes);
+  } catch (err) {
+    console.error("Get quizzes by course error:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
 // Créer un nouveau quiz
-quizController.createQuiz = async (req, res) => {
-  try {
-    const newquiz = new quizModel({
-      title: req.body.title,
-      chrono: req.body.chrono,
-      chronoVal: req.body.chronoVal,
-      course: req.body.courseId
-    });
-    
-    const quiz = await newquiz.save();
-    
-    if (req.body.courseId) {
-      await Course.findByIdAndUpdate(req.body.courseId, {
-        quiz: quiz._id
-      });
+module.exports.create = async (req, res) => {
+    try {
+        const { title, chrono, chronoVal, course } = req.body;
+
+        if (!title) {
+            return res.status(400).json({ error: "Quiz title is required" });
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(course)) {
+            return res.status(400).json({ error: "Invalid course ID" });
+        }
+
+        // Verify course exists
+        const courseExists = await Course.findById(course);
+        if (!courseExists) {
+            return res.status(404).json({ error: "Course not found" });
+        }
+
+        // Ensure proper timer values
+        const isChrono = Boolean(chrono);
+        const timerValue = isChrono ? Math.max(1, parseInt(chronoVal) || 30) : 0;
+
+        const newQuiz = new quizModel({
+            title,
+            chrono: isChrono,
+            chronoVal: timerValue,
+            course,
+            Questions: []
+        });
+
+        const savedQuiz = await newQuiz.save();
+        
+        // Populate course details for response
+        const populatedQuiz = await quizModel.findById(savedQuiz._id)
+            .populate('course', 'title');
+
+        res.status(201).json(populatedQuiz);
+    } catch (err) {
+        console.error("Create quiz error:", err);
+        res.status(500).json({ error: err.message });
     }
-    
-    res.status(200).json(quiz);
-  } catch (err) {
-    console.error("Create error:", err);
-    res.status(500).json({ error: err.message });
-  }
 };
 
-// Supprimer un quiz
-quizController.deleteQuiz = async (req, res) => {
+// Update quiz
+module.exports.update = async (req, res) => {
   try {
-    const quiz = await quizModel.findById(req.params.id);
-    if (!quiz) {
-      return res.status(404).json({ error: "Quiz not found" });
-    }
-    
-    if (quiz.course) {
-      await Course.findByIdAndUpdate(quiz.course, {
-        $unset: { quiz: "" }
-      });
-    }
-    
-    await quizModel.findByIdAndDelete(req.params.id);
-    res.status(200).json({ message: "Quiz deleted successfully" });
-  } catch (err) {
-    console.error("Delete error:", err);
-    res.status(500).json({ error: err.message });
-  }
-};
+    const { id } = req.params;
+    const updates = req.body;
 
-// Mettre à jour un quiz
-quizController.updateQuiz = async (req, res) => {
-  try {
-    const { id, title, chrono, chronoVal, course } = req.body;
-    
-    if (!id) {
-      return res.status(400).json({ error: "Quiz ID is required" });
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid quiz ID" });
     }
-    
+
     const quiz = await quizModel.findById(id);
     if (!quiz) {
       return res.status(404).json({ error: "Quiz not found" });
     }
-    
-    // Prepare update object
-    const updateData = {};
-    if (title !== undefined) updateData.title = title;
-    if (chrono !== undefined) updateData.chrono = chrono;
-    if (chronoVal !== undefined) updateData.chronoVal = chronoVal;
-    
-    // Handle course update
-    if (course !== undefined && course !== quiz.course) {
-      // Remove quiz reference from old course
-      if (quiz.course) {
-        await Course.findByIdAndUpdate(quiz.course, {
-          $unset: { quiz: "" }
-        });
+
+    // Handle timer updates
+    if ('chrono' in updates) {
+      quiz.chrono = Boolean(updates.chrono);
+      if (quiz.chrono && updates.chronoVal) {
+        quiz.chronoVal = Math.max(1, parseInt(updates.chronoVal) || 30);
+      } else if (!quiz.chrono) {
+        quiz.chronoVal = 0;
       }
-      
-      // Add quiz reference to new course
-      if (course) {
-        await Course.findByIdAndUpdate(course, {
-          quiz: id
-        });
-      }
-      
-      updateData.course = course || null;
+    } else if ('chronoVal' in updates && quiz.chrono) {
+      quiz.chronoVal = Math.max(1, parseInt(updates.chronoVal) || 30);
     }
-    
-    // Update quiz
-    const updatedQuiz = await quizModel.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true }
-    );
-    
+
+    // Update other allowed fields
+    const allowedUpdates = ['title', 'description', 'Questions'];
+    Object.keys(updates).forEach(key => {
+      if (allowedUpdates.includes(key)) {
+        quiz[key] = updates[key];
+      }
+    });
+
+    const updatedQuiz = await quiz.save();
     res.status(200).json(updatedQuiz);
   } catch (err) {
-    console.error("Update error:", err);
+    console.error("Update quiz error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Delete quiz
+module.exports.delete = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid quiz ID" });
+    }
+
+    const quiz = await quizModel.findById(id);
+    if (!quiz) {
+      return res.status(404).json({ error: "Quiz not found" });
+    }
+
+    // If quiz is assigned to a course, remove the reference
+    if (quiz.course) {
+      await Course.findByIdAndUpdate(quiz.course, {
+        $pull: { quizzes: id }
+      });
+    }
+
+    // Delete quiz results
+    await QuizResult.deleteMany({ quiz: id });
+
+    // Delete quiz using findByIdAndDelete instead of remove()
+    await quizModel.findByIdAndDelete(id);
+
+    res.status(200).json({ message: "Quiz deleted successfully" });
+  } catch (err) {
+    console.error("Delete quiz error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Add question to quiz
+module.exports.addQuestion = async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: "Invalid quiz ID" });
+    }
+
+    const quiz = await quizModel.findById(req.params.id);
+    if (!quiz) {
+      return res.status(404).json({ error: "Quiz not found" });
+    }
+
+    const newQuestion = {
+      texte: req.body.question,
+      Responses: req.body.options.map(opt => ({
+        texte: opt.text,
+        isCorrect: opt.isCorrect
+      })),
+      points: req.body.points || 1,
+      activer: true
+    };
+
+    if (!Array.isArray(quiz.Questions)) {
+      quiz.Questions = [];
+    }
+
+    quiz.Questions.push(newQuestion);
+    await quiz.save();
+
+    res.status(201).json(quiz);
+  } catch (err) {
+    console.error("Add question error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Remove question from quiz
+module.exports.removeQuestion = async (req, res) => {
+  try {
+    const { id, questionId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id) || !mongoose.Types.ObjectId.isValid(questionId)) {
+      return res.status(400).json({ error: "Invalid quiz or question ID" });
+    }
+
+    const quiz = await quizModel.findById(id);
+    if (!quiz) {
+      return res.status(404).json({ error: "Quiz not found" });
+    }
+
+    quiz.Questions = quiz.Questions.filter(q => q._id.toString() !== questionId);
+    const updatedQuiz = await quiz.save();
+
+    res.status(200).json(updatedQuiz);
+  } catch (err) {
+    console.error("Remove question error:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
 // Affecter un quiz à un cours
-quizController.assignQuizToCourse = async (req, res) => {
+module.exports.assignQuizToCourse = async (req, res) => {
   try {
     const { quizId, courseId } = req.params;
-    
+
     // Validate IDs
     if (!mongoose.Types.ObjectId.isValid(quizId) || !mongoose.Types.ObjectId.isValid(courseId)) {
       return res.status(400).json({ error: "Invalid quiz or course ID" });
     }
-    
-    // Check if quiz and course exist
-    const [quiz, course] = await Promise.all([
-      quizModel.findById(quizId),
-      Course.findById(courseId)
-    ]);
-    
+
+    // Find quiz and course
+    const quiz = await quizModel.findById(quizId);
     if (!quiz) {
       return res.status(404).json({ error: "Quiz not found" });
     }
-    
+
+    const course = await Course.findById(courseId);
     if (!course) {
       return res.status(404).json({ error: "Course not found" });
     }
-    
+
+    // If quiz is already assigned to another course, remove the reference
+    if (quiz.course && quiz.course.toString() !== courseId) {
+      const previousCourse = await Course.findById(quiz.course);
+      if (previousCourse) {
+        previousCourse.quiz = undefined;
+        await previousCourse.save();
+      }
+    }
+
+    // If course already has a quiz, remove the reference from that quiz
+    if (course.quiz && course.quiz.toString() !== quizId) {
+      const previousQuiz = await quizModel.findById(course.quiz);
+      if (previousQuiz) {
+        previousQuiz.course = undefined;
+        await previousQuiz.save();
+      }
+    }
+
     // Update quiz with course reference
     quiz.course = courseId;
     await quiz.save();
-    
+
     // Update course with quiz reference
     course.quiz = quizId;
     await course.save();
-    
-    res.status(200).json({ message: "Quiz assigned to course successfully" });
+
+    // Return updated quiz with populated course
+    const updatedQuiz = await quiz.populate('course', 'title');
+    res.status(200).json(updatedQuiz);
   } catch (err) {
     console.error("Assign error:", err);
     res.status(500).json({ error: err.message });
@@ -160,38 +444,37 @@ quizController.assignQuizToCourse = async (req, res) => {
 };
 
 // Désaffecter un quiz d'un cours
-quizController.unassignQuizFromCourse = async (req, res) => {
+module.exports.unassignQuizFromCourse = async (req, res) => {
   try {
     const { quizId, courseId } = req.params;
-    
+
     // Validate IDs
     if (!mongoose.Types.ObjectId.isValid(quizId) || !mongoose.Types.ObjectId.isValid(courseId)) {
       return res.status(400).json({ error: "Invalid quiz or course ID" });
     }
-    
-    // Check if quiz and course exist
-    const [quiz, course] = await Promise.all([
-      quizModel.findById(quizId),
-      Course.findById(courseId)
-    ]);
-    
+
+    const quiz = await quizModel.findById(quizId);
     if (!quiz) {
       return res.status(404).json({ error: "Quiz not found" });
     }
-    
+
+    const course = await Course.findById(courseId);
     if (!course) {
       return res.status(404).json({ error: "Course not found" });
     }
-    
-    // Update quiz to remove course reference
-    quiz.course = null;
-    await quiz.save();
-    
-    // Update course to remove quiz reference
-    course.quiz = undefined;
-    await course.save();
-    
-    res.status(200).json({ message: "Quiz unassigned from course successfully" });
+
+    // Remove references only if they match
+    if (quiz.course && quiz.course.toString() === courseId) {
+      quiz.course = undefined;
+      await quiz.save();
+    }
+
+    if (course.quiz && course.quiz.toString() === quizId) {
+      course.quiz = undefined;
+      await course.save();
+    }
+
+    res.status(200).json({ message: "Quiz unassigned successfully" });
   } catch (err) {
     console.error("Unassign error:", err);
     res.status(500).json({ error: err.message });
@@ -199,338 +482,351 @@ quizController.unassignQuizFromCourse = async (req, res) => {
 };
 
 // Les autres méthodes existantes restent inchangées
-quizController.findQuizByID = async (req, res) => {
-  try {
-    const quizzes = await quizModel.findOne({ _id: new ObjectID(req.params.id) })
-      .populate({
-        path: 'Questions',
-        populate: {
-          path: 'Responses'
+module.exports.findQuizByID=async(req,res)=>{
+  if (!mongoose.Types.ObjectId.isValid(req.params.id))
+    return res.status(400).send("ID unknown : " + req.params.id);
+    try {
+      const quiz = await quizModel.findById(req.params.id)
+        .populate('course', 'title description');
+      
+      if (!quiz) {
+        return res.status(404).send("Quiz not found");
+      }
+
+      res.status(200).send(quiz);
+    } catch (err) {
+      console.error("Find by ID error:", err);
+      res.status(500).send({ error: err.message });
+    }
+}
+
+module.exports.addScore = async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.body.idQuiz))
+    return res.status(400).send("ID unknown : " + req.body.idQuiz);
+   console.log(req.body);
+
+    quizModel.findByIdAndUpdate(
+      req.body.idQuiz,
+        {
+          $push: {
+            Results: {
+               idUser:req.body.idUser,
+               Note:req.body.score,
+               time:req.body.time,
+               totalClicksofmap:req.body.totalClicksofmap
+            },
+          },
+        },
+        { new: true },
+        (err, docs) => {
+          if (!err) return res.send(docs);
+          else return res.status(400).send(err);
         }
+      )
+    
+  
+};
+
+module.exports.addReponse = async (req, res) => {
+  
+  if (!mongoose.Types.ObjectId.isValid(req.body.idQuiz))
+    return res.status(400).send("ID unknown : " + req.body.idQuiz);
+   qui= await quizModel.findOne({_id:req.body.idQuiz})
+   question=qui.Questions.find(e=>e._id==req.body.idQuestion);
+   reponse=question.Responses.find(e=>e._id==req.body.idResponse)
+   reponse.idUsers.push(req.body.idUser)
+   qui.save();
+   return res.send(qui);
+   
+  
+};
+
+module.exports.DeleteQuestion = async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id))
+    return res.status(400).send("ID unknown : " + req.params.id);
+
+  try {
+    const updatedQuiz = await quizModel.findByIdAndUpdate(
+      req.params.id,
+      {
+        $pull: { Questions: { _id: req.params.idQuestion } }
+      },
+      { new: true }  // Cette option permet de renvoyer le document mis à jour
+    );
+
+    if (!updatedQuiz) {
+      return res.status(404).send("Quiz not found");
+    }
+
+    return res.send(updatedQuiz); // Renvoie le quiz mis à jour
+  } catch (err) {
+    console.error("Error deleting question:", err);
+    return res.status(400).send("Error deleting question");
+  }
+}; 
+
+module.exports.findStudent =  async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.studentid))
+  return res.status(400).send("ID unknown : " + req.params.idModule);
+  UserModel.findById(req.params.studentid,(err, docs) => {
+    if (!err) res.send(docs);
+    else console.log("Error to get data : " + err);
+  })
+};
+
+module.exports.runScriptPython =async(req,res)=>{
+  /*const pyProg = spawn('python', ['public/script.py',req.body.nbclicks,"20","30"]);
+  pyProg.stdout.on('data', function(data) {
+
+    console.log(data.toString());
+    res.send(data);
+
+});*/
+
+
+let options = {
+  mode: 'text',
+  pythonPath: 'python' ,
+  pythonOptions: ['-u'], // get print results in real-time
+  scriptPath: 'public',
+  args: [req.body.click,req.body.time_s,req.body.nbr_mod,req.body.Note]
+};
+PythonShell.run('Behavior.py', options, function (err, results) {
+  if (err) throw err;
+  // results is an array consisting of messages collected during execution
+  console.log('results: %j', results);
+  res.send(results[0])
+});
+}
+
+module.exports.updateBehavior = async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.body.idquiz))
+    return res.status(400).send("ID unknown : " + req.body.idquiz);
+   qui= await quizModel.findOne({_id:req.body.idquiz})
+   resultat=qui.Results.find(e=>e.idUser==req.body.userId);
+   resultat.Behavior=req.body.behavior;
+   
+   qui.save();
+   return res.send(qui);
+   
+  
+};
+
+module.exports.toggleQuizActivation = async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return res.status(400).send("ID unknown : " + req.params.id);
+  }
+
+  // Toggle the 'activer' field (if it's true, set to false, and vice versa)
+  const quiz = await quizModel.findById(req.params.id);
+  if (!quiz) {
+    return res.status(404).send("Quiz not found");
+  }
+
+  quiz.activer = !quiz.activer; // Change the state of 'activer'
+
+  // Save the updated quiz
+  await quiz.save();
+
+  res.status(200).send(`Quiz ${quiz.activer ? 'activated' : 'deactivated'}`);
+};
+
+module.exports.toggleQuestionActivation = async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.idQuiz) || !mongoose.Types.ObjectId.isValid(req.params.idQuestion)) {
+    return res.status(400).send("ID unknown");
+  }
+
+  const quiz = await quizModel.findById(req.params.idQuiz);
+  if (!quiz) {
+    return res.status(404).send("Quiz not found");
+  }
+
+  const question = quiz.Questions.id(req.params.idQuestion);
+  if (!question) {
+    return res.status(404).send("Question not found");
+  }
+
+  // Toggle the 'activer' field of the question
+  question.activer = !question.activer; // Change the state of 'activer'
+
+  // Save the updated quiz with the updated question
+  await quiz.save();
+
+  res.status(200).send(`Question ${question.activer ? 'activated' : 'deactivated'}`);
+};
+
+module.exports.deleteQuiz = async (req, res) => {
+  try {
+    const quiz = await quizModel.findById(req.params.id);
+    if (!quiz) {
+      return res.status(404).json({ error: "Quiz not found" });
+    }
+
+    if (quiz.course) {
+      await Course.findByIdAndUpdate(quiz.course, {
+        $unset: { quiz: "" }
       });
-    res.json(quizzes);
-  } catch (error) {
-    res.json({ message: error.message });
+    }
+
+    await quiz.deleteOne();
+    res.status(200).json({ message: "Quiz deleted successfully" });
+  } catch (err) {
+    console.error("Delete error:", err);
+    res.status(500).json({ error: err.message });
   }
 };
 
-quizController.addQuestion = async (req, res) => {
+module.exports.updateQuiz = async (req, res) => {
   try {
-    const QuizId = req.params.id;
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: "Invalid quiz ID" });
+    }
+
+    const quiz = await quizModel.findById(req.params.id);
+    if (!quiz) {
+      return res.status(404).json({ error: "Quiz not found" });
+    }
+
+    const updateData = {
+      title: req.body.title || quiz.title,
+      description: req.body.description || quiz.description,
+      chronoVal: req.body.chronoVal || quiz.chronoVal
+    };
+
+    if (req.body.courseId) {
+      if (!mongoose.Types.ObjectId.isValid(req.body.courseId)) {
+        return res.status(400).json({ error: "Invalid course ID" });
+      }
+
+      // Handle course change
+      if (quiz.course && quiz.course.toString() !== req.body.courseId) {
+        // Remove quiz from old course
+        await Course.findByIdAndUpdate(quiz.course, {
+          $unset: { quiz: "" }
+        });
+      }
+
+      // Update new course
+      const newCourse = await Course.findById(req.body.courseId);
+      if (!newCourse) {
+        return res.status(404).json({ error: "Course not found" });
+      }
+
+      // Remove quiz from previous course if exists
+      if (newCourse.quiz && newCourse.quiz.toString() !== quiz._id.toString()) {
+        const previousQuiz = await quizModel.findById(newCourse.quiz);
+        if (previousQuiz) {
+          previousQuiz.course = undefined;
+          await previousQuiz.save();
+        }
+      }
+
+      newCourse.quiz = quiz._id;
+      await newCourse.save();
+      updateData.course = req.body.courseId;
+    }
+
+    const updatedQuiz = await quizModel.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    ).populate('course', 'title description');
+
+    res.status(200).json(updatedQuiz);
+  } catch (err) {
+    console.error("Update error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+module.exports.addQuestion = async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: "Invalid quiz ID" });
+    }
+
+    const quiz = await quizModel.findById(req.params.id);
+    if (!quiz) {
+      return res.status(404).json({ error: "Quiz not found" });
+    }
+
     const newQuestion = {
-      texte: req.body.texte,
-      QuestionType: req.body.QuestionType,
-      Responses: req.body.Responses || [],
-      correctAnswer: req.body.correctAnswer,
+      texte: req.body.question,
+      Responses: req.body.options.map(opt => ({
+        texte: opt.text,
+        isCorrect: opt.isCorrect
+      })),
       points: req.body.points || 1,
-      code: req.body.code || "",
-      language: req.body.language || "",
       activer: true
     };
 
-    const quiz = await quizModel.findOne({ _id: QuizId });
-    if (!quiz) {
-      return res.status(404).json({ message: "Quiz not found" });
+    if (!Array.isArray(quiz.Questions)) {
+      quiz.Questions = [];
     }
 
     quiz.Questions.push(newQuestion);
     await quiz.save();
-    
+
     res.status(201).json(quiz);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-quizController.addScore = async (req, res) => {
-  try {
-    const { userId, quizId, score, duration } = req.body;
-    
-    // Validate required fields
-    if (!userId || !quizId || score === undefined) {
-      return res.status(400).json({ error: "userId, quizId, and score are required" });
-    }
-    
-    // Find the user
-    const user = await UserModel.findById(userId);
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-    
-    // Add score to user's scores array
-    const newScore = {
-      quizId,
-      score,
-      duration,
-      date: new Date()
-    };
-    
-    if (!user.scores) {
-      user.scores = [];
-    }
-    
-    user.scores.push(newScore);
-    await user.save();
-    
-    res.status(201).json({ message: "Score added successfully", score: newScore });
   } catch (err) {
-    console.error("Add score error:", err);
+    console.error("Add question error:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
-quizController.addReponse = async (req, res) => {
+module.exports.deleteQuestion = async (req, res) => {
   try {
-    const { userId, quizId, questionId, optionId, isCorrect } = req.body;
-    
-    // Add validation as needed
-    
-    // Record user's response
-    // Implementation depends on your data model
-    
-    res.status(201).json({ message: "Response recorded successfully" });
-  } catch (err) {
-    console.error("Add response error:", err);
-    res.status(500).json({ error: err.message });
-  }
-};
+    const { quizId, questionId } = req.params;
 
-quizController.DeleteQuestion = async (req, res) => {
-  try {
-    const QuizId = req.params.idquiz;
-    const QuestionId = req.params.idQuestion;
+    if (!mongoose.Types.ObjectId.isValid(quizId) || !mongoose.Types.ObjectId.isValid(questionId)) {
+      return res.status(400).json({ error: "Invalid quiz or question ID" });
+    }
 
-    const quiz = await quizModel.findOne({ _id: QuizId });
+    const quiz = await quizModel.findById(quizId);
     if (!quiz) {
-      return res.status(404).json({ message: "Quiz not found" });
+      return res.status(404).json({ error: "Quiz not found" });
     }
 
-    // Find the index of the question to delete
-    const questionIndex = quiz.Questions.findIndex(
-      (q) => q._id.toString() === QuestionId
-    );
+    quiz.Questions = quiz.Questions.filter(q => q._id.toString() !== questionId);
+    await quiz.save();
 
+    res.status(200).json({ message: "Question deleted successfully" });
+  } catch (err) {
+    console.error("Delete question error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+module.exports.updateQuestion = async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: "Invalid quiz ID" });
+    }
+
+    const quiz = await quizModel.findById(req.params.id);
+    if (!quiz) {
+      return res.status(404).json({ error: "Quiz not found" });
+    }
+
+    const questionIndex = quiz.Questions.findIndex(q => q._id.toString() === req.body.questionId);
     if (questionIndex === -1) {
-      return res.status(404).json({ message: "Question not found" });
-    }
-
-    // Remove the question at the found index
-    quiz.Questions.splice(questionIndex, 1);
-    await quiz.save();
-
-    res.json({ message: "Question deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-quizController.findStudent = async (req, res) => {
-  try {
-    const id = req.params.id;
-    console.log(id);
-    if (!mongoose.Types.ObjectId.isValid(id))
-      return res.status(404).send("No Student with that id");
-
-    const student = await UserModel.findById(id);
-    res.status(200).json(student);
-  } catch (error) {
-    res.status(404).json({ message: error.message });
-  }
-};
-
-quizController.runScriptPython = async (req, res) => {
-  const code = req.body.code;
-  const studentAnswer = req.body.studentAnswer;
-  
-  let options = {
-    mode: 'text',
-    pythonPath: 'python',
-    pythonOptions: ['-u'],
-    scriptPath: './python/',
-    args: [code, studentAnswer]
-  };
-  
-  PythonShell.run('script.py', options, function (err, results) {
-    if (err) {
-      console.error('Error running Python script:', err);
-      return res.status(500).json({ error: err.message });
-    }
-    
-    // Process results
-    console.log('Python script results:', results);
-    
-    if (results && results.length > 0) {
-      const result = results[0];
-      // Assuming the Python script returns "True" or "False" as a string
-      const isCorrect = result.toLowerCase() === 'true';
-      
-      res.json({ isCorrect });
-    } else {
-      res.status(500).json({ error: 'No result from Python script' });
-    }
-  });
-};
-
-quizController.updateBehavior = async (req, res) => {
-  try {
-    const { quizId, behavior } = req.body;
-    
-    const quiz = await quizModel.findById(quizId);
-    if (!quiz) {
-      return res.status(404).json({ error: "Quiz not found" });
-    }
-    
-    // Update behavior properties
-    if (behavior.chrono !== undefined) quiz.chrono = behavior.chrono;
-    if (behavior.chronoVal !== undefined) quiz.chronoVal = behavior.chronoVal;
-    
-    await quiz.save();
-    
-    res.status(200).json({ message: "Quiz behavior updated", quiz });
-  } catch (err) {
-    console.error("Update behavior error:", err);
-    res.status(500).json({ error: err.message });
-  }
-};
-
-quizController.toggleQuizActivation = async (req, res) => {
-  try {
-    const quizId = req.params.id;
-    
-    if (!mongoose.Types.ObjectId.isValid(quizId)) {
-      return res.status(400).json({ error: "Invalid quiz ID format" });
-    }
-    
-    const quiz = await quizModel.findById(quizId);
-    if (!quiz) {
-      return res.status(404).json({ error: "Quiz not found" });
-    }
-    
-    // Toggle the isActive property
-    quiz.isActive = !quiz.isActive;
-    
-    // Save the updated quiz
-    await quiz.save();
-    
-    // Return the updated quiz
-    res.status(200).json({
-      message: `Quiz ${quiz.isActive ? 'activated' : 'deactivated'} successfully`,
-      quiz
-    });
-  } catch (err) {
-    console.error("Toggle quiz activation error:", err);
-    res.status(500).json({ error: err.message });
-  }
-};
-
-quizController.toggleQuestionActivation = async (req, res) => {
-  try {
-    const questionId = req.params.id;
-    const { quizId } = req.body;
-    
-    if (!mongoose.Types.ObjectId.isValid(quizId)) {
-      return res.status(400).json({ error: "Invalid quiz ID format" });
-    }
-    
-    const quiz = await quizModel.findById(quizId);
-    if (!quiz) {
-      return res.status(404).json({ error: "Quiz not found" });
-    }
-    
-    // Find the question in the quiz
-    const question = quiz.Questions.id(questionId);
-    if (!question) {
       return res.status(404).json({ error: "Question not found" });
     }
-    
-    // Toggle the activer property
-    question.activer = !question.activer;
-    
-    // Save the updated quiz with the updated question
+
+    // Update question fields
+    const question = quiz.Questions[questionIndex];
+    question.texte = req.body.question || question.texte;
+    question.Responses = req.body.options.map(opt => ({
+      texte: opt.text,
+      isCorrect: opt.isCorrect
+    })) || question.Responses;
+    question.points = req.body.points || question.points;
+    question.activer = req.body.activer !== undefined ? req.body.activer : question.activer;
+
     await quiz.save();
-    
-    res.status(200).send(`Question ${question.activer ? 'activated' : 'deactivated'}`);
+    res.status(200).json(quiz);
   } catch (err) {
-    console.error("Toggle question activation error:", err);
+    console.error("Update question error:", err);
     res.status(500).json({ error: err.message });
   }
 };
-
-// Submit a quiz
-quizController.submitQuiz = async (req, res) => {
-  try {
-    const { quizId, answers, timeSpent } = req.body;
-    const quiz = await quizModel.findById(quizId);
-    
-    if (!quiz) {
-      return res.status(404).json({ error: "Quiz not found" });
-    }
-
-    // Calculate score
-    let score = 0;
-    let totalQuestions = quiz.Questions.length;
-    
-    for (const questionId in answers) {
-      const question = quiz.Questions.find(q => q._id.toString() === questionId);
-      if (question && question.correctAnswer === answers[questionId]) {
-        score++;
-      }
-    }
-
-    const percentage = (score / totalQuestions) * 100;
-
-    // Save quiz result
-    const result = {
-      score,
-      totalQuestions,
-      percentage,
-      timeSpent,
-      submittedAt: new Date(),
-      answers
-    };
-
-    // Update user's quiz results if you have user authentication
-    // await UserModel.findByIdAndUpdate(req.user._id, {
-    //   $push: { quizResults: result }
-    // });
-
-    res.status(200).json(result);
-  } catch (err) {
-    console.error("Submit error:", err);
-    res.status(500).json({ error: err.message });
-  }
-};
-
-// Get quiz for student
-quizController.getQuizForStudent = async (req, res) => {
-  try {
-    const quiz = await quizModel.findById(req.params.id)
-      .select('title Questions chronoVal')
-      .populate('Questions', 'texte code language QuestionType Responses'); // Exclude correctAnswer
-
-    if (!quiz) {
-      return res.status(404).json({ error: "Quiz not found" });
-    }
-
-    // Remove correct answers from questions
-    const safeQuiz = {
-      ...quiz.toObject(),
-      Questions: quiz.Questions.map(q => ({
-        _id: q._id,
-        texte: q.texte,
-        code: q.code,
-        language: q.language,
-        QuestionType: q.QuestionType,
-        Responses: q.Responses
-      }))
-    };
-
-    res.status(200).json(safeQuiz);
-  } catch (err) {
-    console.error("Get quiz error:", err);
-    res.status(500).json({ error: err.message });
-  }
-};
-
-// Export the controller
-module.exports = quizController;
