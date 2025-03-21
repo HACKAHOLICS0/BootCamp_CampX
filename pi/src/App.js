@@ -37,6 +37,7 @@ import ProtectedAdminRoute from './components/ProtectedAdminRoute';
 import Chatbot from './components/chatbot/Chatbot';
 import ChatbotAdmin from './components/Admin/ChatbotAdmin';
 import ChatTest from './components/chatbot/ChatTest';
+import QuizResultView from './components/user/Quiz/QuizResultView';
 
 function App() {
   const location = useLocation();
@@ -87,9 +88,10 @@ function App() {
           
           {/* Routes pour l'affichage des cours et des quiz */}
           <Route path="/courses/:courseId" element={<CourseView />} />
+        
+          {/* Quiz Routes */}
           <Route path="/quiz/:quizId" element={<QuizView />} />
-          <Route path="/courses/:courseId/quiz/:quizId" element={<QuizView />} />
-          
+          <Route path="/quiz/:quizId/result" element={<QuizResultView />} />
           {/* Routes pour le chat et le chatbot */}
           <Route path="/chatbot" element={<Chatbot />} />
           <Route path="/chat" element={<ChatTest />} />

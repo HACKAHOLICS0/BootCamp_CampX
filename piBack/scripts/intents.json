@@ -1,6 +1,66 @@
 {
     "intents": [
         {
+            "tag": "greeting",
+            "patterns": [
+                "bonjour", "salut", "hello", "hey", "bonsoir", "coucou",
+                "bnj", "slt", "bjr", "cc"
+            ],
+            "responses": [
+                "Bonjour! Comment puis-je vous aider avec nos cours?",
+                "Salut! Que puis-je faire pour vous aujourd'hui?",
+                "Bonjour! En quoi puis-je vous être utile pour votre apprentissage?",
+                "Hey! Je peux vous aider à trouver vos cours ou répondre à vos questions."
+            ]
+        },
+        {
+            "tag": "course_search",
+            "patterns": [
+                "je cherche un cours", "trouver un cours", "accéder à mon cours",
+                "voir mes cours", "mes cours", "cours disponibles",
+                "quel cours", "liste des cours", "cours inscrits",
+                "cours sur *", "formation sur *", "apprendre *",
+                "comment accéder au cours *", "où est le cours *",
+                "je veux étudier *", "cours de *", "formation en *"
+            ],
+            "responses": [
+                "Je vais vous aider à trouver votre cours. Pouvez-vous me dire quel sujet vous intéresse?",
+                "Bien sûr! Quel cours recherchez-vous spécifiquement?",
+                "Je peux vous montrer vos cours. Quel sujet vous intéresse en particulier?",
+                "Je vais vous rediriger vers votre cours. Pouvez-vous me préciser lequel?"
+            ]
+        },
+        {
+            "tag": "specific_course",
+            "patterns": [
+                "javascript", "python", "java", "web", "react", "angular",
+                "node.js", "php", "html", "css", "mongodb", "sql",
+                "développement web", "programmation", "base de données",
+                "intelligence artificielle", "machine learning", "data science"
+            ],
+            "responses": [
+                "J'ai trouvé un cours sur ce sujet. Je vous y emmène tout de suite!",
+                "Super! Je vous redirige vers ce cours.",
+                "Excellent choix! Je vous connecte à ce cours maintenant.",
+                "Je vous ouvre l'accès au cours tout de suite."
+            ],
+            "requires_course_redirect": true
+        },
+        {
+            "tag": "my_courses",
+            "patterns": [
+                "mes cours inscrits", "cours auxquels je suis inscrit",
+                "voir mes inscriptions", "mes formations", "mes apprentissages",
+                "montrer mes cours"
+            ],
+            "responses": [
+                "Voici la liste de vos cours inscrits:",
+                "J'affiche vos cours actuels:",
+                "Voici vos cours en cours:"
+            ],
+            "requires_course_list": true
+        },
+        {
             "tag": "salutation",
             "patterns": [
                 "Bonjour",

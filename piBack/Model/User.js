@@ -41,7 +41,7 @@ var User = new Schema({
       },
       authProvider: {
         type: String,
-        enum: ['auth', 'github', 'local'],
+        enum: ['auth', 'github', 'google', 'local'],
       },
     coursepreferences : {
         type:[String]

@@ -2,61 +2,186 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from "yup";
-import Switch from '@mui/material/Switch';
+import { Switch } from '@mui/material';
+import { Form, Button, Alert } from 'react-bootstrap';
+import config from '../../../config';
+import Cookies from 'js-cookie';
 
-const schema = yup.object({
-    title: yup.string().required(),
+const schema = yup.object().shape({
+    title: yup.string().required('Quiz title is required'),
+    courseId: yup.string().required('Course selection is required'),
+    chrono: yup.boolean(),
+    chronoVal: yup.number()
+        .transform((value) => (isNaN(value) ? undefined : value))
+        .when('chrono', {
+            is: true,
+            then: () => yup.number()
+                .min(1, 'Timer must be greater than 0')
+                .required('Timer value is required'),
+            otherwise: () => yup.number().notRequired()
+        })
+});
 
-  }).required();
-  
-const AddQuiz = ({QuizEvent}) => {
-    const [checked, setChecked] = useState(false);
-    const[validechorno,setValidechorno]=useState(true);
-  
-    const handleChange = (event) => {
-      setChecked(event.target.checked);
+const AddQuiz = ({ onClose = () => {}, onSuccess = () => {} }) => {
+    const [error, setError] = useState(null);
+    const [courses, setCourses] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm({
+        resolver: yupResolver(schema),
+        defaultValues: {
+            title: '',
+            chronoVal: 30,
+            chrono: false,
+            courseId: ''
+        }
+    });
+
+    const chrono = watch('chrono');
+
+    useEffect(() => {
+        fetchCourses();
+    }, []);
+
+    const fetchCourses = async () => {
+        try {
+            const token = Cookies.get('token');
+            const response = await fetch(`${config.API_URL}${config.endpoints.courses}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch courses');
+            }
+
+            const data = await response.json();
+            setCourses(data);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
     };
-    const { register, handleSubmit, formState:{ errors } } = useForm({
-        resolver: yupResolver(schema)
-      });
-     
 
-      const onSubmit =  (data) => { 
-        
-        if(checked&&validechorno||checked==false)
-        QuizEvent(data,checked);
-        
-      }      
-return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-
-        <div class="form-group my-3">
-          <input type="text" class="form-control" id="title" {...register("title")} placeholder="Title " />
-        </div>
-        <div class="alert alert-danger" role="alert"  hidden={!errors.title}>
-        {errors.title?.message}
-        </div>
-        <div class="form-group my-3">
-
-        <Switch   checked={checked}
-      onChange={handleChange}
-      ></Switch> Timer (Minutes)
-</div>
-<div class="form-group my-3">
-
-        {checked==true&&
-        <input class="form-control" type="number" placeholder="minutes" defaultValue={30} {...register("chrono")} onChange={(e)=>setValidechorno(e.target.value>0)}/>
+    const handleTimerChange = (event) => {
+        setValue('chrono', event.target.checked);
+        if (!event.target.checked) {
+            setValue('chronoVal', 0);
         }
-        {validechorno==false&&checked==true&&
-        <div class="alert alert-danger my-2" role="alert">
-        <p> Timer must be &gt 0</p>
-        </div>
-        }
-        </div>
-        <div className="form-group my-3">
-          <input type="submit" value="Save"className="form-control btn btn-template " />
-        </div>
+    };
 
-      </form>)
-}
-export default AddQuiz; 
+    const onSubmit = async (data) => {
+        try {
+            const token = Cookies.get('token');
+            const response = await fetch(`${config.API_URL}/api/quiz`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    title: data.title,
+                    chrono: data.chrono,
+                    chronoVal: data.chrono ? Math.max(1, parseInt(data.chronoVal) || 30) : 0,
+                    course: data.courseId
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to create quiz');
+            }
+
+            const result = await response.json();
+            onSuccess(result);
+        } catch (err) {
+            setError(err.message);
+            setTimeout(() => setError(null), 3000);
+        }
+    };
+
+    if (loading) {
+        return <div>Loading courses...</div>;
+    }
+
+    return (
+        <Form onSubmit={handleSubmit(onSubmit)}>
+            {error && (
+                <Alert variant="danger" onClose={() => setError(null)} dismissible>
+                    {error}
+                </Alert>
+            )}
+
+            <Form.Group className="mb-3">
+                <Form.Label>Quiz Title</Form.Label>
+                <Form.Control
+                    type="text"
+                    placeholder="Enter quiz title"
+                    isInvalid={!!errors.title}
+                    {...register("title")}
+                />
+                <Form.Control.Feedback type="invalid">
+                    {errors.title?.message}
+                </Form.Control.Feedback>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+                <Form.Label>Select Course</Form.Label>
+                <Form.Select
+                    isInvalid={!!errors.courseId}
+                    {...register("courseId")}
+                >
+                    <option value="">Select a course</option>
+                    {courses.map(course => (
+                        <option key={course._id} value={course._id}>
+                            {course.title}
+                        </option>
+                    ))}
+                </Form.Select>
+                <Form.Control.Feedback type="invalid">
+                    {errors.courseId?.message}
+                </Form.Control.Feedback>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+                <Form.Label className="d-flex align-items-center">
+                    <Switch
+                        checked={chrono}
+                        onChange={handleTimerChange}
+                        color="primary"
+                        size="small"
+                        className="me-2"
+                    />
+                    Timer (Minutes)
+                </Form.Label>
+                
+                {chrono && (
+                    <Form.Control
+                        type="number"
+                        min="1"
+                        placeholder="Enter time in minutes"
+                        isInvalid={!!errors.chronoVal}
+                        {...register("chronoVal")}
+                    />
+                )}
+                <Form.Control.Feedback type="invalid">
+                    {errors.chronoVal?.message}
+                </Form.Control.Feedback>
+            </Form.Group>
+
+            <div className="d-flex justify-content-end gap-2">
+                <Button variant="secondary" onClick={onClose}>
+                    Cancel
+                </Button>
+                <Button variant="primary" type="submit">
+                    Create Quiz
+                </Button>
+            </div>
+        </Form>
+    );
+};
+
+export default AddQuiz;

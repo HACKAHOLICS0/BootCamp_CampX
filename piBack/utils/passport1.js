@@ -26,13 +26,14 @@ passport.use(new GitHubStrategy(
           image: profile.photos?.[0]?.value || null,
           authProvider: 'github',
           typeUser: 'user',
+          isVerified: true // Les utilisateurs GitHub sont automatiquement vérifiés
         });
         await user.save();
       }
 
       // Génération du JWT
       const token = jwt.sign(
-        { id: user._id, githubId: user.githubId },
+        { id: user._id, githubId: user.githubId, authProvider: user.authProvider },
         process.env.JWT_SECRET,
         { expiresIn: '1d' }
       );
