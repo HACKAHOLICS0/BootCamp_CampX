@@ -108,48 +108,63 @@ const Chatbot = () => {
 
     const newMessage = { role: "user", content: input };
     setMessages(prevMessages => [...prevMessages, newMessage]);
+    setInput("");  // Vider l'input après l'envoi
 
     // Ajouter un message temporaire du bot
     const tempBotMessage = { role: "bot", content: "..." };
     setMessages(prevMessages => [...prevMessages, tempBotMessage]);
 
-    console.log("Envoi de la requête au chatbot avec les données:", {
+    const token = Cookies.get("token");
+    if (!token) {
+      console.error("❌ Pas de token d'authentification trouvé");
+      setMessages(prevMessages => 
+        prevMessages.filter(msg => msg.content !== "...").concat([
+          { 
+            role: "bot", 
+            content: "Erreur d'authentification. Veuillez vous reconnecter." 
+          }
+        ])
+      );
+      return;
+    }
+
+    const requestData = {
       message: input,
       context: {
         userId: user.id,
-        currentUrl: window.location.pathname,
-        currentCourse: getCurrentCourse()
+        currentUrl: window.location.pathname
+      }
+    };
+
+    console.log("Envoi de la requête au chatbot:", {
+      url: "http://localhost:5001/predict",
+      data: requestData,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
       }
     });
 
     axios
       .post(
         "http://localhost:5001/predict",
-        { 
-          message: input,
-          context: {
-            userId: user.id,
-            currentUrl: window.location.pathname,
-            currentCourse: getCurrentCourse()
-          }
-        },
+        requestData,
         {
           headers: {
-            Authorization: `Bearer ${Cookies.get("token")}`,
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
+          timeout: 10000 // Timeout de 10 secondes
         }
       )
       .then((response) => {
-        console.log("Réponse brute du chatbot:", response);
-        console.log("Données de la réponse:", response.data);
+        console.log("Réponse du chatbot:", response.data);
         
         // Supprimer le message temporaire
         setMessages(prevMessages => prevMessages.filter(msg => msg.content !== "..."));
         
         if (response.data.success && response.data.data) {
           const responseData = response.data.data;
-          console.log("Données de réponse traitées:", responseData);
           
           // Ajouter le message du bot
           const botMessage = { 
@@ -158,49 +173,57 @@ const Chatbot = () => {
           };
           setMessages(prevMessages => [...prevMessages, botMessage]);
 
-          // Gérer la redirection
+          // Gérer la redirection vers un cours
           if (responseData.action === "redirect_course" && responseData.shouldRedirect) {
-            console.log("Tentative de redirection avec les données:", responseData);
-            const redirectData = responseData.redirect_data || responseData.course_data;
-            if (redirectData) {
-              console.log("Données de redirection:", redirectData);
-              const courseId = redirectData.courseId || redirectData.id;
-              if (courseId) {
-                console.log("Redirection vers le cours:", courseId);
-                window.location.href = `http://localhost:3000/courses/${courseId}`;
-              } else {
-                console.error("❌ ID du cours manquant dans les données de redirection");
-              }
+            const courseId = responseData.redirect_data?.courseId;
+            if (courseId) {
+              console.log("Redirection vers le cours:", courseId);
+              // Attendre un peu pour que l'utilisateur puisse lire la réponse
+              setTimeout(() => {
+                navigate(`/courses/${courseId}`);
+              }, 1500);
             } else {
-              console.error("❌ Données de redirection manquantes");
+              console.error("❌ ID du cours manquant dans les données de redirection:", responseData);
             }
           }
         } else {
           console.error("❌ Réponse invalide du serveur:", response.data);
-          // En cas d'erreur dans la réponse
           const errorMessage = { 
             role: "bot", 
-            content: response.data.error || "Désolé, une erreur s'est produite."
+            content: "Désolé, je n'ai pas pu comprendre votre demande. Pouvez-vous reformuler ?"
           };
           setMessages(prevMessages => [...prevMessages, errorMessage]);
         }
       })
       .catch((error) => {
-        console.error("❌ Erreur lors de l'envoi du message :", error);
-        console.error("Détails de l'erreur:", error.response?.data || error.message);
+        console.error("❌ Erreur lors de l'envoi du message:", error);
+        console.error("Détails de l'erreur:", {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status
+        });
         
         // Supprimer le message temporaire
         setMessages(prevMessages => prevMessages.filter(msg => msg.content !== "..."));
         
-        // Ajouter le message d'erreur
-        const errorMessage = { 
-          role: "bot", 
-          content: "Désolé, une erreur s'est produite lors du traitement de votre message." 
+        // Message d'erreur personnalisé en fonction du type d'erreur
+        let errorMessage = {
+          role: "bot",
+          content: "Désolé, une erreur s'est produite lors de la communication avec le serveur."
         };
+
+        if (error.code === "ECONNABORTED") {
+          errorMessage.content = "Le serveur met trop de temps à répondre. Veuillez réessayer.";
+        } else if (error.response?.status === 401) {
+          errorMessage.content = "Votre session a expiré. Veuillez vous reconnecter.";
+        } else if (error.response?.status === 404) {
+          errorMessage.content = "Le service de chatbot n'est pas accessible pour le moment.";
+        } else if (!error.response) {
+          errorMessage.content = "Impossible de contacter le serveur. Vérifiez votre connexion.";
+        }
+
         setMessages(prevMessages => [...prevMessages, errorMessage]);
       });
-
-    setInput("");
   };
 
   // Obtenir le cours actuel si on est sur une page de cours

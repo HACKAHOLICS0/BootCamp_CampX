@@ -102,13 +102,14 @@ io.on('connection', (socket) => {
   // Authentification du socket
   socket.on('authenticate', async (data) => {
     try {
-      const { token, userId, displayName } = data;
+      const { token, userId, displayName, avatar } = data;
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       
-      currentUser = { ...decoded, userId, displayName };
+      currentUser = { ...decoded, userId, displayName, avatar };
       socket.userId = userId;
       socket.displayName = displayName;
-      console.log(`Utilisateur ${displayName} (${userId}) authentifié`);
+      socket.avatar = avatar || '';
+      console.log(`Utilisateur ${displayName} (${userId}) authentifié avec avatar: ${avatar}`);
     } catch (error) {
       console.error('Erreur d\'authentification:', error);
       socket.emit('auth_error', { message: 'Authentification échouée' });
@@ -118,7 +119,7 @@ io.on('connection', (socket) => {
   // Rejoindre une room
   socket.on('join_room', async (data) => {
     try {
-      const { roomId, userId, displayName } = data;
+      const { roomId, userId, displayName, avatar } = data;
       console.log('Join room data:', data);
       
       if (!roomId || !userId || !displayName) {
@@ -138,32 +139,51 @@ io.on('connection', (socket) => {
           console.log('Nouvelle room créée:', roomId);
         }
 
-        // Ajouter l'utilisateur aux participants
-        chatRoom.addParticipant(userId, displayName);
+        // Mettre à jour ou ajouter l'utilisateur avec son avatar
+        const existingParticipant = chatRoom.participants.find(p => p.userId === userId);
+        if (existingParticipant) {
+          existingParticipant.username = displayName;
+          existingParticipant.avatar = avatar || existingParticipant.avatar;
+        } else {
+          chatRoom.addParticipant(userId, displayName, avatar);
+        }
         await chatRoom.save();
 
         socket.join(roomId);
         console.log(`Utilisateur ${displayName} (${userId}) a rejoint la room: ${roomId}`);
 
-        // Envoyer l'historique des messages
-        socket.emit('message_history', chatRoom.messages || []);
-      } catch (saveError) {
-        if (saveError.code === 11000) {
-          // Si erreur de duplication, réessayer de récupérer la room
-          chatRoom = await ChatRoom.findOne({ name: roomId });
-          if (chatRoom) {
-            chatRoom.addParticipant(userId, displayName);
-            await chatRoom.save();
-            
-            socket.join(roomId);
-            console.log(`Utilisateur ${displayName} (${userId}) a rejoint la room existante: ${roomId}`);
-            
-            // Envoyer l'historique des messages
-            socket.emit('message_history', chatRoom.messages || []);
-          }
-        } else {
-          throw saveError;
-        }
+        // Récupérer tous les participants avec leurs avatars
+        const participants = chatRoom.participants.map(p => ({
+          userId: p.userId,
+          displayName: p.username,
+          avatar: p.avatar || ''
+        }));
+
+        // Envoyer la liste mise à jour des participants à tous les utilisateurs
+        io.to(roomId).emit('users_in_room', participants);
+
+        // Envoyer l'historique des messages avec les avatars
+        const messagesWithAvatars = chatRoom.messages.map(msg => {
+          const participant = chatRoom.participants.find(p => p.userId === msg.userId);
+          return {
+            ...msg.toObject(),
+            avatar: msg.avatar || participant?.avatar || '',
+            username: participant?.username || msg.username
+          };
+        });
+        
+        console.log('Sending message history with avatars:', messagesWithAvatars);
+        socket.emit('message_history', messagesWithAvatars);
+
+        // Informer les autres utilisateurs du nouvel arrivant
+        socket.to(roomId).emit('user_joined', {
+          userId,
+          displayName,
+          avatar: avatar || ''
+        });
+      } catch (error) {
+        console.error('Erreur lors de la sauvegarde de la room:', error);
+        throw error;
       }
     } catch (error) {
       console.error('Erreur lors de la jointure de la room:', error);
@@ -174,10 +194,10 @@ io.on('connection', (socket) => {
   // Envoyer un message
   socket.on('send_message', async (data) => {
     try {
-      const { roomId, userId, message } = data;
+      const { roomId, userId, message, username, displayName, avatar } = data;
       console.log('Message reçu:', data);
       
-      if (!userId || !roomId || !socket.displayName || !message) {
+      if (!userId || !roomId || !message) {
         console.error('Données manquantes:', data);
         return;
       }
@@ -189,15 +209,42 @@ io.on('connection', (socket) => {
         return;
       }
 
-      // Ajouter le message avec le displayName
-      chatRoom.addMessage(userId, socket.displayName, message);
+      // S'assurer que l'utilisateur est un participant
+      const participant = chatRoom.participants.find(p => p.userId === userId);
+      if (!participant) {
+        console.error('Utilisateur non trouvé dans la room:', userId);
+        return;
+      }
+
+      // Utiliser l'avatar le plus récent
+      const messageAvatar = avatar || participant.avatar || '';
+
+      // Mettre à jour l'avatar du participant si nécessaire
+      if (avatar && avatar !== participant.avatar) {
+        participant.avatar = avatar;
+        await chatRoom.save();
+      }
+
+      // Ajouter le message avec toutes les informations
+      chatRoom.addMessage(userId, username || displayName || participant.username, message, messageAvatar);
       await chatRoom.save();
 
-      const newMessage = chatRoom.messages[chatRoom.messages.length - 1];
-      console.log('Message ajouté à la room:', roomId);
+      // Récupérer le dernier message ajouté
+      const newMessage = chatRoom.messages[chatRoom.messages.length - 1].toObject();
+      
+      // Préparer le message à envoyer avec toutes les informations
+      const messageToSend = {
+        ...newMessage,
+        userId,
+        username: username || displayName || participant.username,
+        displayName: displayName || username || participant.username,
+        avatar: messageAvatar
+      };
+
+      console.log('Message envoyé à la room:', roomId, messageToSend);
 
       // Émettre le message à tous les membres de la room
-      io.to(roomId).emit('receive_message', newMessage);
+      io.to(roomId).emit('receive_message', messageToSend);
     } catch (error) {
       console.error('Erreur lors de l\'envoi du message:', error);
       socket.emit('message_error', { message: 'Erreur lors de l\'envoi du message' });
