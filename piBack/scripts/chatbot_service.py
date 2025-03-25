@@ -157,225 +157,157 @@ class ChatbotPredictor:
         """Recherche un cours spécifique dans la base de données"""
         try:
             # Nettoyer et préparer la requête
-            query_terms = query.lower().split()
+            query = query.lower().strip()
+            query_terms = query.split()
             # Supprimer les mots non pertinents
-            query_terms = [term for term in query_terms if term not in ['cours', 'formation', 'de', 'en', 'le', 'la', 'les', 'du', 'des', 'et']]
+            stop_words = ['cours', 'formation', 'de', 'en', 'le', 'la', 'les', 'du', 'des', 'et', 'sur', 'je', 'veux', 'voir', 'accéder', 'aller']
+            query_terms = [term for term in query_terms if term not in stop_words]
             
             print(f"Termes de recherche après nettoyage: {query_terms}")
             
-            # Récupérer tous les cours depuis l'API
             try:
-                print("Tentative de récupération des cours depuis l'API...")
-                print("Token API:", self.api_token)  # Log du token (à supprimer en production)
-                
-                # Essayer d'abord avec le port 5000
-                try:
-                    response = requests.get(
-                        "http://localhost:5000/api/courses",
-                        headers={
-                            "Authorization": f"Bearer {self.api_token}",
-                            "Content-Type": "application/json"
-                        },
-                        timeout=5  # Timeout de 5 secondes
-                    )
-                except requests.exceptions.RequestException:
-                    print("Tentative avec le port 5000 échouée, essai avec le port 3000...")
-                    response = requests.get(
-                        "http://localhost:3000/api/courses",
-                        headers={
-                            "Authorization": f"Bearer {self.api_token}",
-                            "Content-Type": "application/json"
-                        },
-                        timeout=5  # Timeout de 5 secondes
-                    )
-                
-                print(f"Statut de la réponse API: {response.status_code}")
-                print(f"Contenu de la réponse API: {response.text}")
-                
-                if response.status_code != 200:
-                    print(f"Erreur lors de la récupération des cours: {response.status_code}")
-                    print(f"Message d'erreur: {response.text}")
-                    # Utiliser des données de test si l'API ne répond pas
-                    test_courses = [
-                        {
-                            "_id": "html-css-course",
-                            "title": "HTML et CSS - Les fondamentaux",
-                            "description": "Apprenez les bases du développement web avec HTML et CSS",
-                            "moduleId": "web-dev"
-                        },
-                        {
-                            "_id": "javascript-course",
-                            "title": "JavaScript pour débutants",
-                            "description": "Introduction à la programmation JavaScript",
-                            "moduleId": "web-dev"
-                        }
-                    ]
-                    print("Utilisation des données de test:", json.dumps(test_courses, indent=2))
-                    return self._process_courses(test_courses, query_terms)
-                
-                response_data = response.json()
-                courses = response_data.get('data', [])
-                if not courses:  # Si pas de cours trouvés dans l'API
-                    print("Aucun cours trouvé dans l'API, utilisation des données de test")
-                    test_courses = [
-                        {
-                            "_id": "html-css-course",
-                            "title": "HTML et CSS - Les fondamentaux",
-                            "description": "Apprenez les bases du développement web avec HTML et CSS",
-                            "moduleId": "web-dev"
-                        },
-                        {
-                            "_id": "javascript-course",
-                            "title": "JavaScript pour débutants",
-                            "description": "Introduction à la programmation JavaScript",
-                            "moduleId": "web-dev"
-                        }
-                    ]
-                    return self._process_courses(test_courses, query_terms)
-                
-                print(f"Cours récupérés depuis l'API: {len(courses)} cours")
-                return self._process_courses(courses, query_terms)
-                
-            except Exception as e:
-                print(f"Erreur lors de la requête API: {e}")
-                # Utiliser des données de test en cas d'erreur
-                test_courses = [
-                    {
-                        "_id": "html-css-course",
-                        "title": "HTML et CSS - Les fondamentaux",
-                        "description": "Apprenez les bases du développement web avec HTML et CSS",
-                        "moduleId": "web-dev"
-                    },
-                    {
-                        "_id": "javascript-course",
-                        "title": "JavaScript pour débutants",
-                        "description": "Introduction à la programmation JavaScript",
-                        "moduleId": "web-dev"
+                # Récupérer tous les cours depuis l'API
+                response = requests.get(
+                    "http://localhost:5000/api/courses",
+                    headers={
+                        "Authorization": f"Bearer {self.api_token}",
+                        "Content-Type": "application/json"
                     }
-                ]
-                print("Utilisation des données de test suite à une erreur")
-                return self._process_courses(test_courses, query_terms)
+                )
+                
+                print(f"Réponse API brute: {response.text}")  # Debug
+                
+                if response.status_code == 200:
+                    try:
+                        response_data = response.json()
+                        courses = []
+                        
+                        # Traiter la réponse selon sa structure
+                        if isinstance(response_data, list):
+                            courses = response_data
+                        elif isinstance(response_data, dict):
+                            if 'data' in response_data:
+                                if isinstance(response_data['data'], list):
+                                    courses = response_data['data']
+                                else:
+                                    courses = [response_data['data']]
+                            else:
+                                courses = [response_data]
+                                
+                        print(f"Nombre de cours trouvés: {len(courses)}")
+                        print(f"Structure des cours: {courses[:1]}")  # Debug
+                        
+                        # Rechercher le meilleur match
+                        best_match = None
+                        highest_score = 0
+                        
+                        for course in courses:
+                            if not isinstance(course, dict):
+                                print(f"Course invalide: {course}")
+                                continue
+                                
+                            # Calculer un score de correspondance
+                            score = 0
+                            course_title = str(course.get('title', '')).lower()
+                            course_description = str(course.get('description', '')).lower()
+                            
+                            # Vérifier chaque terme de recherche
+                            for term in query_terms:
+                                if term in course_title:
+                                    score += 2  # Score plus élevé pour les correspondances dans le titre
+                                if term in course_description:
+                                    score += 1
+                            
+                            # Mettre à jour le meilleur match si nécessaire
+                            if score > highest_score:
+                                highest_score = score
+                                best_match = course
+                        
+                        if best_match and highest_score > 0:
+                            print(f"Meilleur cours trouvé: {best_match.get('title')} (score: {highest_score})")
+                            return {
+                                "found": True,
+                                "course": best_match,
+                                "action": "redirect_course",
+                                "shouldRedirect": True,
+                                "response": f"J'ai trouvé le cours '{best_match.get('title')}'. Je vous y emmène !",
+                                "redirect_data": {
+                                    "courseId": best_match.get('_id'),
+                                    "title": best_match.get('title')
+                                }
+                            }
+                        else:
+                            print("Aucun cours correspondant trouvé")
+                            return {
+                                "found": False,
+                                "response": "Désolé, je n'ai pas trouvé de cours correspondant à votre recherche."
+                            }
+                    except json.JSONDecodeError as e:
+                        print(f"Erreur de décodage JSON: {e}")
+                        return {
+                            "found": False,
+                            "response": "Désolé, il y a eu une erreur lors de la lecture des cours."
+                        }
+                else:
+                    print(f"Erreur API: {response.status_code}")
+                    return {
+                        "found": False,
+                        "response": "Désolé, je n'arrive pas à accéder aux cours pour le moment."
+                    }
+                    
+            except requests.exceptions.RequestException as e:
+                print(f"Erreur de requête: {e}")
+                return {
+                    "found": False,
+                    "response": "Désolé, je n'arrive pas à accéder aux cours pour le moment."
+                }
                 
         except Exception as e:
             print(f"Erreur lors de la recherche de cours: {e}")
             import traceback
             print(traceback.format_exc())
-            return []
-
-    def _process_courses(self, courses, query_terms):
-        """Traite et filtre les cours selon les termes de recherche"""
-        matching_courses = []
-        for course in courses:
-            try:
-                title = course.get('title', '').lower()
-                description = course.get('description', '').lower()
-                
-                print(f"\nAnalyse du cours: {title}")
-                
-                # Calculer le score de correspondance
-                score = 0
-                matches = []
-                
-                for term in query_terms:
-                    term_score = 0
-                    if term in title:
-                        term_score += 10
-                        matches.append(f"titre (+10)")
-                    if term in description:
-                        term_score += 5
-                        matches.append(f"description (+5)")
-                    
-                    # Bonus pour les technologies spécifiques
-                    if term in ['html', 'css', 'javascript', 'python', 'java', 'react']:
-                        if term in title:
-                            term_score += 20
-                            matches.append(f"technologie spécifique (+20)")
-                    
-                    score += term_score
-                    if term_score > 0:
-                        print(f"Terme '{term}' trouvé dans: {', '.join(matches)}")
-                
-                if score > 0:
-                    course['match_score'] = score
-                    matching_courses.append(course)
-                    print(f"Score total pour {title}: {score}")
-            except Exception as e:
-                print(f"Erreur lors de l'analyse du cours: {e}")
-                continue
-        
-        # Trier par score de correspondance
-        matching_courses.sort(key=lambda x: x.get('match_score', 0), reverse=True)
-        print(f"\nNombre de cours correspondants trouvés: {len(matching_courses)}")
-        if matching_courses:
-            print(f"Meilleur résultat: {matching_courses[0]['title']} (score: {matching_courses[0]['match_score']})")
-        
-        return matching_courses
-
-    def get_response(self, intents_list, intents_json, user_id, user_context=None):
-        """Version améliorée de get_response avec gestion des cours"""
-        if not intents_list:
             return {
-                "text": "Je ne comprends pas. Pourriez-vous reformuler votre question?",
+                "found": False,
+                "response": "Une erreur s'est produite lors de la recherche du cours."
+            }
+
+    def get_response(self, message, user_id=None):
+        """Génère une réponse en fonction du message de l'utilisateur"""
+        # Normaliser l'entrée
+        message = self._normalize_input(message)
+        
+        # Prédire l'intention
+        ints = self.predict_class(message)
+        if not ints:
+            return {
+                "response": "Je ne comprends pas votre demande.",
                 "action": None
             }
-        
-        tag = intents_list[0]['intent']
-        input_message = intents_list[0].get('input', '').lower()
-        
-        # Vérifier si le message contient des mots-clés de cours
-        course_keywords = ['html', 'css', 'javascript', 'python', 'java', 'react', 'angular', 'nodejs']
-        has_course_keywords = any(keyword in input_message for keyword in course_keywords)
-        
-        if has_course_keywords or tag == "specific_course" or "cours" in input_message:
-            # Rechercher le cours
-            found_courses = self._search_course(input_message, None)
             
-            if found_courses:
-                course = found_courses[0]  # Prendre le cours avec le meilleur score
-                return {
-                    "text": f"Je vous redirige vers le cours : {course['title']}",
-                    "action": "redirect_course",
-                    "course_data": {
-                        "id": course['_id'],
-                        "title": course['title'],
-                        "url": f"/course/{course['_id']}"  # URL relative
-                    },
-                    "redirect_url": f"/course/{course['_id']}"  # URL relative
-                }
-            else:
-                return {
-                    "text": "Désolé, je n'ai pas trouvé ce cours dans notre plateforme. Vous pouvez consulter notre catalogue de cours pour voir tous les cours disponibles.",
-                    "action": None
-                }
+        intent = ints[0]["intent"]
+        print(f"Intention détectée: {intent}")
         
-        # Pour les autres intentions
-        for intent in intents_json['intents']:
-            if intent['tag'] == tag:
-                response = self._get_base_response(intent, user_id)
+        # Si l'intention est de chercher un cours
+        if intent in ["search_course", "course_info", "unknown"]:
+            # Rechercher le cours
+            search_result = self._search_course(message)
+            if search_result["found"]:
+                return search_result
+            
+        # Pour les autres intentions, continuer avec le traitement normal
+        for intent_data in self.intents["intents"]:
+            if intent_data["tag"] == intent:
+                response = random.choice(intent_data["responses"])
                 return {
-                    "text": response,
-                    "action": None
+                    "response": response,
+                    "action": intent_data.get("action"),
+                    "data": intent_data.get("data")
                 }
-        
+                
         return {
-            "text": "Je ne suis pas sûr de comprendre. Pourriez-vous reformuler votre question?",
+            "response": "Je ne suis pas sûr de comprendre. Pouvez-vous reformuler ?",
             "action": None
         }
-
-    def _get_base_response(self, intent, user_id):
-        """Obtient une réponse de base pour une intention"""
-        available_responses = [
-            resp for resp in intent['responses']
-            if resp not in self.response_history[user_id].get(intent['tag'], set())
-        ]
-        
-        if not available_responses:
-            self.response_history[user_id][intent['tag']] = set()
-            available_responses = intent['responses']
-        
-        response = random.choice(available_responses)
-        self.response_history[user_id][intent['tag']].add(response)
-        return response
 
     def predict(self, message, user_id, user_context=None):
         """Version améliorée de predict avec gestion des cours"""
@@ -393,48 +325,50 @@ class ChatbotPredictor:
             
             if has_course_keywords or "cours" in message_words:
                 # Rechercher le cours directement
-                found_courses = self._search_course(normalized_message, None)
+                search_result = self._search_course(normalized_message)
                 
-                if found_courses:
-                    course = found_courses[0]
-                    print(f"Cours trouvé: {course['title']}")
+                if search_result and search_result.get("found"):
+                    course = search_result.get("course")
+                    print(f"Cours trouvé: {course.get('title')}")
                     
                     # Créer l'URL complète pour le frontend
-                    course_url = f"/courses/{course['_id']}"  # URL pour le frontend React
+                    course_url = f"/courses/{course.get('_id')}"
                     
                     return {
-                        "response": f"Je vous redirige vers le cours : {course['title']}",
+                        "response": search_result.get("response", "J'ai trouvé votre cours !"),
                         "confidence": 1.0,
                         "intent": "specific_course",
-                        "action": "redirect_course",
-                        "shouldRedirect": True,
+                        "action": search_result.get("action"),
+                        "shouldRedirect": search_result.get("shouldRedirect", True),
                         "course_data": {
-                            "id": course['_id'],
-                            "title": course['title'],
+                            "id": course.get('_id'),
+                            "title": course.get('title'),
                             "url": course_url,
                             "moduleId": course.get('moduleId')
                         },
                         "redirect_url": course_url,
                         "redirect_data": {
-                            "url": course_url,
-                            "courseId": course['_id'],
-                            "courseTitle": course['title'],
-                            "moduleId": course.get('moduleId')
+                            "courseId": course.get('_id'),
+                            "title": course.get('title')
                         }
+                    }
+                else:
+                    return {
+                        "response": search_result.get("response", "Je n'ai pas trouvé de cours correspondant à votre recherche."),
+                        "confidence": 0.5,
+                        "intent": "search_course",
+                        "action": None,
+                        "shouldRedirect": False
                     }
             
             # Si aucun cours n'est trouvé ou pas de mots-clés de cours, continuer avec la prédiction normale
-            ints = self.predict_class(message)
-            if ints:
-                ints[0]['input'] = message
-            
-            response_data = self.get_response(ints, self.intents, user_id, user_context)
+            response_data = self.get_response(message)
             
             # Construire la réponse finale
             final_response = {
-                "response": response_data.get("text", "Je ne comprends pas votre demande."),
-                "confidence": ints[0]['probability'] if ints else 0,
-                "intent": ints[0]['intent'] if ints else "unknown",
+                "response": response_data.get("response", "Je ne comprends pas votre demande."),
+                "confidence": 0,
+                "intent": "unknown",
                 "action": response_data.get("action"),
                 "shouldRedirect": False,
                 "conversation_history": self.conversation_history[user_id]
@@ -521,16 +455,21 @@ def health():
     })
 
 if __name__ == '__main__':
-    # Créer le dossier des modèles s'il n'existe pas
-    os.makedirs(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../models'), exist_ok=True)
-    # Lire les arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--host', type=str, default='127.0.0.1', help='Adresse IP du serveur Flask')
-    parser.add_argument('--port', type=int, default=5001, help='Port du serveur Flask')
-    args = parser.parse_args()
+    try:
+        # Créer le dossier des modèles s'il n'existe pas
+        os.makedirs(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../models'), exist_ok=True)
+        
+        # Lire les arguments
+        parser = argparse.ArgumentParser()
+        parser.add_argument('--host', type=str, default='127.0.0.1', help='Adresse IP du serveur Flask')
+        parser.add_argument('--port', type=int, default=5001, help='Port du serveur Flask')
+        args = parser.parse_args()
 
-    # Démarrer Flask avec les paramètres donnés
-    app.run(host=args.host, port=args.port, debug=False)
-    
-    # Démarrer le serveur Flask
-    app.run(host='0.0.0.0', port=5000, debug=False)
+        print(f"Démarrage du serveur chatbot sur {args.host}:{args.port}")
+        
+        # Démarrer Flask avec les paramètres donnés
+        app.run(host=args.host, port=args.port, debug=True)
+    except Exception as e:
+        print(f"Erreur lors du démarrage du serveur: {e}")
+        import traceback
+        print(traceback.format_exc())

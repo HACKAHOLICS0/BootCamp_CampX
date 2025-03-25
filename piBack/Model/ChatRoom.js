@@ -8,6 +8,10 @@ const participantSchema = new mongoose.Schema({
   username: {
     type: String,
     required: true
+  },
+  avatar: {
+    type: String,
+    default: ''
   }
 }, { _id: false });
 
@@ -19,6 +23,10 @@ const messageSchema = new mongoose.Schema({
   username: {
     type: String,
     required: true
+  },
+  avatar: {
+    type: String,
+    default: ''
   },
   message: {
     type: String,
@@ -61,18 +69,19 @@ const chatRoomSchema = new mongoose.Schema({
 });
 
 // Méthode pour ajouter un participant
-chatRoomSchema.methods.addParticipant = function(userId, username) {
+chatRoomSchema.methods.addParticipant = function(userId, username, avatar = '') {
   if (!this.participants.some(p => p.userId === userId)) {
-    this.participants.push({ userId, username });
+    this.participants.push({ userId, username, avatar });
   }
 };
 
 // Méthode pour ajouter un message
-chatRoomSchema.methods.addMessage = function(userId, username, message) {
+chatRoomSchema.methods.addMessage = function(userId, username, message, avatar = '') {
   this.messages.push({
     userId,
     username,
     message,
+    avatar,
     time: new Date()
   });
 };
