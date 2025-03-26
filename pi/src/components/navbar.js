@@ -172,6 +172,9 @@ export default function Navbar() {
                 <Link to="/profile" className="nav-link text-dark hover-effect">
                   Profile
                 </Link>
+                <Link to="/market-insights" className="nav-link text-dark hover-effect">
+                  Market Insights
+                </Link>
                 <Link to="/chatbot" className="nav-link text-dark hover-effect">
                   chatbot
                 </Link>
