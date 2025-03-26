@@ -34,10 +34,12 @@ import CourseList from './components/courses/CourseList';
 import CourseView from './components/user/course/CourseView';
 import QuizView from './components/user/Quiz/QuizView';
 import ProtectedAdminRoute from './components/ProtectedAdminRoute';
+import PrivateRoute from './components/PrivateRoute';
 import Chatbot from './components/chatbot/Chatbot';
 import ChatbotAdmin from './components/Admin/ChatbotAdmin';
 import ChatTest from './components/chatbot/ChatTest';
 import QuizResultView from './components/user/Quiz/QuizResultView';
+import MarketInsights from './components/MarketInsights/MarketInsights';
 
 function App() {
   const location = useLocation();
@@ -114,6 +116,12 @@ function App() {
               <Route path="chatbot" element={<ChatbotAdmin />} />
             </Route>
           </Route>
+
+          <Route path="/market-insights" element={
+            <PrivateRoute>
+              <MarketInsights />
+            </PrivateRoute>
+          } />
         </Routes>
 
         {/* Affichage conditionnel du Template uniquement sur la page d'accueil */}

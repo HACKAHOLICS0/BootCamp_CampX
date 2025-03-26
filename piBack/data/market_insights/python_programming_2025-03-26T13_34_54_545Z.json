@@ -1,0 +1,48 @@
+{
+  "status": "success",
+  "timestamp": "2025-03-26T14:35:06.954659",
+  "search_term": "python programming",
+  "total_courses": 5,
+  "platform_distribution": {
+    "Coursera": 5
+  },
+  "average_price": 0,
+  "average_rating": 0,
+  "courses": [
+    {
+      "platform": "Coursera",
+      "title": "Python for Data Science, AI & Development",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/learn/python-for-applied-data-science-ai"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Crash Course on Python",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/learn/python-crash-course"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Microsoft Python Development",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/professional-certificates/microsoft-python-developer"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Programming in Python",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/learn/programming-in-python"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Data Analysis with Python",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/learn/data-analysis-with-python"
+    }
+  ]
+}
