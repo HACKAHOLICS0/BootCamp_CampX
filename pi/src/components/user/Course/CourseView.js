@@ -4,6 +4,7 @@ import { Container, Spinner, Alert } from 'react-bootstrap';
 import { FaPlay, FaQuestionCircle, FaComments, FaClock, FaTrophy, FaChartLine } from 'react-icons/fa';
 import Cookies from 'js-cookie';
 import config from '../../../config';
+import InteractiveVideoPlayer from '../../InteractiveVideoPlayer';
 import './CourseView.css';
 
 const CourseView = () => {
@@ -11,11 +12,14 @@ const CourseView = () => {
   const navigate = useNavigate();
   const [course, setCourse] = useState(null);
   const [quizzes, setQuizzes] = useState([]);
+  const [videos, setVideos] = useState([]);
+  const [selectedVideo, setSelectedVideo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('quiz');
+  const [activeTab, setActiveTab] = useState('video');
   const [progress, setProgress] = useState(0);
   const { categoryId, moduleId } = useParams();
+
   useEffect(() => {
     fetchCourseData();
   }, [courseId]);
@@ -45,6 +49,22 @@ const CourseView = () => {
       const data = await response.json();
       console.log("Course data received:", data);
       setCourse(data);
+
+      // Récupérer les vidéos du cours
+      const videosResponse = await fetch(`${config.API_URL}/api/videos/course/${courseId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+
+      if (videosResponse.ok) {
+        const videosData = await videosResponse.json();
+        setVideos(videosData);
+        if (videosData.length > 0) {
+          setSelectedVideo(videosData[0]);
+        }
+      }
 
       // Extraire les IDs des quiz correctement
       const quizIds = data.quizzes || [];
@@ -192,14 +212,38 @@ const CourseView = () => {
 
           <div className="content-section">
             {activeTab === 'video' && (
-              <div>
-                <div className="video-section">
-                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+              <div className="video-section-container">
+                {videos && videos.length > 0 ? (
+                  <>
+                    <div className="video-player-container">
+                      {selectedVideo && (
+                        <InteractiveVideoPlayer video={selectedVideo} />
+                      )}
+                    </div>
+                    <div className="video-list">
+                      <h3>Liste des vidéos</h3>
+                      {videos.map((video) => (
+                        <div
+                          key={video._id}
+                          className={`video-item ${selectedVideo?._id === video._id ? 'active' : ''}`}
+                          onClick={() => setSelectedVideo(video)}
+                        >
+                          <FaPlay className="video-icon" />
+                          <div className="video-info">
+                            <h4>{video.title}</h4>
+                            <p>{video.description}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div className="no-video-message">
                     <FaPlay size={48} />
+                    <h3>Aucune vidéo disponible</h3>
+                    <p>Les vidéos pour ce cours seront bientôt disponibles.</p>
                   </div>
-                </div>
-                <h3>Contenu vidéo à venir</h3>
-                <p>Les vidéos seront bientôt disponibles pour ce cours.</p>
+                )}
               </div>
             )}
 

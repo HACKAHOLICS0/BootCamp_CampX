@@ -1,7 +1,6 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
-const passport = require("passport");
 const mongoose = require('mongoose');
 const adminRoutes = require("./routes/AdminRoutes"); 
 const bodyParser = require("body-parser");
@@ -12,29 +11,21 @@ const interestPointRoutes = require('./routes/intrestRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const moduleRoutes = require('./routes/moduleRoutes');
 const courseRoutes = require('./routes/courseRoutes');
-const cookieParser = require('cookie-parser');
-
-require("./utils/passport");
-require("./utils/passport1")
-
-const videoRoutes = require("./routes/VideoRoutes");
+const videoRoutes = require("./routes/videoRoutes");
+const quizRoutes = require('./routes/quizRoutes');
 
 dotenv.config({ path: "./config/.env" });
-const quizRoutes=require('./routes/quizRoutes');
-const session = require("express-session");
-const jwt = require('jsonwebtoken');
 const app = express();
 
+// Middleware
 app.use(cors({
   origin: 'http://localhost:3000',
   credentials: true
 }));
 app.use(bodyParser.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-app.use(passport.initialize());
 
-require("./config/dbConfig");
-
+// Connexion à MongoDB
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
@@ -46,17 +37,6 @@ mongoose.connect(process.env.MONGO_URI, {
 .catch((err) => {
   console.error("Erreur lors de la connexion à MongoDB:", err);
 });
-
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false, 
-  saveUninitialized: true, 
-  cookie: { secure: false }
-}));
-
-const SECRET_KEY = "6LebIeMqAAAAAH51qBo0r1Q87u1FxnysnflAv6rb"; 
-app.use(cookieParser());
-app.use(passport.initialize());
 
 // API Routes
 app.use("/api/videos", videoRoutes);

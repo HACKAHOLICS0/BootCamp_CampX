@@ -55,7 +55,7 @@ export const FaceRecognition = ({ userImage, onVerificationComplete }) => {
                     try {
                         const MODEL_URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
                         console.log("🌐 Tentative de chargement depuis:", MODEL_URL);
-                        setLoadingMessage('Chargement des modèles depuis internet...');
+                        setLoadingMessage('Chargement des modèles ...');
                         
                         await Promise.all([
                             faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
@@ -102,7 +102,7 @@ export const FaceRecognition = ({ userImage, onVerificationComplete }) => {
                 if (remaining <= 0) {
                     clearInterval(timer);
                     
-                    if (matchPercentage >= 70) {
+                    if (matchPercentage >= 60) {
                         setScanStatus('✅ Visage vérifié !');
                         setIsVerified(true);
                         setTimeout(() => {

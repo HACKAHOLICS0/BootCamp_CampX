@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { 
   Home, User, Package, BarChart2, Bell, Settings, BookOpen, Search, 
-  LogOut, Sun, Moon, Menu, Book, Layers, FolderTree
+  LogOut, Sun, Moon, Menu, Book, Layers, FolderTree, Video
 } from 'lucide-react';
 import Cookies from 'js-cookie';
 import './AdminStyle.css';
@@ -24,6 +24,7 @@ const Sidebar = ({ isCollapsed, toggleSidebar }) => {
           <li><Link to="/admin/categories"><FolderTree size={20} /> <span>Categories</span></Link></li>
           <li><Link to="/admin/modules"><Layers size={20} /> <span>Modules</span></Link></li>
           <li><Link to="/admin/courses"><Book size={20} /> <span>Courses</span></Link></li>
+          <li><Link to="/admin/videos"><Video size={20} /> <span>Videos</span></Link></li>
           <li><Link to="/admin/analytics"><BarChart2 size={20} /> <span>Analytics</span></Link></li>
           <li><Link to="/admin/notifications"><Bell size={20} /> <span>Notifications</span></Link></li>
           <li><Link to="/admin/settings"><Settings size={20} /> <span>Settings</span></Link></li>

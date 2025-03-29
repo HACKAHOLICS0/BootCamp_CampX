@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const path = require("path");
+const { uploadVideo, createVideo, getCourseVideos, getVideo, updateVideo, deleteVideo } = require('../controllers/videoController');
 
 // Configuration de Multer pour l'upload des vidéos
 const storage = multer.diskStorage({
@@ -15,12 +16,11 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// Contrôleur des vidéos
-const videoController = require("../controllers/VideoController");
-
-// Route pour uploader la vidéo
-router.post("/upload", upload.single("video"), videoController.uploadVideo);
-
-
+// Routes vidéo sans authentification
+router.post('/', upload.single('video'), createVideo);
+router.get('/course/:courseId', getCourseVideos);
+router.get('/:id', getVideo);
+router.put('/:id', upload.single('video'), updateVideo);
+router.delete('/:id', deleteVideo);
 
 module.exports = router;

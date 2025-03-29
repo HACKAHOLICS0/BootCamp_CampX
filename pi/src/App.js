@@ -30,6 +30,7 @@ import Products from './components/Admin/Products';
 import Analytics from './components/Admin/Analytics';
 import Notifications from './components/Admin/Notifications';
 import Settings from './components/Admin/Settings';
+import Videos from './components/Admin/Videos';
 import CourseView from './components/user/Course/CourseView';
 import QuizView from './components/user/Quiz/QuizView';
 import QuizResultView from './components/user/Quiz/QuizResultView';
@@ -83,6 +84,7 @@ function App() {
             <Route path="categories" element={<Categories />} />
             <Route path="modules" element={<Modules />} />
             <Route path="courses" element={<Courses />} />
+            <Route path="videos" element={<Videos />} />
             <Route path="quizs" element={<QuizAdmin />} />
             <Route path="products" element={<Products />} />
             <Route path="analytics" element={<Analytics />} />
