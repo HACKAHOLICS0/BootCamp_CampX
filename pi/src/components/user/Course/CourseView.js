@@ -60,9 +60,14 @@ const CourseView = () => {
 
       if (videosResponse.ok) {
         const videosData = await videosResponse.json();
-        setVideos(videosData);
-        if (videosData.length > 0) {
-          setSelectedVideo(videosData[0]);
+        // Format video URLs to include the full server URL
+        const formattedVideos = videosData.map(video => ({
+          ...video,
+          videoUrl: video.videoUrl ? `${config.API_URL}/${video.videoUrl}` : null
+        }));
+        setVideos(formattedVideos);
+        if (formattedVideos.length > 0) {
+          setSelectedVideo(formattedVideos[0]);
         }
       }
 
@@ -217,7 +222,7 @@ const CourseView = () => {
                   <>
                     <div className="video-player-container">
                       {selectedVideo && (
-                        <InteractiveVideoPlayer video={selectedVideo} />
+                        <InteractiveVideoPlayer videoUrl={selectedVideo.videoUrl} />
                       )}
                     </div>
                     <div className="video-list">

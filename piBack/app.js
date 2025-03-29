@@ -2,17 +2,19 @@ const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const mongoose = require('mongoose');
-const adminRoutes = require("./routes/AdminRoutes"); 
-const bodyParser = require("body-parser");
 const path = require("path");
+const bodyParser = require("body-parser");
+const fs = require('fs');
+
+const adminRoutes = require("./routes/AdminRoutes");
 const authRoutes = require("./routes/authRoutes");
-const { initializePoints } = require('./controllers/intrestpoint');
 const interestPointRoutes = require('./routes/intrestRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const moduleRoutes = require('./routes/moduleRoutes');
 const courseRoutes = require('./routes/courseRoutes');
 const videoRoutes = require("./routes/videoRoutes");
 const quizRoutes = require('./routes/quizRoutes');
+const { initializePoints } = require('./controllers/intrestpoint');
 
 dotenv.config({ path: "./config/.env" });
 const app = express();
@@ -22,8 +24,22 @@ app.use(cors({
   origin: 'http://localhost:3000',
   credentials: true
 }));
-app.use(bodyParser.json());
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Augmenter la limite de la taille du corps de la requête
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+
+// Configuration pour servir les fichiers statiques (vidéos)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.mp4')) {
+      res.set({
+        'Content-Type': 'video/mp4',
+        'Accept-Ranges': 'bytes'
+      });
+    }
+  }
+}));
 
 // Connexion à MongoDB
 mongoose.connect(process.env.MONGO_URI, {
@@ -48,17 +64,29 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/modules', moduleRoutes);
 app.use('/api/courses', courseRoutes);
 
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+// Route pour tester si une vidéo existe
+app.get('/check-video/:filename', (req, res) => {
+  const videoPath = path.join(path.join(__dirname, 'uploads'), 'videos', req.params.filename);
+  if (fs.existsSync(videoPath)) {
+    res.json({ exists: true });
+  } else {
+    res.json({ exists: false });
+  }
+});
 
-app.get('/api/points', async (req, res) => {
-    try {
-        const interestPointModel = require('./Model/Interestpoint'); 
-        const points = await interestPointModel.find();
-        res.status(200).json(points);
-    } catch (err) {
-        console.error("Erreur lors de la récupération des points d'intérêt:", err);
-        res.status(500).json({ message: "Erreur serveur" });
-    }
+// Route de test pour les vidéos
+app.get('/test-video', (req, res) => {
+  res.send(`
+    <html>
+      <body>
+        <h2>Test de lecture vidéo</h2>
+        <video width="640" height="360" controls>
+          <source src="/uploads/videos/test.mp4" type="video/mp4">
+          Votre navigateur ne supporte pas la lecture de vidéos.
+        </video>
+      </body>
+    </html>
+  `);
 });
 
 app.all("*", (req, res) => {
