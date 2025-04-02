@@ -13,7 +13,7 @@ const categoryRoutes = require('./routes/categoryRoutes');
 const moduleRoutes = require('./routes/moduleRoutes');
 const courseRoutes = require('./routes/courseRoutes');
 const cookieParser = require('cookie-parser');
-const statisticRoutes = require("./routes/statisticRoutes");
+
  
 require("./utils/passport");
 require("./utils/passport1")
@@ -68,7 +68,7 @@ app.use('/api/quiz', quizRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/modules', moduleRoutes);
 app.use('/api/courses', courseRoutes);
-app.use('/api/statistics', statisticRoutes);
+
 
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
