@@ -57,7 +57,16 @@ const courseSchema = new mongoose.Schema({
     enrolledStudentsCount: { type: Number, default: 0 }, // NEW: Track course popularity
     completionCount: { type: Number, default: 0 }, // NEW: Measure effectiveness
     averageRating: { type: Number, default: 0 }, // NEW: Rank courses
-    totalRevenue: { type: Number, default: 0 } // NEW: Earnings per course
+    totalRevenue: { type: Number, default: 0 }, // NEW: Earnings per course
+    dropoutCount: { type: Number, default: 0 }, // NEW: Students who didn't finish
+    retentionRate: { type: Number, default: 0 }, // NEW: Percentage of students completing the course
+    
 });
-
+courseSchema.methods.updateDropoutRate = function () {
+    this.dropoutCount = this.enrolledStudentsCount - this.completionCount;
+    this.retentionRate =
+        this.enrolledStudentsCount > 0
+            ? (this.completionCount / this.enrolledStudentsCount) * 100
+            : 0;
+};
 module.exports = mongoose.model('Course', courseSchema);
