@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const path = require("path");
 const bodyParser = require("body-parser");
 const fs = require('fs');
+const axios = require('axios');
 
 const adminRoutes = require("./routes/AdminRoutes");
 const authRoutes = require("./routes/authRoutes");
@@ -15,13 +16,20 @@ const courseRoutes = require('./routes/courseRoutes');
 const videoRoutes = require("./routes/videoRoutes");
 const quizRoutes = require('./routes/quizRoutes');
 const { initializePoints } = require('./controllers/intrestpoint');
+const videoAnalysisService = require('./services/videoAnalysisService');
 
 dotenv.config({ path: "./config/.env" });
 const app = express();
 
+// Configuration de l'API Hugging Face
+const HUGGINGFACE_API_URL = "https://api-inference.huggingface.co/models";
+const MODEL_NAME = "mistralai/Mistral-7B-Instruct-v0.2";
+
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: ['http://localhost:3000', 'http://localhost:5000'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
 
@@ -63,6 +71,92 @@ app.use('/api/quiz', quizRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/modules', moduleRoutes);
 app.use('/api/courses', courseRoutes);
+
+// Route pour générer des questions
+app.post('/api/generate-question', async (req, res) => {
+  try {
+    const { timestamp, videoUrl, section } = req.body;
+    console.log('Génération de question pour:', { timestamp, videoUrl, section });
+
+    if (!timestamp || !videoUrl) {
+      return res.status(400).json({ error: 'timestamp et videoUrl sont requis' });
+    }
+
+    // Extraire le sujet de la vidéo de l'URL et du chemin
+    const videoPath = videoUrl.toLowerCase();
+    let videoSubject = 'programmation';
+    
+    // Détection automatique du sujet basée sur le chemin de la vidéo
+    if (videoPath.includes('html') || videoPath.includes('web')) {
+      videoSubject = 'développement web';
+    } else if (videoPath.includes('machine') || videoPath.includes('ml') || videoPath.includes('ai')) {
+      videoSubject = 'machine learning';
+    } else if (videoPath.includes('python')) {
+      videoSubject = 'Python';
+    } else if (videoPath.includes('javascript') || videoPath.includes('js')) {
+      videoSubject = 'JavaScript';
+    } else if (videoPath.includes('java')) {
+      videoSubject = 'Java';
+    } else if (videoPath.includes('c++') || videoPath.includes('cpp')) {
+      videoSubject = 'C++';
+    }
+
+    // Analyser le contenu de la vidéo autour du timestamp
+    let videoAnalysis;
+    try {
+      videoAnalysis = await videoAnalysisService.analyzeVideoContent(videoUrl, timestamp);
+    } catch (error) {
+      console.error('Erreur lors de l\'analyse du contenu vidéo:', error);
+      // En cas d'erreur d'analyse, utiliser un contenu par défaut
+      videoAnalysis = {
+        content: "Contenu de la vidéo à analyser...",
+        difficulty: 'intermediate',
+        context: "Contexte de la section en cours"
+      };
+    }
+
+    // Générer une question basée sur le contenu analysé
+    const question = await videoAnalysisService.createQuestionFromText(videoAnalysis.content);
+    
+    if (!question) {
+      return res.status(500).json({ 
+        error: 'Impossible de générer une question valide',
+        details: 'Le contenu de la vidéo ne permet pas de générer une question pertinente'
+      });
+    }
+
+    // Ajouter des métadonnées à la question
+    question.metadata = {
+      timestamp,
+      subject: videoSubject,
+      difficulty: videoAnalysis.difficulty,
+      context: videoAnalysis.context,
+      section: section ? {
+        startTime: section.startTime,
+        endTime: section.endTime
+      } : null
+    };
+
+    res.json({
+      question: {
+        text: question.question,
+        options: question.options,
+        correctAnswer: question.correctAnswer,
+        type: question.type,
+        timestamp: timestamp,
+        subject: videoSubject,
+        explanation: question.explanation,
+        metadata: question.metadata
+      }
+    });
+  } catch (error) {
+    console.error('Erreur lors de la génération de la question:', error);
+    res.status(500).json({ 
+      error: 'Erreur lors de la génération de la question',
+      details: error.message 
+    });
+  }
+});
 
 // Route pour tester si une vidéo existe
 app.get('/check-video/:filename', (req, res) => {

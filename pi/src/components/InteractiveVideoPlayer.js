@@ -1,28 +1,426 @@
-import React, { useEffect, useRef } from 'react';
-import { Box, Typography } from '@mui/material';
+import React, { useEffect, useRef, useState } from 'react';
+import { Box, Typography, Dialog, DialogTitle, DialogContent, DialogActions, Button, Paper, IconButton, CircularProgress, Slider, LinearProgress } from '@mui/material';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import PauseIcon from '@mui/icons-material/Pause';
+import ReplayIcon from '@mui/icons-material/Replay';
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import VolumeOffIcon from '@mui/icons-material/VolumeOff';
+import { generateQuestion, analyzeVideoContent } from '../services/questionGenerator';
+import config from '../config';
 
-const InteractiveVideoPlayer = ({ videoUrl }) => {
+const InteractiveVideoPlayer = ({ videoUrl, videoTitle = "", onQuestionAnswered }) => {
   const videoRef = useRef(null);
+  const [currentQuestion, setCurrentQuestion] = useState(null);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [autoPauseInterval, setAutoPauseInterval] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [videoContent, setVideoContent] = useState([]);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [lastContent, setLastContent] = useState("");
+  const [contentHistory, setContentHistory] = useState([]);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [videoProgress, setVideoProgress] = useState(0);
+  const [lastQuestionTime, setLastQuestionTime] = useState(0);
+  const [showCorrectAnswer, setShowCorrectAnswer] = useState(false);
+  const [questionHistory, setQuestionHistory] = useState([]);
+  const [currentSection, setCurrentSection] = useState(null);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
+  const [volume, setVolume] = useState(1);
+  const [showQuestion, setShowQuestion] = useState(false);
+  const [transcription, setTranscription] = useState('');
+  const [videoContext, setVideoContext] = useState({
+    content: '',
+    contentType: 'general',
+    keyPoints: [],
+    timestamp: 0
+  });
+
+  // Fonction pour formater le temps en minutes:secondes
+  const formatTime = (time) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  // Fonction pour gérer le son
+  const handleMute = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !videoRef.current.muted;
+      setIsMuted(videoRef.current.muted);
+    }
+  };
+
+  // Fonction pour gérer la lecture/pause
+  const handlePlayPause = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        // Vérifier si l'utilisateur a déjà interagi avec la page
+        const playPromise = videoRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              setIsPlaying(true);
+            })
+            .catch(error => {
+              console.error("Erreur de lecture:", error);
+              // Afficher un message à l'utilisateur
+              setTranscription("Veuillez cliquer sur le bouton lecture pour démarrer la vidéo.");
+            });
+        }
+      }
+    }
+  };
+
+  // Fonction pour gérer la mise à jour du temps de la vidéo
+  const handleTimeUpdate = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const currentTime = video.currentTime;
+    
+    // Mettre à jour la section courante
+    const newSection = videoContent.find(section => 
+      currentTime >= section.startTime && currentTime <= section.endTime
+    );
+
+    if (newSection && (!currentSection || newSection.startTime !== currentSection.startTime)) {
+      setCurrentSection(newSection);
+      // Générer une question quand on change de section
+      if (!currentQuestion) {
+      generateQuestion(currentTime);
+      }
+    }
+
+    const progress = (currentTime / video.duration) * 100;
+    setVideoProgress(progress);
+
+    // Générer une question toutes les 2 minutes si on est dans la même section
+    if (currentTime - lastQuestionTime >= 120 && currentSection && !currentQuestion) {
+      generateQuestion(currentTime);
+      setLastQuestionTime(currentTime);
+    }
+
+    setCurrentTime(currentTime);
+    setDuration(video.duration);
+  };
+
+  // Fonction pour gérer le changement de position dans la vidéo
+  const handleSeek = (event, newValue) => {
+    if (videoRef.current) {
+      const newTime = (newValue / 100) * duration;
+      videoRef.current.currentTime = newTime;
+      setVideoProgress(newValue);
+    }
+  };
 
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.load();
+      analyzeVideo();
     }
   }, [videoUrl]);
+
+  const analyzeVideo = async () => {
+    setIsAnalyzing(true);
+    try {
+      const duration = videoRef.current.duration;
+      const sections = [];
+      const sectionDuration = 30;
+
+      for (let startTime = 0; startTime < duration; startTime += sectionDuration) {
+        const endTime = Math.min(startTime + sectionDuration, duration);
+        sections.push({
+          startTime,
+          endTime,
+          content: "",
+          keyPoints: []
+        });
+      }
+
+      setVideoContent(sections);
+    } catch (error) {
+      console.error('Erreur lors de l\'analyse de la vidéo:', error);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    // Configurer les pauses automatiques toutes les 2 minutes
+    const interval = setInterval(() => {
+      if (video && !currentQuestion && isPlaying) {
+        const currentTime = video.currentTime;
+        if (currentTime - lastQuestionTime >= 120) { // 120 secondes = 2 minutes
+          console.log('Pause automatique après 2 minutes:', currentTime);
+          video.pause();
+          generateQuestion(currentTime);
+          setLastQuestionTime(currentTime);
+        }
+      }
+    }, 1000);
+
+    setAutoPauseInterval(interval);
+
+    // Ajouter l'écouteur d'événements timeupdate
+    video.addEventListener('timeupdate', handleTimeUpdate);
+
+    return () => {
+      video.removeEventListener('timeupdate', handleTimeUpdate);
+      clearInterval(interval);
+    };
+  }, [videoContent, currentQuestion, isPlaying, lastContent, lastQuestionTime]);
+
+  // Ajouter un useEffect pour gérer la pause
+  useEffect(() => {
+    if (videoRef.current) {
+      if (isPaused) {
+        videoRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        videoRef.current.play().catch(error => {
+          console.error("Erreur de lecture:", error);
+        });
+        setIsPlaying(true);
+      }
+    }
+  }, [isPaused]);
+
+  const generateQuestion = async (timestamp) => {
+    if (isLoading || currentQuestion) return;
+    setIsLoading(true);
+    try {
+      const videoContext = {
+        timestamp,
+        videoUrl,
+        section: currentSection,
+        lastContent: contentHistory.slice(-3),
+        duration: duration,
+        currentTime: currentTime
+      };
+
+      const data = await generateQuestion(videoContext);
+      
+      if (data && data.question) {
+        setCurrentQuestion(data.question);
+        setQuestionHistory(prev => [...prev, data.question]);
+        setIsPaused(true);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la génération de la question:', error);
+      // En cas d'erreur, générer une question par défaut
+      const defaultQuestion = {
+        text: `Question sur le contenu à ${Math.floor(timestamp / 60)}:${(timestamp % 60).toString().padStart(2, '0')}`,
+        options: ["Vrai", "Faux", "Je ne sais pas", "Aucune de ces réponses"],
+        correctAnswer: "Vrai",
+        explanation: `Cette question teste votre compréhension du contenu à ${Math.floor(timestamp / 60)}:${(timestamp % 60).toString().padStart(2, '0')}`
+      };
+      setCurrentQuestion(defaultQuestion);
+      setIsPaused(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAnswer = (answer) => {
+    setSelectedAnswer(answer);
+    setShowCorrectAnswer(true);
+    setShowExplanation(true);
+    
+    // Désactiver les boutons de réponse après la sélection
+    const buttons = document.querySelectorAll('.answer-button');
+    buttons.forEach(button => {
+      button.disabled = true;
+      if (button.textContent === currentQuestion.correctAnswer) {
+        button.style.backgroundColor = '#4caf50';
+        button.style.color = 'white';
+      }
+    });
+
+    if (onQuestionAnswered) {
+      onQuestionAnswered(answer, currentQuestion);
+    }
+  };
+
+  const handleContinue = () => {
+    setCurrentQuestion(null);
+    setSelectedAnswer(null);
+    setShowExplanation(false);
+    setShowCorrectAnswer(false);
+    setIsPaused(false);
+    
+    // Réactiver les boutons de réponse
+    const buttons = document.querySelectorAll('.answer-button');
+    buttons.forEach(button => {
+      button.disabled = false;
+      button.style.backgroundColor = '';
+      button.style.color = '';
+    });
+  };
+
+  const restartVideo = () => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.play().catch(error => {
+        console.error("Erreur de lecture:", error);
+      });
+      setIsPlaying(true);
+      setCurrentQuestion(null);
+      setSelectedAnswer(null);
+      setShowExplanation(false);
+      setShowCorrectAnswer(false);
+      setIsPaused(false);
+    }
+  };
+
+  const handlePause = () => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  const handlePlay = () => {
+    if (videoRef.current) {
+      videoRef.current.play().catch(error => {
+        console.error("Erreur de lecture:", error);
+      });
+      setIsPlaying(true);
+    }
+  };
+
+  // Gestion de la transcription et génération de questions
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    let transcriptionInterval;
+    let questionInterval;
+    let isGeneratingQuestion = false;
+    let lastQuestionTime = 0;
+
+    const handleTranscription = async () => {
+      try {
+        console.log('Début de la transcription pour le timestamp:', currentTime);
+        const content = await analyzeVideoContent(video, currentTime, (newTranscription) => {
+          // Mettre à jour la transcription en temps réel
+          if (newTranscription && newTranscription.trim() !== '') {
+            setTranscription(prev => {
+              // Ajouter la nouvelle transcription à la précédente
+              const updatedTranscription = prev ? `${prev} ${newTranscription}` : newTranscription;
+              return updatedTranscription;
+            });
+          }
+        });
+        
+        setVideoContext(prevContext => ({
+          ...prevContext,
+          content: content.content,
+          contentType: content.contentType,
+          keyPoints: content.keyPoints,
+          timestamp: content.timestamp
+        }));
+      } catch (error) {
+        console.error('Erreur de transcription:', error);
+      }
+    };
+
+    const generateQuestionFromTranscription = async () => {
+      if (!videoContext.content || videoContext.content.trim() === '' || isGeneratingQuestion) return;
+      
+      // Vérifier si suffisamment de temps s'est écoulé depuis la dernière question
+      const timeSinceLastQuestion = currentTime - lastQuestionTime;
+      if (timeSinceLastQuestion < 120) return; // Attendre au moins 2 minutes entre les questions
+      
+      try {
+        isGeneratingQuestion = true;
+        const result = await generateQuestion(videoContext);
+        if (result && result.question) {
+          console.log('Nouvelle question générée:', result.question);
+          setCurrentQuestion(result.question);
+          setShowQuestion(true);
+          lastQuestionTime = currentTime;
+          video.pause();
+          setIsPlaying(false);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la génération de la question:', error);
+      } finally {
+        isGeneratingQuestion = false;
+      }
+    };
+
+    // Démarrer la transcription quand la vidéo commence à jouer
+    const handlePlay = () => {
+      if (!isPlaying) return; // Ne démarrer que si la vidéo est effectivement en lecture
+      
+      console.log('Vidéo en lecture, démarrage de la transcription');
+      setTranscription(''); // Réinitialiser l'état
+      handleTranscription();
+      
+      // Mettre à jour la transcription plus fréquemment
+      transcriptionInterval = setInterval(() => {
+        if (isPlaying) {
+          handleTranscription();
+        }
+      }, 1000); // Mise à jour toutes les secondes
+
+      // Générer une question toutes les 2 minutes
+      questionInterval = setInterval(() => {
+        if (isPlaying && !showQuestion && !isGeneratingQuestion) {
+          generateQuestionFromTranscription();
+        }
+      }, 1000); // Vérifier toutes les secondes
+    };
+
+    // Arrêter la transcription quand la vidéo est en pause
+    const handlePause = () => {
+      if (transcriptionInterval) {
+        clearInterval(transcriptionInterval);
+      }
+      if (questionInterval) {
+        clearInterval(questionInterval);
+      }
+    };
+
+    // Ajouter les écouteurs d'événements uniquement si la vidéo est en lecture
+    if (isPlaying) {
+      video.addEventListener('play', handlePlay);
+      video.addEventListener('pause', handlePause);
+    }
+
+    return () => {
+      if (isPlaying) {
+        video.removeEventListener('play', handlePlay);
+        video.removeEventListener('pause', handlePause);
+      }
+      if (transcriptionInterval) {
+        clearInterval(transcriptionInterval);
+      }
+      if (questionInterval) {
+        clearInterval(questionInterval);
+      }
+    };
+  }, [currentTime, isPlaying, videoContext, showQuestion]);
 
   if (!videoUrl) {
     return (
       <Box sx={{ 
         width: '100%',
         position: 'relative',
-        paddingTop: '56.25%', // Ratio 16:9
-        backgroundColor: '#000',
-        borderRadius: '8px',
-        overflow: 'hidden',
+        paddingTop: '56.25%',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
-        color: 'white'
+        justifyContent: 'center'
       }}>
         <Typography>Vidéo non disponible</Typography>
       </Box>
@@ -30,30 +428,169 @@ const InteractiveVideoPlayer = ({ videoUrl }) => {
   }
 
   return (
-    <Box sx={{ 
-      width: '100%',
-      position: 'relative',
-      paddingTop: '56.25%', // Ratio 16:9
-      backgroundColor: '#000',
-      borderRadius: '8px',
-      overflow: 'hidden'
-    }}>
-      <video
-        ref={videoRef}
-        style={{ 
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          objectFit: 'contain'
-        }}
-        src={videoUrl}
-        controls
-        controlsList="nodownload"
-        playsInline
-        preload="auto"
-      />
+    <Box sx={{ width: '100%', maxWidth: 800, mx: 'auto', mt: 4 }}>
+      <Box sx={{ position: 'relative' }}>
+        <video
+          ref={videoRef}
+          src={videoUrl}
+          style={{ width: '100%', borderRadius: '8px' }}
+          controls
+          playsInline
+        />
+        {isLoading && (
+          <LinearProgress sx={{ position: 'absolute', top: 0, left: 0, right: 0 }} />
+        )}
+      </Box>
+
+      {/* Contrôles vidéo */}
+      <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
+        <IconButton onClick={handlePlayPause}>
+          {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
+        </IconButton>
+        <IconButton onClick={handleMute}>
+          {isMuted ? <VolumeOffIcon /> : <VolumeUpIcon />}
+        </IconButton>
+        <Typography variant="body2" sx={{ mx: 2 }}>
+          {formatTime(currentTime)} / {formatTime(duration)}
+        </Typography>
+        <Slider
+          value={currentTime || 0}
+          max={duration || 0}
+          onChange={handleSeek}
+          sx={{ flex: 1, mx: 2 }}
+        />
+      </Box>
+
+      {/* Affichage de la transcription */}
+      <Box sx={{ 
+        mt: 2, 
+        p: 2, 
+        bgcolor: 'background.paper', 
+        borderRadius: 1,
+        maxHeight: '200px',
+        overflowY: 'auto',
+        border: '1px solid',
+        borderColor: 'divider',
+        position: 'relative'
+      }}>
+        <Typography variant="h6" gutterBottom>
+          Transcription en direct
+        </Typography>
+        <Box sx={{ 
+          position: 'relative',
+          minHeight: '100px',
+          p: 2
+        }}>
+          <Typography 
+            variant="body1" 
+            sx={{ 
+              whiteSpace: 'pre-wrap',
+              fontFamily: 'monospace',
+              fontSize: '0.9rem',
+              lineHeight: 1.5,
+              color: transcription ? 'text.primary' : 'text.secondary'
+            }}
+          >
+            {transcription || 'La transcription apparaîtra ici en temps réel...'}
+          </Typography>
+          {isPlaying && (
+            <Box sx={{
+              position: 'absolute',
+              bottom: 0,
+              right: 0,
+              bgcolor: 'rgba(0,0,0,0.5)',
+              color: 'white',
+              px: 1,
+              py: 0.5,
+              borderRadius: 1,
+              fontSize: '0.8rem'
+            }}>
+              En direct...
+            </Box>
+          )}
+        </Box>
+      </Box>
+
+      {/* Question */}
+      {currentQuestion && (
+        <Dialog 
+          open={!!currentQuestion} 
+          onClose={() => {}}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>Question sur le contenu</DialogTitle>
+          <DialogContent>
+            <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
+              {currentQuestion.text}
+            </Typography>
+            <Box sx={{ mt: 2 }}>
+              {currentQuestion.options.map((option, index) => (
+                <Button
+                  key={index}
+                  className="answer-button"
+                  variant={selectedAnswer === option ? "contained" : "outlined"}
+                  onClick={() => handleAnswer(option)}
+                  disabled={!!selectedAnswer}
+                  sx={{ 
+                    mb: 1, 
+                    width: '100%', 
+                    textAlign: 'left',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      backgroundColor: !selectedAnswer ? 'action.hover' : 'inherit',
+                    }
+                  }}
+                >
+                  {option}
+                </Button>
+              ))}
+            </Box>
+            {showCorrectAnswer && (
+              <Typography
+                variant="body1"
+                color={selectedAnswer === currentQuestion.correctAnswer ? "success.main" : "error.main"}
+                sx={{ mt: 2, fontWeight: 'bold' }}
+              >
+                {selectedAnswer === currentQuestion.correctAnswer
+                  ? "✓ Correct !"
+                  : `✗ Incorrect. La bonne réponse est : ${currentQuestion.correctAnswer}`}
+              </Typography>
+            )}
+            {showExplanation && (
+              <Typography 
+                variant="body2" 
+                color="text.secondary" 
+                sx={{ 
+                  mt: 2,
+                  p: 2,
+                  bgcolor: 'background.default',
+                  borderRadius: 1
+                }}
+              >
+                {currentQuestion.explanation}
+              </Typography>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button 
+              onClick={handleContinue}
+              variant="contained"
+              color="primary"
+              sx={{ mt: 2 }}
+            >
+              Continuer la vidéo
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
+
+      {/* Indicateur de chargement */}
+      {isLoading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+          <CircularProgress />
+        </Box>
+      )}
     </Box>
   );
 };

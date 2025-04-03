@@ -17,7 +17,22 @@ const videoSchema = new mongoose.Schema({
   videoUrl: {
     type: String,
     required: true
-  }
+  },
+  interactivePoints: [{
+    timestamp: {
+      type: Number, // Temps en secondes où la question apparaît
+      required: true
+    },
+    question: {
+      type: String,
+      required: true
+    },
+    options: [{
+      text: String,
+      isCorrect: Boolean
+    }],
+    explanation: String // Explication de la réponse correcte
+  }]
 }, {
   timestamps: true
 });

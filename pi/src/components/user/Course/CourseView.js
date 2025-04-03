@@ -222,7 +222,10 @@ const CourseView = () => {
                   <>
                     <div className="video-player-container">
                       {selectedVideo && (
-                        <InteractiveVideoPlayer videoUrl={selectedVideo.videoUrl} />
+                        <InteractiveVideoPlayer 
+                          videoUrl={selectedVideo.videoUrl} 
+                          interactivePoints={selectedVideo.interactivePoints || []}
+                        />
                       )}
                     </div>
                     <div className="video-list">
