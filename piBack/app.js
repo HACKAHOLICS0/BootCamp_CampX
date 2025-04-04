@@ -33,6 +33,8 @@ const authRoutes = require("./routes/authRoutes");
 const { initializePoints } = require("./controllers/intrestpoint");
 const interestPointRoutes = require("./routes/intrestRoutes");
 
+const questionRoutes = require('./routes/questionRoutes');
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -121,6 +123,7 @@ app.use('/api/modules', moduleRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/chat', chatRoutes); // Ajout des routes du chatbot
 app.use('/api/market-insights', marketInsightsRoutes);
+app.use('/api/questions', questionRoutes);
 
 // Socket.IO events
 io.on('connection', (socket) => {
