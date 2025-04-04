@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Box, Typography, Button, Paper } from '@mui/material';
+import { Box, Typography, Button, Paper, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 
 const InteractiveVideoPlayer = ({ videoUrl }) => {
   const videoRef = useRef(null);
@@ -8,6 +8,11 @@ const InteractiveVideoPlayer = ({ videoUrl }) => {
   const [isRecognizing, setIsRecognizing] = useState(false);
   const recognitionRef = useRef(null);
   const transcriptionRef = useRef(''); // Pour stocker la transcription complète
+  const [currentQuestion, setCurrentQuestion] = useState(null);
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [lastQuestionTime, setLastQuestionTime] = useState(0);
+  const questionIntervalRef = useRef(null);
 
   useEffect(() => {
     // Vérifier si la reconnaissance vocale est supportée
@@ -119,6 +124,88 @@ const InteractiveVideoPlayer = ({ videoUrl }) => {
     }
   }, [transcription]);
 
+  // Fonction pour générer une question
+  const generateQuestion = async () => {
+    if (!transcriptionRef.current.trim()) {
+      console.log("Pas de transcription disponible pour générer une question");
+      return;
+    }
+
+    try {
+      // Mettre la vidéo en pause avant de faire la requête
+      if (videoRef.current) {
+        videoRef.current.pause();
+      }
+
+      const response = await fetch('http://localhost:5000/api/questions/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          transcript: transcriptionRef.current
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erreur lors de la génération de la question');
+      }
+
+      if (Array.isArray(data) && data.length > 0) {
+        setCurrentQuestion(data[0]);
+      } else {
+        console.error('Aucune question générée');
+        if (videoRef.current) {
+          videoRef.current.play();
+        }
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+      // En cas d'erreur, reprendre la lecture
+      if (videoRef.current) {
+        videoRef.current.play();
+      }
+    }
+  };
+
+  // Vérifier périodiquement s'il faut générer une question
+  useEffect(() => {
+    const checkForQuestion = () => {
+      if (videoRef.current && !videoRef.current.paused && !currentQuestion) {
+        const currentTime = videoRef.current.currentTime;
+        if (currentTime - lastQuestionTime >= 120) { // 120 secondes = 2 minutes
+          console.log("Génération d'une question à", currentTime);
+          generateQuestion();
+          setLastQuestionTime(currentTime);
+        }
+      }
+    };
+
+    const intervalId = setInterval(checkForQuestion, 1000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [lastQuestionTime, currentQuestion]);
+
+  // Gérer la réponse à la question
+  const handleAnswer = (answer) => {
+    setSelectedAnswer(answer);
+    setShowExplanation(true);
+  };
+
+  // Continuer la vidéo après la question
+  const handleContinue = () => {
+    setCurrentQuestion(null);
+    setSelectedAnswer(null);
+    setShowExplanation(false);
+    if (videoRef.current) {
+      videoRef.current.play();
+    }
+  };
+
   if (!videoUrl) {
     return (
       <Box sx={{ 
@@ -202,6 +289,69 @@ const InteractiveVideoPlayer = ({ videoUrl }) => {
           {transcription || 'La transcription apparaîtra pendant la lecture...'}
         </Typography>
       </Paper>
+
+      {/* Dialog pour afficher la question */}
+      <Dialog 
+        open={!!currentQuestion} 
+        onClose={() => {}}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Question sur le contenu</DialogTitle>
+        <DialogContent>
+          {currentQuestion && (
+            <>
+              <Typography variant="h6" gutterBottom>
+                {currentQuestion.question}
+              </Typography>
+              <Box sx={{ mt: 2 }}>
+                {currentQuestion.options.map((option, index) => (
+                  <Button
+                    key={index}
+                    variant={selectedAnswer === option ? "contained" : "outlined"}
+                    onClick={() => handleAnswer(option)}
+                    disabled={!!selectedAnswer}
+                    sx={{ 
+                      mb: 1, 
+                      width: '100%',
+                      textAlign: 'left',
+                      backgroundColor: selectedAnswer === option && 
+                                    option === currentQuestion.correct_answer ? 
+                                    'success.light' : undefined
+                    }}
+                  >
+                    {option}
+                  </Button>
+                ))}
+              </Box>
+              {showExplanation && (
+                <Box sx={{ mt: 2, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
+                  <Typography variant="body1" color={
+                    selectedAnswer === currentQuestion.correct_answer ? 
+                    "success.main" : "error.main"
+                  }>
+                    {selectedAnswer === currentQuestion.correct_answer ? 
+                      "Correct !" : 
+                      `Incorrect. La bonne réponse était : ${currentQuestion.correct_answer}`
+                    }
+                  </Typography>
+                </Box>
+              )}
+            </>
+          )}
+        </DialogContent>
+        <DialogActions>
+          {showExplanation && (
+            <Button 
+              onClick={handleContinue}
+              variant="contained"
+              color="primary"
+            >
+              Continuer la vidéo
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
