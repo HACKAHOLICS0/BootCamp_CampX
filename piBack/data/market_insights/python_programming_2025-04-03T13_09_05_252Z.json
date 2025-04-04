@@ -1,13 +1,14 @@
 {
   "status": "success",
-  "timestamp": "2025-03-26T14:35:06.954659",
+  "timestamp": "2025-04-03T14:09:13.987054",
   "search_term": "python programming",
-  "total_courses": 5,
+  "total_courses": 7,
   "platform_distribution": {
-    "Coursera": 5
+    "Coursera": 5,
+    "Udemy": 2
   },
-  "average_price": 0,
-  "average_rating": 0,
+  "average_price": 9.28,
+  "average_rating": 4.5,
   "courses": [
     {
       "platform": "Coursera",
@@ -32,17 +33,31 @@
     },
     {
       "platform": "Coursera",
-      "title": "Programming in Python",
+      "title": "Python 3 Programming",
       "price": null,
       "rating": null,
-      "url": "https://www.coursera.org/learn/programming-in-python"
+      "url": "https://www.coursera.org/specializations/python-3-programming"
     },
     {
       "platform": "Coursera",
-      "title": "Data Analysis with Python",
+      "title": "Python for Everybody",
       "price": null,
       "rating": null,
-      "url": "https://www.coursera.org/learn/data-analysis-with-python"
+      "url": "https://www.coursera.org/specializations/python"
+    },
+    {
+      "platform": "Udemy",
+      "title": "Complete Python Bootcamp From Zero to Hero in Python",
+      "price": 29.99,
+      "rating": 4.6,
+      "url": "https://www.udemy.com/course/complete-python-bootcamp/"
+    },
+    {
+      "platform": "Udemy",
+      "title": "Python for Data Science and Machine Learning Bootcamp",
+      "price": 34.99,
+      "rating": 4.5,
+      "url": "https://www.udemy.com/course/python-for-data-science-and-machine-learning-bootcamp/"
     }
   ]
 }

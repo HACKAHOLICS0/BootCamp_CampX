@@ -1,0 +1,28 @@
+{
+  "status": "success",
+  "timestamp": "2025-04-03T22:36:29.824305",
+  "search_term": "web development",
+  "total_courses": 2,
+  "platform_distribution": {
+    "Coursera": 1,
+    "Udemy": 1
+  },
+  "average_price": 14.99,
+  "average_rating": 4.7,
+  "courses": [
+    {
+      "platform": "Coursera",
+      "title": "Web Design for Everybody: Basics of Web Development & Coding",
+      "price": null,
+      "rating": 4.6,
+      "url": "https://www.coursera.org/specializations/web-design"
+    },
+    {
+      "platform": "Udemy",
+      "title": "The Web Developer Bootcamp",
+      "price": 29.99,
+      "rating": 4.7,
+      "url": "https://www.udemy.com/course/the-web-developer-bootcamp/"
+    }
+  ]
+}

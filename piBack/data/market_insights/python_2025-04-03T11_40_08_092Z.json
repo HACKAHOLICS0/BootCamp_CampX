@@ -1,7 +1,7 @@
 {
   "status": "success",
-  "timestamp": "2025-03-26T14:33:59.476946",
-  "search_term": "python programming",
+  "timestamp": "2025-04-03T12:40:13.672323",
+  "search_term": "python",
   "total_courses": 5,
   "platform_distribution": {
     "Coursera": 5
@@ -11,24 +11,10 @@
   "courses": [
     {
       "platform": "Coursera",
-      "title": "Python 3 Programming",
+      "title": "Python for Data Science, AI & Development",
       "price": null,
       "rating": null,
-      "url": "https://www.coursera.org/specializations/python-3-programming"
-    },
-    {
-      "platform": "Coursera",
-      "title": "Programming in Python",
-      "price": null,
-      "rating": null,
-      "url": "https://www.coursera.org/learn/programming-in-python"
-    },
-    {
-      "platform": "Coursera",
-      "title": "Microsoft Python Development",
-      "price": null,
-      "rating": null,
-      "url": "https://www.coursera.org/professional-certificates/microsoft-python-developer"
+      "url": "https://www.coursera.org/learn/python-for-applied-data-science-ai"
     },
     {
       "platform": "Coursera",
@@ -39,10 +25,24 @@
     },
     {
       "platform": "Coursera",
-      "title": "Crash Course on Python",
+      "title": "Microsoft Python Development",
       "price": null,
       "rating": null,
-      "url": "https://www.coursera.org/learn/python-crash-course"
+      "url": "https://www.coursera.org/professional-certificates/microsoft-python-developer"
+    },
+    {
+      "platform": "Coursera",
+      "title": "AI Agents and Agentic AI in Python: Powered by Generative AI",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/specializations/ai-agents-python"
+    },
+    {
+      "platform": "Coursera",
+      "title": "DeepLearning.AI Data Analytics",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/professional-certificates/data-analytics"
     }
   ]
 }

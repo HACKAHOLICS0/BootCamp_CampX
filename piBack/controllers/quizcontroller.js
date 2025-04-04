@@ -238,6 +238,23 @@ module.exports.create = async (req, res) => {
         });
 
         const savedQuiz = await newQuiz.save();
+        console.log("Quiz créé avec succès:", savedQuiz._id);
+        
+        // Mettre à jour le cours avec le nouveau quiz en utilisant findByIdAndUpdate
+        const updatedCourse = await Course.findByIdAndUpdate(
+            course,
+            { $push: { quizzes: savedQuiz._id } },
+            { new: true }
+        );
+        
+        if (!updatedCourse) {
+            console.error("Erreur lors de la mise à jour du cours");
+            // Supprimer le quiz si la mise à jour du cours échoue
+            await quizModel.findByIdAndDelete(savedQuiz._id);
+            return res.status(500).json({ error: "Failed to update course with new quiz" });
+        }
+        
+        console.log("Cours mis à jour avec le nouveau quiz");
         
         // Populate course details for response
         const populatedQuiz = await quizModel.findById(savedQuiz._id)
@@ -735,41 +752,6 @@ module.exports.updateQuiz = async (req, res) => {
     res.status(200).json(updatedQuiz);
   } catch (err) {
     console.error("Update error:", err);
-    res.status(500).json({ error: err.message });
-  }
-};
-
-module.exports.addQuestion = async (req, res) => {
-  try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ error: "Invalid quiz ID" });
-    }
-
-    const quiz = await quizModel.findById(req.params.id);
-    if (!quiz) {
-      return res.status(404).json({ error: "Quiz not found" });
-    }
-
-    const newQuestion = {
-      texte: req.body.question,
-      Responses: req.body.options.map(opt => ({
-        texte: opt.text,
-        isCorrect: opt.isCorrect
-      })),
-      points: req.body.points || 1,
-      activer: true
-    };
-
-    if (!Array.isArray(quiz.Questions)) {
-      quiz.Questions = [];
-    }
-
-    quiz.Questions.push(newQuestion);
-    await quiz.save();
-
-    res.status(201).json(quiz);
-  } catch (err) {
-    console.error("Add question error:", err);
     res.status(500).json({ error: err.message });
   }
 };

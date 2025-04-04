@@ -25,13 +25,12 @@ import Notifications from './components/Admin/Notifications';
 import Quiz from './components/Admin/Quizs/QuizAdmin';
 import Categories from './components/Admin/Categories';
 import Modules from './components/Admin/Modules';
+import Videos from './components/Admin/Videos';
 import Courses from './components/Admin/Courses';
-import VideoQuizStats from './components/Admin/VideoQuizStats';
 import UploadVideo from './components/user/UploadVideo';
 import CategoryList from './components/categories/CategoryList';
 import ModuleList from './components/modules/ModuleList';
 import CourseList from './components/courses/CourseList';
-import CourseView from './components/user/course/CourseView';
 import QuizView from './components/user/Quiz/QuizView';
 import ProtectedAdminRoute from './components/ProtectedAdminRoute';
 import PrivateRoute from './components/PrivateRoute';
@@ -40,6 +39,9 @@ import ChatbotAdmin from './components/Admin/ChatbotAdmin';
 import ChatTest from './components/chatbot/ChatTest';
 import QuizResultView from './components/user/Quiz/QuizResultView';
 import MarketInsights from './components/MarketInsights/MarketInsights';
+import CourseView from './components/video-course/CourseView';
+import { FaceRecognition } from './components/user/Quiz/FaceRecognition';
+
 
 function App() {
   const location = useLocation();
@@ -82,18 +84,19 @@ function App() {
           <Route path="/google/:token" element={<GoogleRedirectHandler />} />
           <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
           <Route path="/upload-video" element={<UploadVideo />} />
-
-          {/* Routes pour les catégories, modules et cours */}
-          <Route path="/categories" element={<CategoryList />} />
+  {/* Categories, Modules, and Courses Routes */}
+  <Route path="/categories" element={<CategoryList />} />
           <Route path="/categories/:categoryId/modules" element={<ModuleList />} />
-          <Route path="/modules/:moduleId/courses" element={<CourseList />} />
-          
-          {/* Routes pour l'affichage des cours et des quiz */}
-          <Route path="/courses/:courseId" element={<CourseView />} />
-        
+          <Route path="/categories/:categoryId/modules/:moduleId" element={<CourseList />} />
+          <Route path="/categories/:categoryId/modules/:moduleId/courses/:courseId" element={<CourseView />} />
+          <Route path="/categories/:categoryId/modules/:moduleId/courses/:courseId/face-recognition" element={<FaceRecognition />} />
+          <Route path="/categories/:categoryId/modules/:moduleId/courses/:courseId/quiz/:quizId" element={<QuizView />} />
+          <Route path="/categories/:categoryId/modules/:moduleId/courses/:courseId/quiz/:quizId/result" element={<QuizResultView />} />
+
           {/* Quiz Routes */}
           <Route path="/quiz/:quizId" element={<QuizView />} />
           <Route path="/quiz/:quizId/result" element={<QuizResultView />} />
+          
           {/* Routes pour le chat et le chatbot */}
           <Route path="/chatbot" element={<Chatbot />} />
           <Route path="/chat" element={<ChatTest />} />
@@ -112,7 +115,7 @@ function App() {
               <Route path="categories" element={<Categories />} />
               <Route path="modules" element={<Modules />} />
               <Route path="courses" element={<Courses />} />
-              <Route path="videoquiz-stats" element={<VideoQuizStats />} />
+              <Route path="videos" element={<Videos />} />
               <Route path="chatbot" element={<ChatbotAdmin />} />
             </Route>
           </Route>

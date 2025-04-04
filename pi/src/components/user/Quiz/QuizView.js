@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Button, Alert, Card, ProgressBar, Form, Spinner } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-// import { FaceRecognition } from './FaceRecognition';
+import { FaceRecognition } from './FaceRecognition';
 import config from '../../../config';
 import Cookies from 'js-cookie';
 
@@ -29,9 +29,7 @@ const QuizView = () => {
         const token = Cookies.get('token');
         if (!token) return navigate('/login');
 
-        const response = await axios.get(`${config.API_URL}/api/auth/profile/${parsedUser.id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await axios.get(`${config.API_URL}/api/auth/profile/${parsedUser.id}`);
 
         if (response.data?.image) {
           setUserImage(response.data.image);

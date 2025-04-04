@@ -1,14 +1,13 @@
 {
   "status": "success",
-  "timestamp": "2025-03-26T15:05:15.555403",
+  "timestamp": "2025-04-03T12:40:28.777136",
   "search_term": "react",
-  "total_courses": 8,
+  "total_courses": 5,
   "platform_distribution": {
-    "Coursera": 5,
-    "Udemy": 3
+    "Coursera": 5
   },
-  "average_price": 11.25,
-  "average_rating": 4.7,
+  "average_price": 0,
+  "average_rating": 0,
   "courses": [
     {
       "platform": "Coursera",
@@ -40,31 +39,10 @@
     },
     {
       "platform": "Coursera",
-      "title": "Build Your First React Website",
+      "title": "Become a Professional React Developer",
       "price": null,
       "rating": null,
-      "url": "https://www.coursera.org/projects/build-first-react-website"
-    },
-    {
-      "platform": "Udemy",
-      "title": "React - The Complete Guide 2025 (incl. React Router & Redux)",
-      "price": 29.99,
-      "rating": 4.8,
-      "url": "https://www.udemy.com/course/react-the-complete-guide-incl-redux/"
-    },
-    {
-      "platform": "Udemy",
-      "title": "Modern React with Redux [2025 Update]",
-      "price": 24.99,
-      "rating": 4.7,
-      "url": "https://www.udemy.com/course/react-redux/"
-    },
-    {
-      "platform": "Udemy",
-      "title": "React Native - The Practical Guide 2025",
-      "price": 34.99,
-      "rating": 4.6,
-      "url": "https://www.udemy.com/course/react-native-the-practical-guide/"
+      "url": "https://www.coursera.org/specializations/react"
     }
   ]
 }
