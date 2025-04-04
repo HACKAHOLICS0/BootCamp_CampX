@@ -3,8 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Spinner, Alert } from 'react-bootstrap';
 import { FaPlay, FaQuestionCircle, FaComments, FaClock, FaTrophy, FaChartLine } from 'react-icons/fa';
 import Cookies from 'js-cookie';
-import config from '../../../config';
-import InteractiveVideoPlayer from '../../InteractiveVideoPlayer';
+import config from '../../config';
+import InteractiveVideoPlayer from './InteractiveVideoPlayer';
 import './CourseView.css';
 
 const CourseView = () => {
@@ -268,9 +268,10 @@ const CourseView = () => {
                             {formatDuration(quiz.duration)}
                           </span>
                           <span>
-                            <FaQuestionCircle /> 
-                            {quiz.questions ? quiz.questions.length : 0} questions
-                          </span>
+  <FaQuestionCircle /> 
+  {quiz.Questions ? quiz.Questions.length : 0} questions
+</span>
+
                           {quiz.completed && (
                             <span className="completed-badge">
                               ✓ Complété

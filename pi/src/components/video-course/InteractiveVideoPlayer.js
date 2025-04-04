@@ -5,8 +5,8 @@ import PauseIcon from '@mui/icons-material/Pause';
 import ReplayIcon from '@mui/icons-material/Replay';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
-import { generateQuestion, analyzeVideoContent } from '../services/questionGenerator';
-import config from '../config';
+import { generateQuestion, analyzeVideoContent } from '../../services/questionGenerator';
+
 
 const InteractiveVideoPlayer = ({ videoUrl, videoTitle = "", onQuestionAnswered }) => {
   const videoRef = useRef(null);
@@ -68,9 +68,8 @@ const InteractiveVideoPlayer = ({ videoUrl, videoTitle = "", onQuestionAnswered 
               setIsPlaying(true);
             })
             .catch(error => {
-          console.error("Erreur de lecture:", error);
-              setTranscription("Veuillez cliquer sur le bouton lecture pour démarrer la vidéo.");
-        });
+              console.error("Erreur de lecture:", error);
+            });
         }
       }
     }
@@ -107,6 +106,17 @@ const InteractiveVideoPlayer = ({ videoUrl, videoTitle = "", onQuestionAnswered 
 
     setCurrentTime(currentTime);
     setDuration(video.duration);
+
+    // Mettre à jour la transcription en fonction du temps
+    updateTranscription(currentTime);
+  };
+
+  // Fonction pour mettre à jour la transcription
+  const updateTranscription = (time) => {
+    // Ici, vous pouvez ajouter la logique pour mettre à jour la transcription
+    // en fonction du temps de la vidéo
+   // const newTranscription = `Transcription à ${formatTime(time)}`;
+  //  setTranscription(newTranscription);
   };
 
   // Fonction pour gérer le changement de position dans la vidéo
@@ -115,6 +125,7 @@ const InteractiveVideoPlayer = ({ videoUrl, videoTitle = "", onQuestionAnswered 
       const newTime = (newValue / 100) * duration;
       videoRef.current.currentTime = newTime;
       setVideoProgress(newValue);
+      updateTranscription(newTime);
     }
   };
 
@@ -504,14 +515,13 @@ const InteractiveVideoPlayer = ({ videoUrl, videoTitle = "", onQuestionAnswered 
           {formatTime(currentTime)} / {formatTime(duration)}
         </Typography>
         <Slider
-          value={currentTime || 0}
-          max={duration || 0}
+          value={videoProgress}
           onChange={handleSeek}
           sx={{ flex: 1, mx: 2 }}
         />
       </Box>
 
-      {/* Affichage de la transcription */}
+      {/* Transcription */}
       <Box sx={{ 
         mt: 2, 
         p: 2, 
@@ -520,45 +530,14 @@ const InteractiveVideoPlayer = ({ videoUrl, videoTitle = "", onQuestionAnswered 
         maxHeight: '200px',
         overflowY: 'auto',
         border: '1px solid',
-        borderColor: 'divider',
-        position: 'relative'
+        borderColor: 'divider'
       }}>
         <Typography variant="h6" gutterBottom>
-          Transcription en direct
+          Transcription
         </Typography>
-        <Box sx={{ 
-          position: 'relative',
-          minHeight: '100px',
-          p: 2
-        }}>
-          <Typography 
-            variant="body1" 
-            sx={{ 
-              whiteSpace: 'pre-wrap',
-              fontFamily: 'monospace',
-              fontSize: '0.9rem',
-              lineHeight: 1.5,
-              color: transcription ? 'text.primary' : 'text.secondary'
-            }}
-          >
-            {transcription || 'La transcription apparaîtra ici en temps réel...'}
-          </Typography>
-          {isPlaying && (
-            <Box sx={{
-              position: 'absolute',
-              bottom: 0,
-              right: 0,
-              bgcolor: 'rgba(0,0,0,0.5)',
-              color: 'white',
-              px: 1,
-              py: 0.5,
-              borderRadius: 1,
-              fontSize: '0.8rem'
-            }}>
-              En direct...
-            </Box>
-          )}
-        </Box>
+        <Typography variant="body1">
+          {transcription}
+        </Typography>
       </Box>
 
       {/* Question */}

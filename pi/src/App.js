@@ -31,10 +31,11 @@ import Analytics from './components/Admin/Analytics';
 import Notifications from './components/Admin/Notifications';
 import Settings from './components/Admin/Settings';
 import Videos from './components/Admin/Videos';
-import CourseView from './components/user/Course/CourseView';
+import CourseView from './components/video-course/CourseView';
 import QuizView from './components/user/Quiz/QuizView';
 import QuizResultView from './components/user/Quiz/QuizResultView';
 import { FaceRecognition } from './components/user/Quiz/FaceRecognition';
+import InteractiveVideoPlayer from './components/video-course/InteractiveVideoPlayer';
 
 function App() {
   const location = useLocation();

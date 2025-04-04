@@ -145,8 +145,8 @@ const [pointToDelete, setPointToDelete] = useState(null);
         console.log("User ID passed as parameter:", userId);
         console.log("Selected points before saving:", selectedPoints);
     
-        const updatedSelectedPoints = [...new Set([...user.refinterestpoints, ...selectedPoints])];
-    
+        const updatedSelectedPoints = [...new Set([...user.refinterestpoints || [], ...selectedPoints])];
+
         try {
             const response = await fetch(`${backendURL}/api/user/${userId}/interest-points`, {
                 method: "PUT",
@@ -329,29 +329,30 @@ const [pointToDelete, setPointToDelete] = useState(null);
                                 <h4 className="text-center my-3">Points of Interest</h4>
                                 <hr />
                                 <div className="row">
-    {user.refinterestpoints && user.refinterestpoints.length > 0 ? (
-        user.refinterestpoints.map((point, i) => (
-            <div key={i} className="col-auto mb-2">
-                <div
-                    className="card point-card"
-                    style={{
-                        cursor: 'pointer',
-                        maxWidth: '250px',
-                        fontSize: '0.9rem',
-                        padding: '10px',
-                        transition: 'transform 0.3s, box-shadow 0.3s',
-                    }}
-                    onClick={() => openDeleteModal(typeof point === 'string' ? point : point.value)} // Vérifie si point est une chaîne ou un objet
-                >
-                    <div className="card-body" style={{ padding: '10px' }}>
-                        <h5>{typeof point === 'string' ? point : point.value}</h5> {/* Affiche correctement le nom du point */}
-                    </div>
+                                {user.refinterestpoints && user.refinterestpoints.length > 0 ? (
+    user.refinterestpoints.map((point, i) => (
+        <div key={i} className="col-auto mb-2">
+            <div
+                className="card point-card"
+                style={{
+                    cursor: 'pointer',
+                    maxWidth: '250px',
+                    fontSize: '0.9rem',
+                    padding: '10px',
+                    transition: 'transform 0.3s, box-shadow 0.3s',
+                }}
+                onClick={() => openDeleteModal(point)}  // Directement utiliser la chaîne de texte
+            >
+                <div className="card-body" style={{ padding: '10px' }}>
+                    <h5>{point}</h5>  {/* Affiche directement la chaîne */}
                 </div>
             </div>
-        ))
-    ) : (
-        <p>No points of interest available.</p>
-    )}
+        </div>
+    ))
+) : (
+    <p>No points of interest available.</p>
+)}
+
 </div>
 <div className="text-end mt-3 me-3">
     <button className="edit-button" onClick={openInterestPointModal}>

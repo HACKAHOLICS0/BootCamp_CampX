@@ -1,6 +1,6 @@
 // API URLs and other configuration
 const config = {
-    API_URL: 'http://localhost:5000',  // URL du serveur backend
+    API_URL: process.env.REACT_APP_API_URL || 'http://localhost:5000',  // URL du serveur backend
     endpoints: {
         courses: '/api/courses',
         quizzes: '/api/quiz',
