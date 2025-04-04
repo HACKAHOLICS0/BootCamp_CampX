@@ -3,96 +3,89 @@ import config from '../config';
 const HUGGING_FACE_API_URL = 'https://api-inference.huggingface.co/models/facebook/bart-large-cnn';
 const HUGGING_FACE_API_KEY = process.env.REACT_APP_HUGGING_FACE_API_KEY;
 
+/* global webkitSpeechRecognition */
+
 // Configuration de la reconnaissance vocale
-let recognition = null;
 let isTranscribing = false;
 let currentTranscription = '';
+let lastTranscription = '';
 let transcriptionCallback = null;
 let recognitionAttempts = 0;
-const MAX_RECOGNITION_ATTEMPTS = 3;
 
-if (typeof window !== 'undefined') {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (SpeechRecognition) {
-    recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'fr-FR';
+// Configuration de la reconnaissance vocale
+const setupRecognition = () => {
+  if (!('webkitSpeechRecognition' in window)) {
+    console.error('La reconnaissance vocale n\'est pas disponible');
+    return null;
+  }
 
-    recognition.onstart = () => {
-      console.log('Reconnaissance vocale démarrée');
-      isTranscribing = true;
-      currentTranscription = '';
-      recognitionAttempts = 0;
-    };
+  const recognition = new webkitSpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = 'fr-FR';
 
-    recognition.onend = () => {
-      console.log('Reconnaissance vocale terminée');
-      isTranscribing = false;
-      
-      // Ne redémarrer que si on n'a pas atteint le nombre maximum de tentatives
-      if (recognitionAttempts < MAX_RECOGNITION_ATTEMPTS) {
-        setTimeout(() => {
-          if (recognition && !isTranscribing) {
-            try {
-              recognition.start();
-              recognitionAttempts++;
-            } catch (error) {
-              console.error('Erreur lors du redémarrage de la reconnaissance:', error);
-            }
-          }
-        }, 1000); // Attendre 1 seconde avant de redémarrer
-      }
-    };
+  recognition.onstart = () => {
+    isTranscribing = true;
+    currentTranscription = '';
+    lastTranscription = '';
+    recognitionAttempts = 0;
+  };
 
-    recognition.onerror = (event) => {
-      console.error('Erreur de reconnaissance vocale:', event.error);
-      isTranscribing = false;
-
-      // Gérer différemment selon le type d'erreur
-      switch (event.error) {
-        case 'network':
-          console.log('Erreur réseau, tentative de reconnexion...');
-          if (recognitionAttempts < MAX_RECOGNITION_ATTEMPTS) {
-            setTimeout(() => {
-              if (recognition && !isTranscribing) {
-                try {
-                  recognition.start();
-                  recognitionAttempts++;
-                } catch (error) {
-                  console.error('Erreur lors de la reconnexion:', error);
-                }
-              }
-            }, 2000); // Attendre plus longtemps pour les erreurs réseau
-          }
-          break;
-        case 'no-speech':
-          console.log('Aucun son détecté');
-          break;
-        case 'not-allowed':
-          console.log('Accès au microphone non autorisé');
-          break;
-        default:
-          console.log('Autre erreur de reconnaissance');
-      }
-    };
-
-    recognition.onresult = (event) => {
-      const transcript = Array.from(event.results)
-        .map(result => result[0])
-        .map(result => result.transcript)
-        .join(' ');
-      
+  recognition.onresult = (event) => {
+    const transcript = Array.from(event.results)
+      .map(result => result[0])
+      .map(result => result.transcript)
+      .join(' ');
+    
+    // Ne mettre à jour que si la transcription a changé significativement
+    if (transcript !== lastTranscription && transcript.length > lastTranscription.length) {
       currentTranscription = transcript;
-      console.log('Transcription en cours:', currentTranscription);
+      lastTranscription = transcript;
       
       // Notifier le callback si défini
       if (transcriptionCallback) {
         transcriptionCallback(currentTranscription);
       }
-    };
-  }
-}
+    }
+  };
+
+  recognition.onerror = (event) => {
+    console.error('Erreur de reconnaissance:', event.error);
+    isTranscribing = false;
+    
+    if (event.error === 'no-speech' && recognitionAttempts < 3) {
+      recognitionAttempts++;
+      setTimeout(() => {
+        if (!isTranscribing) {
+          try {
+            recognition.start();
+          } catch (error) {
+            console.error('Erreur lors du redémarrage de la reconnaissance:', error);
+          }
+        }
+      }, 1000);
+    }
+  };
+
+  recognition.onend = () => {
+    isTranscribing = false;
+    if (recognitionAttempts < 3) {
+      setTimeout(() => {
+        if (!isTranscribing) {
+          try {
+            recognition.start();
+          } catch (error) {
+            console.error('Erreur lors du redémarrage de la reconnaissance:', error);
+          }
+        }
+      }, 1000);
+    }
+  };
+
+  return recognition;
+};
+
+let recognition = setupRecognition();
 
 // Questions par défaut pour différents types de contenu
 const defaultQuestions = {
@@ -169,6 +162,56 @@ const generateSimulatedTranscription = (timestamp) => {
   }
 };
 
+// Fonction pour nettoyer la transcription
+const cleanTranscription = (text) => {
+  if (!text) return '';
+  
+  // Supprimer les espaces multiples
+  let cleaned = text.replace(/\s+/g, ' ');
+  
+  // Supprimer les espaces avant la ponctuation
+  cleaned = cleaned.replace(/\s+([.,!?])/g, '$1');
+  
+  // Supprimer les espaces au début et à la fin
+  cleaned = cleaned.trim();
+  
+  return cleaned;
+};
+
+// Fonction pour extraire les phrases clés
+const extractKeyPhrases = (text) => {
+  const cleanedText = cleanTranscription(text);
+  const sentences = cleanedText.split(/[.!?]+/).filter(s => s.trim().length > 0);
+  
+  // Filtrer les phrases importantes
+  const importantPhrases = sentences.filter(sentence => {
+    const lowerSentence = sentence.toLowerCase();
+    return (
+      lowerSentence.includes('comment') ||
+      lowerSentence.includes('pourquoi') ||
+      lowerSentence.includes('comment faire') ||
+      lowerSentence.includes('étape') ||
+      lowerSentence.includes('important') ||
+      lowerSentence.includes('conseil') ||
+      lowerSentence.includes('astuce')
+    );
+  });
+  
+  return importantPhrases.length > 0 ? importantPhrases : sentences;
+};
+
+// Fonction pour formater le temps
+const formatTime = (timestamp) => {
+  if (typeof timestamp !== 'number' || isNaN(timestamp)) {
+    console.error('Timestamp invalide:', timestamp);
+    return '0:00';
+  }
+  
+  const minutes = Math.floor(timestamp / 60);
+  const seconds = Math.floor(timestamp % 60);
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+};
+
 // Fonction pour analyser le contenu vidéo avec transcription
 export const analyzeVideoContent = async (videoElement, timestamp, callback) => {
   try {
@@ -187,12 +230,12 @@ export const analyzeVideoContent = async (videoElement, timestamp, callback) => 
 
     // Démarrer la reconnaissance si elle n'est pas déjà en cours
     if (!isTranscribing) {
-      console.log('Démarrage de la reconnaissance vocale');
       try {
+        currentTranscription = '';
+        lastTranscription = '';
         recognition.start();
       } catch (error) {
         console.error('Erreur lors du démarrage de la reconnaissance:', error);
-        // En cas d'erreur, retourner une transcription par défaut
         return {
           content: "La reconnaissance vocale n'est pas disponible pour le moment.",
           contentType: "general",
@@ -203,13 +246,10 @@ export const analyzeVideoContent = async (videoElement, timestamp, callback) => 
     }
 
     // Retourner la transcription actuelle
-    const content = currentTranscription.trim();
-    console.log('Transcription retournée:', content);
-
     return {
-      content: content,
-      contentType: detectContentType(content),
-      keyPoints: extractKeyPoints(content),
+      content: currentTranscription.trim(),
+      contentType: detectContentType(currentTranscription),
+      keyPoints: extractKeyPoints(currentTranscription),
       timestamp: timestamp
     };
 
@@ -319,25 +359,35 @@ const generateDefaultQuestion = (contentType) => {
 // Fonction pour générer des questions basées sur le contenu
 const generateQuestionFromContent = (content, contentType, timestamp) => {
   try {
-    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
-    if (sentences.length === 0) {
+    const cleanedContent = cleanTranscription(content);
+    const keyPhrases = extractKeyPhrases(cleanedContent);
+    
+    if (keyPhrases.length === 0) {
       return generateDefaultQuestion(contentType);
     }
 
     // Sélectionner une phrase clé pour la question
-    const keySentence = sentences[Math.floor(Math.random() * sentences.length)].trim();
+    const keyPhrase = keyPhrases[Math.floor(Math.random() * keyPhrases.length)].trim();
     
     // Générer des options basées sur le contenu
-    const options = generateOptionsFromContent(content, keySentence);
+    const options = generateOptionsFromContent(cleanedContent, keyPhrase);
     
     // Formater le temps
-    const minutes = Math.floor(timestamp / 60);
-    const seconds = Math.floor(timestamp % 60);
-    const formattedTime = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    const formattedTime = formatTime(timestamp);
+
+    // Générer la question en fonction du type de contenu
+    let questionText;
+    if (contentType === 'code') {
+      questionText = `Quelle est la fonction de cette partie du code : "${keyPhrase}" ?`;
+    } else if (contentType === 'installation') {
+      questionText = `Quelle est l'étape décrite ici : "${keyPhrase}" ?`;
+    } else {
+      questionText = `Quelle est la signification de cette partie du tutoriel : "${keyPhrase}" ?`;
+    }
 
     return {
       question: {
-        text: `Quelle est la signification de cette partie du tutoriel : "${keySentence}" ?`,
+        text: questionText,
         options: options,
         correctAnswer: options[0],
         explanation: `Cette question porte sur le contenu à ${formattedTime}`,
@@ -351,24 +401,34 @@ const generateQuestionFromContent = (content, contentType, timestamp) => {
 };
 
 // Fonction pour générer des options basées sur le contenu
-const generateOptionsFromContent = (content, keySentence) => {
+const generateOptionsFromContent = (content, keyPhrase) => {
   try {
     const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
-    const options = [keySentence];
+    const options = [keyPhrase];
     
     // Ajouter d'autres phrases comme options
     while (options.length < 4 && sentences.length > 0) {
       const randomIndex = Math.floor(Math.random() * sentences.length);
       const option = sentences[randomIndex].trim();
-      if (!options.includes(option)) {
+      if (!options.includes(option) && option !== keyPhrase) {
         options.push(option);
       }
       sentences.splice(randomIndex, 1);
     }
     
     // Compléter avec des options par défaut si nécessaire
+    const defaultOptions = [
+      "Cette partie explique une étape importante",
+      "Cette partie montre comment configurer",
+      "Cette partie décrit une fonctionnalité",
+      "Cette partie donne un exemple"
+    ];
+    
     while (options.length < 4) {
-      options.push(`Option ${options.length + 1}`);
+      const randomOption = defaultOptions[Math.floor(Math.random() * defaultOptions.length)];
+      if (!options.includes(randomOption)) {
+        options.push(randomOption);
+      }
     }
     
     return options.sort(() => Math.random() - 0.5);
@@ -382,14 +442,23 @@ export const generateQuestion = async (videoContext) => {
   try {
     const { content, contentType, keyPoints, timestamp } = videoContext;
     
+    // Vérifier que le timestamp est valide
+    if (typeof timestamp !== 'number' || isNaN(timestamp)) {
+      console.error('Timestamp invalide dans le contexte vidéo:', timestamp);
+      return generateDefaultQuestion(contentType);
+    }
+    
+    // Nettoyer la transcription
+    const cleanedContent = cleanTranscription(content);
+    
     // Si la transcription est vide, retourner une question par défaut
-    if (!content || content.trim() === '') {
+    if (!cleanedContent || cleanedContent.trim() === '') {
       return generateDefaultQuestion(contentType);
     }
 
     // Si l'API Hugging Face n'est pas disponible, générer une question basée sur le contenu
     if (!HUGGING_FACE_API_KEY) {
-      return generateQuestionFromContent(content, contentType, timestamp);
+      return generateQuestionFromContent(cleanedContent, contentType, timestamp);
     }
 
     try {
@@ -402,9 +471,10 @@ export const generateQuestion = async (videoContext) => {
         body: JSON.stringify({
           inputs: `En tant qu'expert pédagogique, génère une question à choix multiples précise et spécifique basée sur ce contenu:
           
-          Transcription: "${content}"
+          Transcription: "${cleanedContent}"
           Points clés: "${keyPoints.join('. ')}"
           Type de contenu: ${contentType}
+          Timestamp: ${formatTime(timestamp)}
           
           La question doit tester la compréhension des concepts spécifiques mentionnés dans cette partie de la vidéo.
           Format: QUESTION: [question] OPTIONS: [4 options] CORRECT: [option correcte] EXPLANATION: [explication courte]`,
@@ -443,14 +513,12 @@ export const generateQuestion = async (videoContext) => {
         const options = optionsText.split('\n').map(opt => opt.trim()).filter(opt => opt);
 
         // Formater le temps correctement
-        const minutes = Math.floor(timestamp / 60);
-        const seconds = Math.floor(timestamp % 60);
-        const formattedTime = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        const formattedTime = formatTime(timestamp);
 
         return {
           question: {
             text: questionText,
-            options: options.length >= 4 ? options : generateOptionsFromContent(content, questionText),
+            options: options.length >= 4 ? options : generateOptionsFromContent(cleanedContent, questionText),
             correctAnswer: correctAnswer,
             explanation: explanation || `Cette question teste votre compréhension du contenu à ${formattedTime}`,
             timestamp: formattedTime
@@ -461,7 +529,7 @@ export const generateQuestion = async (videoContext) => {
       }
     } catch (error) {
       console.error('Erreur avec l\'API Hugging Face:', error);
-      return generateQuestionFromContent(content, contentType, timestamp);
+      return generateQuestionFromContent(cleanedContent, contentType, timestamp);
     }
   } catch (error) {
     console.error('Erreur dans la génération de question:', error);

@@ -61,7 +61,6 @@ const InteractiveVideoPlayer = ({ videoUrl, videoTitle = "", onQuestionAnswered 
         videoRef.current.pause();
         setIsPlaying(false);
       } else {
-        // Vérifier si l'utilisateur a déjà interagi avec la page
         const playPromise = videoRef.current.play();
         if (playPromise !== undefined) {
           playPromise
@@ -69,10 +68,9 @@ const InteractiveVideoPlayer = ({ videoUrl, videoTitle = "", onQuestionAnswered 
               setIsPlaying(true);
             })
             .catch(error => {
-              console.error("Erreur de lecture:", error);
-              // Afficher un message à l'utilisateur
+          console.error("Erreur de lecture:", error);
               setTranscription("Veuillez cliquer sur le bouton lecture pour démarrer la vidéo.");
-            });
+        });
         }
       }
     }
@@ -298,6 +296,40 @@ const InteractiveVideoPlayer = ({ videoUrl, videoTitle = "", onQuestionAnswered 
     }
   };
 
+  // Fonction pour extraire les points clés de la transcription
+  const extractKeyPoints = (text) => {
+    if (!text || text.trim() === '') return [];
+    
+    // Nettoyer le texte
+    const cleanedText = text.replace(/\s+/g, ' ').trim();
+    
+    // Diviser le texte en phrases
+    const sentences = cleanedText.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    
+    // Filtrer les phrases importantes
+    const keyPoints = sentences.filter(sentence => {
+      const lowerSentence = sentence.toLowerCase();
+      return (
+        lowerSentence.includes('important') ||
+        lowerSentence.includes('clé') ||
+        lowerSentence.includes('essentiel') ||
+        lowerSentence.includes('étape') ||
+        lowerSentence.includes('conseil') ||
+        lowerSentence.includes('astuce') ||
+        lowerSentence.includes('note') ||
+        lowerSentence.includes('attention') ||
+        lowerSentence.includes('remarque')
+      );
+    });
+    
+    // Si aucune phrase importante n'est trouvée, prendre les 3 premières phrases
+    if (keyPoints.length === 0 && sentences.length > 0) {
+      return sentences.slice(0, 3);
+    }
+    
+    return keyPoints;
+  };
+
   // Gestion de la transcription et génération de questions
   useEffect(() => {
     const video = videoRef.current;
@@ -307,50 +339,58 @@ const InteractiveVideoPlayer = ({ videoUrl, videoTitle = "", onQuestionAnswered 
     let questionInterval;
     let isGeneratingQuestion = false;
     let lastQuestionTime = 0;
+    let fullTranscription = '';
+    let transcriptionStartTime = 0;
+    let questionGenerationTimeout = null;
 
     const handleTranscription = async () => {
       try {
-        console.log('Début de la transcription pour le timestamp:', currentTime);
         const content = await analyzeVideoContent(video, currentTime, (newTranscription) => {
-          // Mettre à jour la transcription en temps réel
           if (newTranscription && newTranscription.trim() !== '') {
-            setTranscription(prev => {
-              // Ajouter la nouvelle transcription à la précédente
-              const updatedTranscription = prev ? `${prev} ${newTranscription}` : newTranscription;
-              return updatedTranscription;
-            });
+            const cleanedTranscription = newTranscription.replace(/\s+/g, ' ').trim();
+            fullTranscription = cleanedTranscription;
+            setTranscription(fullTranscription);
+            setVideoContext(prevContext => ({
+              ...prevContext,
+              content: fullTranscription,
+              timestamp: currentTime
+            }));
           }
         });
-        
-        setVideoContext(prevContext => ({
-          ...prevContext,
-          content: content.content,
-          contentType: content.contentType,
-          keyPoints: content.keyPoints,
-          timestamp: content.timestamp
-        }));
       } catch (error) {
         console.error('Erreur de transcription:', error);
       }
     };
 
     const generateQuestionFromTranscription = async () => {
-      if (!videoContext.content || videoContext.content.trim() === '' || isGeneratingQuestion) return;
+      if (!fullTranscription || isGeneratingQuestion) return;
       
-      // Vérifier si suffisamment de temps s'est écoulé depuis la dernière question
       const timeSinceLastQuestion = currentTime - lastQuestionTime;
-      if (timeSinceLastQuestion < 120) return; // Attendre au moins 2 minutes entre les questions
+      if (timeSinceLastQuestion < 120) return;
       
       try {
         isGeneratingQuestion = true;
-        const result = await generateQuestion(videoContext);
+        
+        const questionContext = {
+          content: fullTranscription,
+          contentType: 'general',
+          keyPoints: extractKeyPoints(fullTranscription),
+          timestamp: currentTime
+        };
+
+        const result = await generateQuestion(questionContext);
+        
         if (result && result.question) {
-          console.log('Nouvelle question générée:', result.question);
           setCurrentQuestion(result.question);
           setShowQuestion(true);
           lastQuestionTime = currentTime;
           video.pause();
           setIsPlaying(false);
+          
+          // Réinitialiser la transcription pour la prochaine période
+          fullTranscription = '';
+          setTranscription('');
+          transcriptionStartTime = currentTime;
         }
       } catch (error) {
         console.error('Erreur lors de la génération de la question:', error);
@@ -359,30 +399,35 @@ const InteractiveVideoPlayer = ({ videoUrl, videoTitle = "", onQuestionAnswered 
       }
     };
 
-    // Démarrer la transcription quand la vidéo commence à jouer
+    const checkAndGenerateQuestion = () => {
+      if (isPlaying && !showQuestion && !isGeneratingQuestion) {
+        const timeSinceTranscriptionStart = currentTime - transcriptionStartTime;
+        if (timeSinceTranscriptionStart >= 120) {
+          generateQuestionFromTranscription();
+        }
+      }
+    };
+
     const handlePlay = () => {
-      if (!isPlaying) return; // Ne démarrer que si la vidéo est effectivement en lecture
+      if (!isPlaying) return;
       
-      console.log('Vidéo en lecture, démarrage de la transcription');
-      setTranscription(''); // Réinitialiser l'état
+      // Réinitialiser la transcription au début de la lecture
+      fullTranscription = '';
+      setTranscription('');
+      transcriptionStartTime = currentTime;
       handleTranscription();
       
-      // Mettre à jour la transcription plus fréquemment
+      // Mettre à jour la transcription toutes les secondes
       transcriptionInterval = setInterval(() => {
         if (isPlaying) {
           handleTranscription();
         }
-      }, 1000); // Mise à jour toutes les secondes
+      }, 1000);
 
-      // Générer une question toutes les 2 minutes
-      questionInterval = setInterval(() => {
-        if (isPlaying && !showQuestion && !isGeneratingQuestion) {
-          generateQuestionFromTranscription();
-        }
-      }, 1000); // Vérifier toutes les secondes
+      // Vérifier toutes les secondes si 2 minutes se sont écoulées
+      questionInterval = setInterval(checkAndGenerateQuestion, 1000);
     };
 
-    // Arrêter la transcription quand la vidéo est en pause
     const handlePause = () => {
       if (transcriptionInterval) {
         clearInterval(transcriptionInterval);
@@ -390,9 +435,11 @@ const InteractiveVideoPlayer = ({ videoUrl, videoTitle = "", onQuestionAnswered 
       if (questionInterval) {
         clearInterval(questionInterval);
       }
+      if (questionGenerationTimeout) {
+        clearTimeout(questionGenerationTimeout);
+      }
     };
 
-    // Ajouter les écouteurs d'événements uniquement si la vidéo est en lecture
     if (isPlaying) {
       video.addEventListener('play', handlePlay);
       video.addEventListener('pause', handlePause);
@@ -409,8 +456,11 @@ const InteractiveVideoPlayer = ({ videoUrl, videoTitle = "", onQuestionAnswered 
       if (questionInterval) {
         clearInterval(questionInterval);
       }
+      if (questionGenerationTimeout) {
+        clearTimeout(questionGenerationTimeout);
+      }
     };
-  }, [currentTime, isPlaying, videoContext, showQuestion]);
+  }, [currentTime, isPlaying, showQuestion]);
 
   if (!videoUrl) {
     return (
