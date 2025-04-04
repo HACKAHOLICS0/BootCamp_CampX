@@ -247,150 +247,69 @@ const MarketInsights = () => {
             );
         }
 
-        // Calculate additional statistics
-        const platformCount = Object.keys(analysis.platform_distribution).length;
-        const mostPopularPlatform = Object.entries(analysis.platform_distribution)
-            .sort((a, b) => b[1] - a[1])
-            .map(([platform]) => platform)[0] || 'N/A';
-        
-        // Calculate price ranges if we have price data
-        let priceStats = { min: 0, max: 0, free: 0, paid: 0 };
-        if (analysis.courses && analysis.courses.length > 0) {
-            const prices = analysis.courses
-                .filter(course => course.price !== null && course.price !== undefined)
-                .map(course => course.price);
-            
-            if (prices.length > 0) {
-                priceStats.min = Math.min(...prices);
-                priceStats.max = Math.max(...prices);
-            }
-            
-            priceStats.free = analysis.courses.filter(course => 
-                course.price === null || course.price === 0 || course.price === undefined
-            ).length;
-            
-            priceStats.paid = analysis.courses.length - priceStats.free;
-        }
-
         return (
             <Grid container spacing={3}>
                 <Grid item xs={12}>
                     <Typography variant="h6" gutterBottom>
-                        Résultats d'analyse du marché
-                    </Typography>
-                    <Typography variant="body2" gutterBottom>
-                        Recherche: {analysis.search_term}
-                    </Typography>
-                    <Typography variant="body2" gutterBottom>
-                        Nombre total de cours: {analysis.total_courses}
+                        Tableau de bord des statistiques
                     </Typography>
                 </Grid>
-                
-                {/* Statistics Dashboard */}
-                <Grid item xs={12}>
+
+                {/* Statistics Cards */}
+                <Grid item xs={12} md={3}>
                     <Card>
                         <CardContent>
-                            <Typography variant="h6" gutterBottom>
-                                Tableau de bord des statistiques
+                            <Typography variant="subtitle2" color="textSecondary">
+                                Nombre de cours
                             </Typography>
-                            <Grid container spacing={2}>
-                                <Grid item xs={6} sm={3}>
-                                    <Card variant="outlined" sx={{ height: '100%' }}>
-                                        <CardContent>
-                                            <Typography variant="subtitle2" color="textSecondary">
-                                                Nombre de cours
-                                            </Typography>
-                                            <Typography variant="h4">
-                                                {analysis.total_courses}
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                                <Grid item xs={6} sm={3}>
-                                    <Card variant="outlined" sx={{ height: '100%' }}>
-                                        <CardContent>
-                                            <Typography variant="subtitle2" color="textSecondary">
-                                                Plateformes
-                                            </Typography>
-                                            <Typography variant="h4">
-                                                {platformCount}
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                                <Grid item xs={6} sm={3}>
-                                    <Card variant="outlined" sx={{ height: '100%' }}>
-                                        <CardContent>
-                                            <Typography variant="subtitle2" color="textSecondary">
-                                                Cours gratuits
-                                            </Typography>
-                                            <Typography variant="h4">
-                                                {priceStats.free}
-                                            </Typography>
-                                            <Typography variant="body2" color="textSecondary">
-                                                {analysis.total_courses > 0 ? 
-                                                    `${Math.round((priceStats.free / analysis.total_courses) * 100)}%` 
-                                                    : '0%'}
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                                <Grid item xs={6} sm={3}>
-                                    <Card variant="outlined" sx={{ height: '100%' }}>
-                                        <CardContent>
-                                            <Typography variant="subtitle2" color="textSecondary">
-                                                Cours payants
-                                            </Typography>
-                                            <Typography variant="h4">
-                                                {priceStats.paid}
-                                            </Typography>
-                                            <Typography variant="body2" color="textSecondary">
-                                                {analysis.total_courses > 0 ? 
-                                                    `${Math.round((priceStats.paid / analysis.total_courses) * 100)}%` 
-                                                    : '0%'}
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                            </Grid>
-                            
-                            <Grid container spacing={2} sx={{ mt: 1 }}>
-                                <Grid item xs={12} sm={6}>
-                                    <Card variant="outlined">
-                                        <CardContent>
-                                            <Typography variant="subtitle2" color="textSecondary">
-                                                Plateforme la plus populaire
-                                            </Typography>
-                                            <Typography variant="h5">
-                                                {mostPopularPlatform}
-                                            </Typography>
-                                            <Typography variant="body2" color="textSecondary">
-                                                {analysis.platform_distribution[mostPopularPlatform]} cours disponibles
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                                <Grid item xs={12} sm={6}>
-                                    <Card variant="outlined">
-                                        <CardContent>
-                                            <Typography variant="subtitle2" color="textSecondary">
-                                                Gamme de prix
-                                            </Typography>
-                                            <Typography variant="h5">
-                                                {priceStats.min}€ - {priceStats.max}€
-                                            </Typography>
-                                            <Typography variant="body2" color="textSecondary">
-                                                Prix moyen: {analysis.average_price}€
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                            </Grid>
+                            <Typography variant="h4">
+                                {analysis.total_courses}
+                            </Typography>
                         </CardContent>
                     </Card>
                 </Grid>
-                
-                <Grid item xs={12} md={6}>
+
+                <Grid item xs={12} md={3}>
+                    <Card>
+                        <CardContent>
+                            <Typography variant="subtitle2" color="textSecondary">
+                                Plateformes
+                            </Typography>
+                            <Typography variant="h4">
+                                {Object.keys(analysis.platform_distribution).length}
+                            </Typography>
+                        </CardContent>
+                    </Card>
+                </Grid>
+
+                <Grid item xs={12} md={3}>
+                    <Card>
+                        <CardContent>
+                            <Typography variant="subtitle2" color="textSecondary">
+                                Prix moyen
+                            </Typography>
+                            <Typography variant="h4">
+                                {analysis.average_price}€
+                            </Typography>
+                        </CardContent>
+                    </Card>
+                </Grid>
+
+                <Grid item xs={12} md={3}>
+                    <Card>
+                        <CardContent>
+                            <Typography variant="subtitle2" color="textSecondary">
+                                Note moyenne
+                            </Typography>
+                            <Typography variant="h4">
+                                {analysis.average_rating}/5
+                            </Typography>
+                        </CardContent>
+                    </Card>
+                </Grid>
+
+                {/* Platform Distribution Chart */}
+                <Grid item xs={12}>
                     <Card>
                         <CardContent>
                             <Typography variant="h6" gutterBottom>
@@ -406,94 +325,11 @@ const MarketInsights = () => {
                                 renderPlatformPieChart(analysis.platform_distribution) : 
                                 renderPlatformDistributionChart(analysis.platform_distribution)
                             }
-                            <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap' }}>
-                                {Object.entries(analysis.platform_distribution).map(([platform, count]) => (
-                                    <Chip
-                                        key={platform}
-                                        label={`${platform}: ${count} cours`}
-                                        sx={{ m: 0.5 }}
-                                        color={platform === "Udemy" ? "primary" : 
-                                              platform === "Coursera" ? "secondary" : 
-                                              platform === "edX" ? "success" :
-                                              platform === "OpenClassrooms" ? "warning" :
-                                              platform === "FreeCodeCamp" ? "info" : "default"}
-                                        variant="outlined"
-                                    />
-                                ))}
-                            </Box>
                         </CardContent>
                     </Card>
                 </Grid>
-                <Grid item xs={12} md={6}>
-                    <Card>
-                        <CardContent>
-                            <Typography variant="h6" gutterBottom>
-                                Prix moyen
-                            </Typography>
-                            <Typography variant="h4">
-                                {analysis.average_price}€
-                            </Typography>
-                        </CardContent>
-                    </Card>
-                </Grid>
-                <Grid item xs={12}>
-                    <Card>
-                        <CardContent>
-                            <Typography variant="h6" gutterBottom>
-                                Évaluation des cours par plateforme
-                            </Typography>
-                            <Box sx={{ mt: 2 }}>
-                                {analysis.courses && analysis.courses.length > 0 && (
-                                    <Grid container spacing={2}>
-                                        {Object.entries(analysis.platform_distribution).map(([platform, count]) => {
-                                            // Calculer la moyenne des évaluations pour cette plateforme
-                                            const platformCourses = analysis.courses.filter(c => c.platform === platform);
-                                            const ratingsSum = platformCourses
-                                                .filter(c => c.rating)
-                                                .reduce((sum, course) => sum + (course.rating || 0), 0);
-                                            const avgRating = platformCourses.filter(c => c.rating).length > 0 
-                                                ? ratingsSum / platformCourses.filter(c => c.rating).length 
-                                                : 0;
-                                            
-                                            return (
-                                                <Grid item xs={12} sm={6} md={4} key={platform}>
-                                                    <Card variant="outlined">
-                                                        <CardContent>
-                                                            <Typography variant="subtitle1">
-                                                                {platform}
-                                                            </Typography>
-                                                            {avgRating > 0 ? (
-                                                                <>
-                                                                    <Box display="flex" alignItems="center">
-                                                                        <Rating 
-                                                                            value={avgRating} 
-                                                                            precision={0.1} 
-                                                                            readOnly 
-                                                                        />
-                                                                        <Typography variant="body2" sx={{ ml: 1 }}>
-                                                                            {avgRating.toFixed(1)}/5
-                                                                        </Typography>
-                                                                    </Box>
-                                                                    <Typography variant="body2" color="textSecondary">
-                                                                        Basé sur {platformCourses.filter(c => c.rating).length} cours évalués
-                                                                    </Typography>
-                                                                </>
-                                                            ) : (
-                                                                <Typography variant="body2">
-                                                                    Aucune évaluation disponible
-                                                                </Typography>
-                                                            )}
-                                                        </CardContent>
-                                                    </Card>
-                                                </Grid>
-                                            );
-                                        })}
-                                    </Grid>
-                                )}
-                            </Box>
-                        </CardContent>
-                    </Card>
-                </Grid>
+
+                {/* Course List */}
                 <Grid item xs={12}>
                     <Card>
                         <CardContent>
@@ -506,25 +342,32 @@ const MarketInsights = () => {
                                         <Grid item xs={12} sm={6} md={4} key={index}>
                                             <Card variant="outlined">
                                                 <CardContent>
-                                                    <Typography variant="subtitle1" noWrap>
+                                                    <Typography variant="subtitle1" gutterBottom>
                                                         {course.title}
                                                     </Typography>
-                                                    <Typography variant="body2" color="textSecondary">
+                                                    <Typography variant="body2" color="textSecondary" gutterBottom>
                                                         {course.platform}
                                                     </Typography>
-                                                    {course.rating && (
-                                                        <Typography variant="body2">
-                                                            Note: {course.rating}/5
-                                                        </Typography>
-                                                    )}
-                                                    {course.price !== null && (
-                                                        <Typography variant="body2">
-                                                            Prix: {course.price}€
-                                                        </Typography>
-                                                    )}
-                                                    <Button 
-                                                        size="small" 
-                                                        variant="outlined" 
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                                        {course.rating ? (
+                                                            <>
+                                                                <Rating value={course.rating} precision={0.1} readOnly size="small" />
+                                                                <Typography variant="body2" sx={{ ml: 1 }}>
+                                                                    ({course.rating})
+                                                                </Typography>
+                                                            </>
+                                                        ) : (
+                                                            <Typography variant="body2" color="textSecondary">
+                                                                Note non disponible
+                                                            </Typography>
+                                                        )}
+                                                    </Box>
+                                                    <Typography variant="body2" gutterBottom>
+                                                        {course.price ? `${course.price}€` : 'Gratuit'}
+                                                    </Typography>
+                                                    <Button
+                                                        size="small"
+                                                        variant="outlined"
                                                         href={course.url}
                                                         target="_blank"
                                                         sx={{ mt: 1 }}

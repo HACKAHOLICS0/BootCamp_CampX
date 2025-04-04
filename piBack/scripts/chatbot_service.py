@@ -225,6 +225,29 @@ class ChatbotPredictor:
                         
                         if best_match and highest_score > 0:
                             print(f"Meilleur cours trouvé: {best_match.get('title')} (score: {highest_score})")
+                            
+                            # Extraire les IDs de catégorie et de module
+                            module_id = best_match.get('module', {}).get('_id')
+                            category_id = best_match.get('category', {}).get('_id')
+                            
+                            # Si l'ID de catégorie n'est pas directement dans le cours, le récupérer depuis le module
+                            if not category_id and module_id:
+                                try:
+                                    module_response = requests.get(
+                                        f"http://localhost:5000/api/modules/{module_id}",
+                                        headers={
+                                            "Authorization": f"Bearer {self.api_token}",
+                                            "Content-Type": "application/json"
+                                        }
+                                    )
+                                    if module_response.status_code == 200:
+                                        module_data = module_response.json()
+                                        category_id = module_data.get('category', {}).get('_id')
+                                except Exception as e:
+                                    print(f"Erreur lors de la récupération des données du module: {e}")
+                            
+                            print(f"IDs extraits - Category: {category_id}, Module: {module_id}")
+                            
                             return {
                                 "found": True,
                                 "course": best_match,
@@ -233,7 +256,9 @@ class ChatbotPredictor:
                                 "response": f"J'ai trouvé le cours '{best_match.get('title')}'. Je vous y emmène !",
                                 "redirect_data": {
                                     "courseId": best_match.get('_id'),
-                                    "title": best_match.get('title')
+                                    "title": best_match.get('title'),
+                                    "categoryId": category_id,
+                                    "moduleId": module_id
                                 }
                             }
                         else:
@@ -332,7 +357,27 @@ class ChatbotPredictor:
                     print(f"Cours trouvé: {course.get('title')}")
                     
                     # Créer l'URL complète pour le frontend
-                    course_url = f"/courses/{course.get('_id')}"
+                    module_id = course.get('module', {}).get('_id')
+                    category_id = course.get('category', {}).get('_id')
+                    
+                    # Si l'ID de catégorie n'est pas directement dans le cours, le récupérer depuis le module
+                    if not category_id and module_id:
+                        try:
+                            module_response = requests.get(
+                                f"http://localhost:5000/api/modules/{module_id}",
+                                headers={
+                                    "Authorization": f"Bearer {self.api_token}",
+                                    "Content-Type": "application/json"
+                                }
+                            )
+                            if module_response.status_code == 200:
+                                module_data = module_response.json()
+                                category_id = module_data.get('category', {}).get('_id')
+                        except Exception as e:
+                            print(f"Erreur lors de la récupération des données du module: {e}")
+                    
+                    print(f"IDs extraits - Category: {category_id}, Module: {module_id}")
+                    course_url = f"/categories/{category_id}/modules/{module_id}/courses/{course.get('_id')}"
                     
                     return {
                         "response": search_result.get("response", "J'ai trouvé votre cours !"),
@@ -344,12 +389,15 @@ class ChatbotPredictor:
                             "id": course.get('_id'),
                             "title": course.get('title'),
                             "url": course_url,
-                            "moduleId": course.get('moduleId')
+                            "moduleId": module_id,
+                            "categoryId": category_id
                         },
                         "redirect_url": course_url,
                         "redirect_data": {
                             "courseId": course.get('_id'),
-                            "title": course.get('title')
+                            "title": course.get('title'),
+                            "categoryId": category_id,
+                            "moduleId": module_id
                         }
                     }
                 else:

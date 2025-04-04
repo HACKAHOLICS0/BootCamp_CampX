@@ -55,7 +55,6 @@ exports.authMiddleware = async (req, res, next) => {
     }
 };
 
-
 // Middleware pour vérifier si l'utilisateur est un administrateur
 exports.adminMiddleware = async (req, res, next) => {
     try {
@@ -66,7 +65,8 @@ exports.adminMiddleware = async (req, res, next) => {
             });
         }
         
-        if (!req.user.isAdmin) {
+        // Vérifier si l'utilisateur est admin en utilisant typeUser
+        if (req.user.typeUser !== 'admin') {
             return res.status(403).json({ 
                 success: false, 
                 message: "Accès réservé aux administrateurs." 

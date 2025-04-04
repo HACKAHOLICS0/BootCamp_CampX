@@ -78,9 +78,11 @@ const Chatbot = () => {
       case "redirect_course":
         if (data?.courseId || data?.id) {
           const courseId = data.courseId || data.id;
+          const categoryId = data.categoryId;
+          const moduleId = data.moduleId;
           console.log("Redirection vers le cours:", courseId);
-          // Rediriger vers l'URL complète du frontend React
-          window.location.href = `http://localhost:3000/courses/${courseId}`;
+          // Rediriger vers l'URL complète du frontend React avec le nouveau format
+          window.location.href = `http://localhost:3000/categories/${categoryId}/modules/${moduleId}/courses/${courseId}`;
         } else {
           console.error("❌ ID du cours manquant dans les données:", data);
         }
@@ -176,14 +178,16 @@ const Chatbot = () => {
           // Gérer la redirection vers un cours
           if (responseData.action === "redirect_course" && responseData.shouldRedirect) {
             const courseId = responseData.redirect_data?.courseId;
-            if (courseId) {
+            const categoryId = responseData.redirect_data?.categoryId;
+            const moduleId = responseData.redirect_data?.moduleId;
+            if (courseId && categoryId && moduleId) {
               console.log("Redirection vers le cours:", courseId);
               // Attendre un peu pour que l'utilisateur puisse lire la réponse
               setTimeout(() => {
-                navigate(`/courses/${courseId}`);
+                navigate(`/categories/${categoryId}/modules/${moduleId}/courses/${courseId}`);
               }, 1500);
             } else {
-              console.error("❌ ID du cours manquant dans les données de redirection:", responseData);
+              console.error("❌ Données de redirection manquantes:", responseData);
             }
           }
         } else {

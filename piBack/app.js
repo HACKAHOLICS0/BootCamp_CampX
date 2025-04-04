@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 const session = require("express-session"); // Importation de express-session
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
+const fs = require('fs'); // Add fs module import
 const interestPointModel = require("./Model/Interestpoint")
 const adminRoutes = require("./routes/AdminRoutes"); 
 const moduleRoutes = require("./routes/moduleRoutes");
@@ -13,18 +14,17 @@ const { Server } = require("socket.io");
 const quizRoutes=require('./routes/quizRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const courseRoutes = require('./routes/courseRoutes');
-const videoQuizRoutes = require('./routes/videoQuizRoutes');
-const chatRoutes = require('./routes/chatRoutes'); // Importation des routes du chatbot
+const chatRoutes = require('./routes/chatRoutes'); 
 const ChatRoom = require("./Model/ChatRoom");
 const marketInsightsRoutes = require('./routes/marketInsights');
+const connectDB = require("./config/dbConfig");
 
-require("dotenv").config({ path: "./config/.env" }); // Load .env from config folder
+require("dotenv").config({ path: "./config/.env" }); 
 
 require("./utils/passport"); // Local auth
 require("./utils/passport1") // Pass the app to githubAuth.js
 
-
-const videoRoutes = require("./routes/VideoRoutes");
+const videoRoutes = require("./routes/videoRoutes");
 
 const bodyParser = require("body-parser");
 const path = require("path");
@@ -44,11 +44,22 @@ const io = new Server(server, {
   }
 });
 
+// Configuration de l'API Hugging Face
+const HUGGINGFACE_API_URL = "https://api-inference.huggingface.co/models";
+const MODEL_NAME = "mistralai/Mistral-7B-Instruct-v0.2";
 app.use(cors({
   origin: "http://localhost:3000",
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"],
+  allowedHeaders: [
+    "Content-Type", 
+    "Authorization", 
+    "X-Requested-With",
+    "Accept",
+    "Origin",
+    "Cache-Control"
+  ],
+  exposedHeaders: ["Content-Range", "X-Content-Range"]
 }));
 // Attacher io à l'application pour qu'il soit accessible dans les routes
 app.use(session({
@@ -62,36 +73,52 @@ app.use(cookieParser());
 app.use(passport.initialize());
 
 app.use(express.json()); // Activer le parsing JSON
+app.use(express.urlencoded({ extended: true }));
 
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// MongoDB Connection
-require("./config/dbConfig");
+// Configuration pour servir les fichiers statiques avec CORS
+app.use('/uploads', (req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+  res.header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Cache-Control, Content-Type');
+  next();
+}, express.static(path.join(__dirname, 'uploads')));
 
-mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => {
+// Connexion MongoDB
+const startServer = async () => {
+  try {
+    await connectDB();
     console.log("Connexion à MongoDB réussie");
     initializePoints();
-  })
-  .catch((err) => {
-    console.error("Erreur lors de la connexion à MongoDB:", err);
-  });
-  
+    
+    // Start Server
+    const port = process.env.PORT || 5000;
+    server.listen(port, () => {
+      console.log(`Server running on port ${port}`);
+    });
+  } catch (err) {
+    console.error("Erreur lors du démarrage du serveur:", err);
+  }
+};
+
+startServer();
+
 // Routes d'authentification
 app.use("/api/videos", videoRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/modules", moduleRoutes);
+app.use("/api/courses", courseRoutes);
+app.use("/api/quizzes", quizRoutes);
+app.use("/api/videos", videoRoutes);
 app.use("/api", interestPointRoutes);
 app.use("/api/admin", adminRoutes);
 app.use('/api/quiz', quizRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/modules', moduleRoutes);
 app.use('/api/courses', courseRoutes);
-app.use('/api/videoquiz', videoQuizRoutes);
 app.use('/api/chat', chatRoutes); // Ajout des routes du chatbot
 app.use('/api/market-insights', marketInsightsRoutes);
 
@@ -270,14 +297,119 @@ app.get('/api/points', async (req, res) => {
 
 
 
+// Route pour générer des questions
+app.post('/api/generate-question', async (req, res) => {
+  try {
+    const { timestamp, videoUrl, section } = req.body;
+    console.log('Génération de question pour:', { timestamp, videoUrl, section });
+
+    if (!timestamp || !videoUrl) {
+      return res.status(400).json({ error: 'timestamp et videoUrl sont requis' });
+    }
+
+    // Extraire le sujet de la vidéo de l'URL et du chemin
+    const videoPath = videoUrl.toLowerCase();
+    let videoSubject = 'programmation';
+    
+    // Détection automatique du sujet basée sur le chemin de la vidéo
+    if (videoPath.includes('html') || videoPath.includes('web')) {
+      videoSubject = 'développement web';
+    } else if (videoPath.includes('machine') || videoPath.includes('ml') || videoPath.includes('ai')) {
+      videoSubject = 'machine learning';
+    } else if (videoPath.includes('python')) {
+      videoSubject = 'Python';
+    } else if (videoPath.includes('javascript') || videoPath.includes('js')) {
+      videoSubject = 'JavaScript';
+    } else if (videoPath.includes('java')) {
+      videoSubject = 'Java';
+    } else if (videoPath.includes('c++') || videoPath.includes('cpp')) {
+      videoSubject = 'C++';
+    }
+
+    // Analyser le contenu de la vidéo autour du timestamp
+    let videoAnalysis;
+    try {
+      videoAnalysis = await videoAnalysisService.analyzeVideoContent(videoUrl, timestamp);
+    } catch (error) {
+      console.error('Erreur lors de l\'analyse du contenu vidéo:', error);
+      // En cas d'erreur d'analyse, utiliser un contenu par défaut
+      videoAnalysis = {
+        content: "Contenu de la vidéo à analyser...",
+        difficulty: 'intermediate',
+        context: "Contexte de la section en cours"
+      };
+    }
+
+    // Générer une question basée sur le contenu analysé
+    const question = await videoAnalysisService.createQuestionFromText(videoAnalysis.content);
+    
+    if (!question) {
+      return res.status(500).json({ 
+        error: 'Impossible de générer une question valide',
+        details: 'Le contenu de la vidéo ne permet pas de générer une question pertinente'
+      });
+    }
+
+    // Ajouter des métadonnées à la question
+    question.metadata = {
+      timestamp,
+      subject: videoSubject,
+      difficulty: videoAnalysis.difficulty,
+      context: videoAnalysis.context,
+      section: section ? {
+        startTime: section.startTime,
+        endTime: section.endTime
+      } : null
+    };
+
+    res.json({
+      question: {
+        text: question.question,
+        options: question.options,
+        correctAnswer: question.correctAnswer,
+        type: question.type,
+        timestamp: timestamp,
+        subject: videoSubject,
+        explanation: question.explanation,
+        metadata: question.metadata
+      }
+    });
+  } catch (error) {
+    console.error('Erreur lors de la génération de la question:', error);
+    res.status(500).json({ 
+      error: 'Erreur lors de la génération de la question',
+      details: error.message 
+    });
+  }
+});
+
+// Route pour tester si une vidéo existe
+app.get('/check-video/:filename', (req, res) => {
+  const videoPath = path.join(path.join(__dirname, 'uploads'), 'videos', req.params.filename);
+  if (fs.existsSync(videoPath)) {
+    res.json({ exists: true });
+  } else {
+    res.json({ exists: false });
+  }
+});
+
+// Route de test pour les vidéos
+app.get('/test-video', (req, res) => {
+  res.send(`
+    <html>
+      <body>
+        <h2>Test de lecture vidéo</h2>
+        <video width="640" height="360" controls>
+          <source src="/uploads/videos/test.mp4" type="video/mp4">
+          Votre navigateur ne supporte pas la lecture de vidéos.
+        </video>
+      </body>
+    </html>
+  `);
+});
+
 
 // Gestion des routes non définies
 app.all("*", (req, res) => {
   res.status(404).json({ message: "Route not found" });
-});
-
-// Start Server
-const port = process.env.PORT || 5000;
-server.listen(port, () => {
-  console.log(`Server running on port ${port}`);
 });

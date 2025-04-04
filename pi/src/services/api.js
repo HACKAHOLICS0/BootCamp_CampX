@@ -1,20 +1,24 @@
 import axios from 'axios';
+import Cookies from 'js-cookie';
+
+const API_URL = 'http://localhost:5000/api';
 
 // Create axios instance with default config
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
-  withCredentials: true, // Ensure credentials are sent with requests
+  baseURL: API_URL,
+  withCredentials: true,
   headers: {
-    'Content-Type': 'application/json',
-  },
+    'Content-Type': 'application/json'
+  }
 });
 
-// Interceptor to add the token
+// Add request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token'); // Get token from localStorage
+    // Try to get token from Cookies first, then localStorage as fallback
+    const token = Cookies.get('token') || localStorage.getItem('token');
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`; // Attach token if it exists
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
