@@ -1,0 +1,48 @@
+{
+  "status": "success",
+  "timestamp": "2025-04-03T12:40:13.672323",
+  "search_term": "python",
+  "total_courses": 5,
+  "platform_distribution": {
+    "Coursera": 5
+  },
+  "average_price": 0,
+  "average_rating": 0,
+  "courses": [
+    {
+      "platform": "Coursera",
+      "title": "Python for Data Science, AI & Development",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/learn/python-for-applied-data-science-ai"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Python for Everybody",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/specializations/python"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Microsoft Python Development",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/professional-certificates/microsoft-python-developer"
+    },
+    {
+      "platform": "Coursera",
+      "title": "AI Agents and Agentic AI in Python: Powered by Generative AI",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/specializations/ai-agents-python"
+    },
+    {
+      "platform": "Coursera",
+      "title": "DeepLearning.AI Data Analytics",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/professional-certificates/data-analytics"
+    }
+  ]
+}

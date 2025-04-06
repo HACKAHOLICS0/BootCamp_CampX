@@ -1,0 +1,48 @@
+{
+  "status": "success",
+  "timestamp": "2025-04-03T12:40:28.777136",
+  "search_term": "react",
+  "total_courses": 5,
+  "platform_distribution": {
+    "Coursera": 5
+  },
+  "average_price": 0,
+  "average_rating": 0,
+  "courses": [
+    {
+      "platform": "Coursera",
+      "title": "React Basics",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/learn/react-basics"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Advanced React",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/learn/advanced-react"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Meta React Native",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/specializations/meta-react-native"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Meta Front-End Developer",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/professional-certificates/meta-front-end-developer"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Become a Professional React Developer",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/specializations/react"
+    }
+  ]
+}

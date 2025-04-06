@@ -1,0 +1,134 @@
+/* App.css */
+
+/* Général */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background-color: #f9f9f9;
+}
+
+/* Navbar */
+#header {
+  background-color: #ffffff; /* Fond blanc */
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+#header .logo {
+  font-size: 30px;
+  color: #5FCF80; /* Couleur claire pour le logo */
+  font-weight: bold;
+}
+
+#navbar {
+  display: flex;
+  justify-content: space-between;
+}
+
+#navbar .navbar-nav {
+  list-style: none;
+  display: flex;
+  margin: 0;
+  padding: 0;
+}
+
+#navbar .nav-item {
+  margin-right: 20px;
+}
+
+#navbar .nav-link {
+  color: #000000; /* Couleur noire pour les liens */
+  text-decoration: none;
+  font-size: 16px;
+}
+
+#navbar .nav-link:hover {
+  color: #5FCF80; /* Effet au survol */
+}
+
+#navbar .mobile-nav-toggle {
+  display: none;
+}
+
+
+/* Footer */
+.footer {
+  background-color: #222222;
+  color: #ffffff;
+  padding: 40px 0;
+  position: relative;
+  bottom: 0;
+  width: 100%;
+  text-align: center;
+}
+
+.footer h3 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #ffffff;
+}
+
+.mc-trial .form-control {
+  margin-bottom: 10px;
+  padding: 15px;
+  border-radius: 5px;
+}
+
+.mc-trial .btn-submit {
+  background-color: #5FCF80;
+  color: #ffffff;
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: none;
+}
+
+.mc-trial .btn-submit:hover {
+  background-color: #4bcf6c;
+}
+
+.social-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.social-links li a {
+  color: #ffffff;
+  font-size: 18px;
+  text-decoration: none;
+}
+
+.social-links li a:hover {
+  color: #5FCF80;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  #navbar {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #navbar .navbar-nav {
+    flex-direction: column;
+    margin-top: 20px;
+  }
+
+  .footer h3 {
+    font-size: 20px;
+  }
+
+  .footer p {
+    font-size: 14px;
+  }
+}
+.App {
+  padding-top: 30px; /* Ajoute de l'espace entre la navbar et le contenu principal */
+}
