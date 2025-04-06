@@ -33,6 +33,12 @@ const authRoutes = require("./routes/authRoutes");
 const { initializePoints } = require("./controllers/intrestpoint");
 const interestPointRoutes = require("./routes/intrestRoutes");
 
+// Import models
+require('./Model/User');
+require('./Model/Course');
+require('./Model/Quiz');
+require('./Model/QuizResult');
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {

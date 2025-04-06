@@ -31,6 +31,26 @@ const QuizResultSchema = new mongoose.Schema({
   submittedAt: {
     type: Date,
     default: Date.now
+  },
+  // Nouveaux champs pour la détection de fraude
+  timeSpent: {
+    type: Number, // en secondes
+    required: true
+  },
+  answerTimes: {
+    type: Map,
+    of: Number, // temps de réponse en secondes pour chaque question
+    required: true
+  },
+  fraudDetection: {
+    isSuspicious: {
+      type: Boolean,
+      default: false
+    },
+    reasons: [{
+      type: String,
+      enum: ['TOO_FAST', 'INCONSISTENT_TIME', 'UNREALISTIC_SCORE']
+    }]
   }
 }, {
   timestamps: true

@@ -57,7 +57,10 @@ module.exports.findById = async (req, res) => {
 // Get quiz for student
 module.exports.getQuizForStudent = async (req, res) => {
   try {
+    console.log("Getting quiz for student, quiz ID:", req.params.id);
+    
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      console.log("Invalid quiz ID format");
       return res.status(400).json({ error: "Invalid quiz ID" });
     }
 
@@ -72,7 +75,10 @@ module.exports.getQuizForStudent = async (req, res) => {
         }
       });
 
+    console.log("Quiz found:", quiz);
+
     if (!quiz) {
+      console.log("Quiz not found");
       return res.status(404).json({ error: "Quiz not found" });
     }
 
@@ -94,7 +100,10 @@ module.exports.getQuizForStudent = async (req, res) => {
       }))
     };
 
+    console.log("Formatted quiz:", formattedQuiz);
+
     if (formattedQuiz.Questions.length === 0) {
+      console.log("No active questions found");
       return res.status(404).json({ error: "No active questions available for this quiz" });
     }
 
@@ -109,7 +118,14 @@ module.exports.getQuizForStudent = async (req, res) => {
 module.exports.submitQuiz = async (req, res) => {
   try {
     const { quizId } = req.params;
-    const { answers } = req.body;
+    const { answers, answerTimes, timeSpent } = req.body;
+
+    console.log("Received submission data:", {
+      quizId,
+      answers,
+      answerTimes,
+      timeSpent
+    });
 
     if (!answers || Object.keys(answers).length === 0) {
       return res.status(400).json({ error: "No answers provided" });
@@ -130,6 +146,8 @@ module.exports.submitQuiz = async (req, res) => {
         }
       });
 
+    console.log("Found quiz:", quiz);
+
     if (!quiz) {
       return res.status(404).json({ error: "Quiz not found" });
     }
@@ -148,23 +166,79 @@ module.exports.submitQuiz = async (req, res) => {
       const userAnswer = answers[question._id];
       const correctResponse = question.Responses.find(r => r.isCorrect);
       
-      totalPoints += question.points;
+      totalPoints += question.points || 1;
       
       if (userAnswer && correctResponse && userAnswer === correctResponse._id.toString()) {
-        score += question.points;
+        score += question.points || 1;
       }
     });
 
-    // Prepare result
-    const result = {
-      score,
-      totalPoints,
-      totalQuestions: activeQuestions.length,
-      percentage: Math.round((score / totalPoints) * 100),
-      message: score >= totalPoints * 0.6 ? "Congratulations! You passed the quiz!" : "Keep practicing to improve your score."
+    // Détection de fraude
+    const fraudDetection = {
+      isSuspicious: false,
+      reasons: []
     };
 
-    res.status(200).json(result);
+    // Vérification du temps de réponse trop rapide (moins de 5 secondes par question)
+    const MIN_TIME_PER_QUESTION = 5;
+    const suspiciousFastAnswers = Object.values(answerTimes || {}).filter(time => time < MIN_TIME_PER_QUESTION);
+    if (suspiciousFastAnswers.length > 0) {
+      fraudDetection.isSuspicious = true;
+      fraudDetection.reasons.push('TOO_FAST');
+    }
+
+    // Vérification de la cohérence du temps (si le temps total est très différent de la somme des temps individuels)
+    const totalAnswerTime = Object.values(answerTimes || {}).reduce((sum, time) => sum + time, 0);
+    const timeDifference = Math.abs(totalAnswerTime - (timeSpent || 0));
+    if (timeDifference > 30) { // Plus de 30 secondes de différence
+      fraudDetection.isSuspicious = true;
+      fraudDetection.reasons.push('INCONSISTENT_TIME');
+    }
+
+    // Vérification du score irréaliste (100% avec des temps de réponse très courts)
+    if (score === totalPoints && suspiciousFastAnswers.length > activeQuestions.length / 2) {
+      fraudDetection.isSuspicious = true;
+      fraudDetection.reasons.push('UNREALISTIC_SCORE');
+    }
+
+    try {
+      // Créer le résultat du quiz
+      const quizResult = new QuizResult({
+        user: req.user._id,
+        quiz: quizId,
+        score,
+        totalPoints,
+        percentage: Math.round((score / totalPoints) * 100),
+        answers,
+        timeSpent: timeSpent || 0,
+        answerTimes: answerTimes || {},
+        fraudDetection
+      });
+
+      console.log("Saving quiz result:", quizResult);
+      await quizResult.save();
+      console.log("Quiz result saved successfully");
+
+      // Préparer la réponse
+      const result = {
+        score,
+        totalPoints,
+        totalQuestions: activeQuestions.length,
+        percentage: Math.round((score / totalPoints) * 100),
+        fraudDetection,
+        message: fraudDetection.isSuspicious 
+          ? "Attention: Des comportements suspects ont été détectés lors de la passation du quiz."
+          : score >= totalPoints * 0.6 
+            ? "Félicitations! Vous avez réussi le quiz!" 
+            : "Continuez à vous entraîner pour améliorer votre score."
+      };
+
+      console.log("Sending response:", result);
+      res.status(200).json(result);
+    } catch (saveError) {
+      console.error("Error saving quiz result:", saveError);
+      res.status(500).json({ error: "Error saving quiz result", details: saveError.message });
+    }
   } catch (err) {
     console.error("Submit quiz error:", err);
     res.status(500).json({ error: err.message });

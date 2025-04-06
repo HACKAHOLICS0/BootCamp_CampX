@@ -68,10 +68,32 @@ const QuizResultView = () => {
 
   const feedback = getFeedback(result.percentage);
 
+  const getFraudMessage = (fraudDetection) => {
+    if (!fraudDetection || !fraudDetection.isSuspicious) return null;
+
+    const messages = {
+      'TOO_FAST': 'Certaines réponses ont été données trop rapidement.',
+      'INCONSISTENT_TIME': 'Incohérence détectée dans les temps de réponse.',
+      'UNREALISTIC_SCORE': 'Score irréaliste compte tenu des temps de réponse.'
+    };
+
+    return (
+      <div className="fraud-alert alert alert-warning mt-3">
+        <h5>⚠️ Attention</h5>
+        <p>Des comportements suspects ont été détectés :</p>
+        <ul>
+          {fraudDetection.reasons.map(reason => (
+            <li key={reason}>{messages[reason]}</li>
+          ))}
+        </ul>
+      </div>
+    );
+  };
+
   return (
     <Container className="mt-4">
       <Card className="result-card">
-        <Card.Header as="h4" className="text-center">Quiz Results</Card.Header>
+        <Card.Header as="h4" className="text-center">Résultats du Quiz</Card.Header>
         <Card.Body>
           <div className="text-center mb-4">
             <h2>
@@ -86,21 +108,23 @@ const QuizResultView = () => {
             </h3>
           </div>
 
+          {result.fraudDetection && getFraudMessage(result.fraudDetection)}
+
           <div className="result-stats">
             <div className="stat-item">
-              <span className="stat-label">Total Questions:</span>
+              <span className="stat-label">Questions totales:</span>
               <span className="stat-value">{result.totalQuestions}</span>
             </div>
             <div className="stat-item">
-              <span className="stat-label">Points Earned:</span>
+              <span className="stat-label">Points obtenus:</span>
               <span className="stat-value">{result.score}</span>
             </div>
             <div className="stat-item">
-              <span className="stat-label">Total Points:</span>
+              <span className="stat-label">Points totaux:</span>
               <span className="stat-value">{result.totalPoints}</span>
             </div>
             <div className="stat-item">
-              <span className="stat-label">Percentage:</span>
+              <span className="stat-label">Pourcentage:</span>
               <span className="stat-value">{result.percentage}%</span>
             </div>
           </div>
@@ -118,14 +142,14 @@ const QuizResultView = () => {
             onClick={handleReturn}
             className="me-2"
           >
-            Return to {courseId ? 'Course' : 'Categories'}
+            Retour au {courseId ? 'cours' : 'catégories'}
           </Button>
           {quizId && (
             <Button 
               variant="outline-primary"
               onClick={() => window.location.reload()}
             >
-              Try Again
+              Réessayer
             </Button>
           )}
         </Card.Footer>

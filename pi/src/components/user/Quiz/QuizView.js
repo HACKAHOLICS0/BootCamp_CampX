@@ -12,11 +12,14 @@ const QuizView = () => {
   const [quiz, setQuiz] = useState(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState({});
-  const [timeLeft, setTimeLeft] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(0);
   const [verificationComplete, setVerificationComplete] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [startTime, setStartTime] = useState(null);
+  const [answerTimes, setAnswerTimes] = useState({});
+  const [questionStartTime, setQuestionStartTime] = useState(null);
   const navigate = useNavigate();
 
   // Récupérer l'image utilisateur pour la vérification
@@ -44,58 +47,72 @@ const QuizView = () => {
     fetchUserImage();
   }, []);
 
-  // Charger le quiz après la vérification faciale
+  // Récupérer le quiz
   useEffect(() => {
-    if (verificationComplete) {
-      setLoading(true);
-      const token = Cookies.get('token');
-      
-      axios.get(`${config.API_URL}/api/quiz/${quizId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-        .then(res => {
-          console.log("Quiz data received:", res.data);
-          if (!res.data) {
-            throw new Error('Aucune donnée de quiz reçue');
-          }
+    const fetchQuiz = async () => {
+      try {
+        console.log("Fetching quiz with ID:", quizId);
+        const token = Cookies.get('token');
+        if (!token) {
+          setError("Token non trouvé. Veuillez vous reconnecter.");
+          return;
+        }
 
-          // Normaliser les données du quiz
-          const normalizedQuiz = {
-            ...res.data,
-            title: res.data.title || res.data.nom || 'Quiz sans titre',
-            Questions: Array.isArray(res.data.questions) ? res.data.questions : 
-                      Array.isArray(res.data.Questions) ? res.data.Questions : []
-          };
-
-          if (normalizedQuiz.Questions.length === 0) {
-            throw new Error('Aucune question trouvée dans ce quiz');
-          }
-
-          // S'assurer que chaque question a le bon format
-          normalizedQuiz.Questions = normalizedQuiz.Questions.map(q => ({
-            _id: q._id,
-            texte: q.texte || q.text || q.question || 'Question sans texte',
-            Responses: Array.isArray(q.Responses) ? q.Responses :
-                      Array.isArray(q.responses) ? q.responses.map(r => ({
-                        _id: r._id,
-                        texte: r.texte || r.text || r.response || 'Réponse sans texte'
-                      })) : []
-          }));
-
-          console.log("Normalized quiz data:", normalizedQuiz);
-          setQuiz(normalizedQuiz);
-          setTimeLeft((normalizedQuiz.chronoVal || normalizedQuiz.duration || 10) * 60);
-          setLoading(false);
-        })
-        .catch((err) => {
-          console.error("Error loading quiz:", err);
-          setError(err.message || "Erreur lors du chargement du quiz");
-          setLoading(false);
+        const response = await axios.get(`${config.API_URL}/api/quiz/${quizId}`, {
+          headers: { Authorization: `Bearer ${token}` }
         });
-    }
-  }, [verificationComplete, quizId]);
 
-  // Timer pour le quiz
+        console.log("Quiz data received:", response.data);
+
+        if (!response.data) {
+          throw new Error('Aucune donnée de quiz reçue');
+        }
+
+        // Normaliser les données du quiz
+        const normalizedQuiz = {
+          ...response.data,
+          title: response.data.title || response.data.nom || 'Quiz sans titre',
+          Questions: Array.isArray(response.data.questions) ? response.data.questions : 
+                    Array.isArray(response.data.Questions) ? response.data.Questions : []
+        };
+
+        if (normalizedQuiz.Questions.length === 0) {
+          throw new Error('Aucune question trouvée dans ce quiz');
+        }
+
+        // S'assurer que chaque question a le bon format
+        normalizedQuiz.Questions = normalizedQuiz.Questions.map(q => ({
+          _id: q._id,
+          texte: q.texte || q.text || q.question || 'Question sans texte',
+          Responses: Array.isArray(q.Responses) ? q.Responses :
+                    Array.isArray(q.responses) ? q.responses.map(r => ({
+                      _id: r._id,
+                      texte: r.texte || r.text || r.response || 'Réponse sans texte'
+                    })) : []
+        }));
+
+        console.log("Normalized quiz data:", normalizedQuiz);
+        setQuiz(normalizedQuiz);
+        setTimeLeft((normalizedQuiz.chronoVal || normalizedQuiz.duration || 10) * 60);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error loading quiz:", error);
+        setError(error.message || "Erreur lors du chargement du quiz");
+        setLoading(false);
+      }
+    };
+
+    fetchQuiz();
+  }, [quizId]);
+
+  // Initialiser le temps de début du quiz
+  useEffect(() => {
+    if (quiz && !startTime) {
+      setStartTime(Date.now());
+    }
+  }, [quiz, startTime]);
+
+  // Gérer le timer du quiz
   useEffect(() => {
     let timer;
     if (timeLeft > 0 && quiz && !submitting) {
@@ -113,7 +130,24 @@ const QuizView = () => {
     return () => clearInterval(timer);
   }, [timeLeft, quiz, submitting]);
 
+  // Mettre à jour le temps de début de la question courante
+  useEffect(() => {
+    if (quiz && quiz.Questions && quiz.Questions[currentQuestion]) {
+      setQuestionStartTime(Date.now());
+    }
+  }, [currentQuestion, quiz]);
+
   const handleAnswerSelect = (questionId, answerId) => {
+    if (!questionStartTime) return;
+
+    const currentTime = Date.now();
+    const timeSpent = Math.floor((currentTime - questionStartTime) / 1000);
+    
+    setAnswerTimes(prev => ({
+      ...prev,
+      [questionId]: timeSpent
+    }));
+
     setSelectedAnswers(prev => ({
       ...prev,
       [questionId]: answerId
@@ -129,14 +163,37 @@ const QuizView = () => {
     try {
       setSubmitting(true);
       const token = Cookies.get('token');
+      const totalTimeSpent = Math.floor((Date.now() - startTime) / 1000);
+
+      // Vérifier que toutes les questions ont une réponse
+      const unansweredQuestions = quiz.Questions.filter(
+        q => !selectedAnswers[q._id]
+      );
+
+      if (unansweredQuestions.length > 0) {
+        setError('Veuillez répondre à toutes les questions avant de soumettre.');
+        setSubmitting(false);
+        return;
+      }
+
+      console.log("Submitting quiz with data:", {
+        answers: selectedAnswers,
+        answerTimes,
+        timeSpent: totalTimeSpent
+      });
+
       const response = await axios.post(`${config.API_URL}/api/quiz/submit/${quizId}`, {
-        answers: selectedAnswers
+        answers: selectedAnswers,
+        answerTimes,
+        timeSpent: totalTimeSpent
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
+      console.log("Quiz submission response:", response.data);
       navigate(`/quiz/${quizId}/result`, { state: { result: response.data } });
     } catch (err) {
+      console.error("Quiz submission error:", err);
       setError(err.response?.data?.error || "Échec de la soumission du quiz.");
       setSubmitting(false);
     }
@@ -152,6 +209,13 @@ const QuizView = () => {
     return (
       <Container className="mt-4">
         <Alert variant="danger">{error}</Alert>
+        <Button 
+          variant="primary" 
+          className="mt-3"
+          onClick={() => navigate(-1)}
+        >
+          Retour
+        </Button>
       </Container>
     );
   }
@@ -175,10 +239,11 @@ const QuizView = () => {
 
   if (loading || !quiz || !quiz.Questions) {
     return (
-      <Container>
-        <div className="text-center mt-4">
+      <Container className="mt-4">
+        <div className="text-center">
           <Spinner animation="border" />
           <p>Chargement du quiz...</p>
+          <small className="text-muted">Veuillez patienter pendant le chargement des questions.</small>
         </div>
       </Container>
     );

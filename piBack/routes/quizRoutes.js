@@ -1,10 +1,11 @@
 const express = require('express');
 const router = require('express').Router();
 const quizController = require('../controllers/quizcontroller');
+const { authMiddleware } = require('../middleware/authMiddleware');
 
 // Student quiz routes
 router.get('/student/:id', quizController.getQuizForStudent);
-router.post('/submit/:quizId', quizController.submitQuiz);
+router.post('/submit/:quizId', authMiddleware, quizController.submitQuiz);
 
 // Quiz course management
 router.get('/course/:courseId', quizController.getQuizzesByCourse);
