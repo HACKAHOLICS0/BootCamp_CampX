@@ -5,6 +5,7 @@ import { FaPlay, FaQuestionCircle, FaComments, FaClock, FaTrophy, FaChartLine } 
 import Cookies from 'js-cookie';
 import config from '../../config';
 import InteractiveVideoPlayer from './InteractiveVideoPlayer';
+import CourseProgress from '../user/Course/CourseProgress';
 import './CourseView.css';
 
 const CourseView = () => {
@@ -98,11 +99,27 @@ const CourseView = () => {
               }
               const quizData = await res.json();
               console.log(`Quiz ${quizId} data:`, quizData);
+
+              // Récupérer les résultats du quiz pour l'utilisateur actuel
+              const resultsResponse = await fetch(`${config.API_URL}/api/quiz/results/${quizId}`, {
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Accept': 'application/json'
+                }
+              });
+
+              let completed = false;
+              if (resultsResponse.ok) {
+                const results = await resultsResponse.json();
+                completed = results.length > 0;
+              }
+
               return {
                 ...quizData,
                 _id: quizId,
                 title: quizData.title || quizData.nom || 'Quiz sans titre',
-                duration: quizData.duration || quizData.duree || quizData.chronoVal || 0
+                duration: quizData.duration || quizData.duree || quizData.chronoVal || 0,
+                completed
               };
             }).catch(error => {
               console.warn(`Erreur lors de la récupération du quiz ${quizId}:`, error);
@@ -144,7 +161,6 @@ const CourseView = () => {
 
   const startQuiz = (quizId) => {
     navigate(`/categories/${categoryId}/modules/${moduleId}/courses/${courseId}/quiz/${quizId}`);
-
   };
 
   const formatDuration = (duration) => {
@@ -271,10 +287,9 @@ const CourseView = () => {
                             {formatDuration(quiz.duration)}
                           </span>
                           <span>
-  <FaQuestionCircle /> 
-  {quiz.Questions ? quiz.Questions.length : 0} questions
-</span>
-
+                            <FaQuestionCircle /> 
+                            {quiz.Questions ? quiz.Questions.length : 0} questions
+                          </span>
                           {quiz.completed && (
                             <span className="completed-badge">
                               ✓ Complété
@@ -313,18 +328,10 @@ const CourseView = () => {
         <div className="sidebar">
           <div className="sidebar-card">
             <h2>Progression</h2>
-            <div className="progress-info">
-              <div className="progress-bar">
-                <div 
-                  className="progress-fill" 
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>{Math.round(progress)}% complété</span>
-                <span>{quizzes.length} quiz</span>
-              </div>
-            </div>
+            <CourseProgress 
+              completedQuizzes={quizzes.filter(q => q.completed).length}
+              totalQuizzes={quizzes.length}
+            />
           </div>
 
           <div className="sidebar-card">

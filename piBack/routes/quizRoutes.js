@@ -21,4 +21,7 @@ router.delete('/:id', quizController.delete);
 router.post('/:id/question', quizController.addQuestion);
 router.delete('/:id/question/:questionId', quizController.removeQuestion);
 
+// Results management
+router.get('/results/:quizId', authMiddleware, quizController.getQuizResults);
+
 module.exports = router;

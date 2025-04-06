@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const quizModel = require('../Model/Quiz');
 const QuizResult = require('../Model/QuizResult');
 const Course = require('../Model/Course');
+const User = require('../Model/User');
 
 // Récupérer tous les quiz
 module.exports.find = async (req, res) => {
@@ -136,7 +137,7 @@ module.exports.submitQuiz = async (req, res) => {
     }
 
     const quiz = await quizModel.findById(quizId)
-      .select('Questions chrono chronoVal')
+      .select('Questions chrono chronoVal course')
       .populate({
         path: 'Questions',
         select: 'texte points Responses activer',
@@ -182,23 +183,10 @@ module.exports.submitQuiz = async (req, res) => {
     // Vérification du temps de réponse trop rapide (moins de 5 secondes par question)
     const MIN_TIME_PER_QUESTION = 5;
     const suspiciousFastAnswers = Object.values(answerTimes || {}).filter(time => time < MIN_TIME_PER_QUESTION);
+
     if (suspiciousFastAnswers.length > 0) {
       fraudDetection.isSuspicious = true;
       fraudDetection.reasons.push('TOO_FAST');
-    }
-
-    // Vérification de la cohérence du temps (si le temps total est très différent de la somme des temps individuels)
-    const totalAnswerTime = Object.values(answerTimes || {}).reduce((sum, time) => sum + time, 0);
-    const timeDifference = Math.abs(totalAnswerTime - (timeSpent || 0));
-    if (timeDifference > 30) { // Plus de 30 secondes de différence
-      fraudDetection.isSuspicious = true;
-      fraudDetection.reasons.push('INCONSISTENT_TIME');
-    }
-
-    // Vérification du score irréaliste (100% avec des temps de réponse très courts)
-    if (score === totalPoints && suspiciousFastAnswers.length > activeQuestions.length / 2) {
-      fraudDetection.isSuspicious = true;
-      fraudDetection.reasons.push('UNREALISTIC_SCORE');
     }
 
     try {
@@ -218,6 +206,30 @@ module.exports.submitQuiz = async (req, res) => {
       console.log("Saving quiz result:", quizResult);
       await quizResult.save();
       console.log("Quiz result saved successfully");
+
+      // Mettre à jour la progression de l'utilisateur dans le cours
+      if (quiz.course) {
+        const user = await User.findById(req.user._id);
+        const courseProgress = user.enrolledCourses.find(
+          course => course.courseId.toString() === quiz.course.toString()
+        );
+
+        if (courseProgress) {
+          // Vérifier si le quiz n'a pas déjà été complété
+          const existingResult = await QuizResult.findOne({
+            user: req.user._id,
+            quiz: quizId
+          });
+
+          if (!existingResult) {
+            courseProgress.quizzesCompleted += 1;
+            courseProgress.progress = Math.round(
+              (courseProgress.quizzesCompleted / quiz.Questions.length) * 100
+            );
+            await user.save();
+          }
+        }
+      }
 
       // Préparer la réponse
       const result = {
@@ -883,6 +895,28 @@ module.exports.updateQuestion = async (req, res) => {
     res.status(200).json(quiz);
   } catch (err) {
     console.error("Update question error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Get quiz results for a user
+module.exports.getQuizResults = async (req, res) => {
+  try {
+    const { quizId } = req.params;
+    const userId = req.user._id;
+
+    if (!mongoose.Types.ObjectId.isValid(quizId)) {
+      return res.status(400).json({ error: "Invalid quiz ID" });
+    }
+
+    const results = await QuizResult.find({
+      quiz: quizId,
+      user: userId
+    }).sort({ submittedAt: -1 });
+
+    res.status(200).json(results);
+  } catch (err) {
+    console.error("Get quiz results error:", err);
     res.status(500).json({ error: err.message });
   }
 };
