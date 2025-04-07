@@ -34,6 +34,16 @@ const [pointToDelete, setPointToDelete] = useState(null);
     const [interestPoints, setInterestPoints] = useState([]);
     const [selectedPoints, setSelectedPoints] = useState([]);
 
+    const [errors, setErrors] = useState({
+        name: "",
+        lastName: "",
+        birthDate: "",
+        email: "",
+        phone: ""
+    });
+
+    const [isFormValid, setIsFormValid] = useState(false);
+
     useEffect(() => {
         const storedUser = Cookies.get("user");
         if (storedUser) {
@@ -95,8 +105,8 @@ const [pointToDelete, setPointToDelete] = useState(null);
             return;
         }
     
-        const userId = user._id || user.id; // Extract and ensure we have a valid ID
-        console.log("User ID passed as parameter:", userId); // Ajout du log pour afficher l'ID
+        const userId = user._id || user.id;
+        console.log("User ID passed as parameter:", userId);
     
         try {
             const response = await fetch(`${backendURL}/api/auth/${userId}`, {
@@ -112,8 +122,28 @@ const [pointToDelete, setPointToDelete] = useState(null);
             }
     
             const updatedUser = await response.json();
-            setUser(updatedUser);
-            Cookies.set("user", JSON.stringify(updatedUser), { expires: 7 });
+            
+            // Mettre à jour l'état user avec les nouvelles valeurs
+            setUser(prevUser => ({
+                ...prevUser,
+                name: updatedUser.name,
+                lastName: updatedUser.lastName,
+                birthDate: updatedUser.birthDate,
+                email: updatedUser.email,
+                phone: updatedUser.phone
+            }));
+    
+            // Mettre à jour le cookie avec les nouvelles valeurs
+            Cookies.set("user", JSON.stringify({
+                ...user,
+                name: updatedUser.name,
+                lastName: updatedUser.lastName,
+                birthDate: updatedUser.birthDate,
+                email: updatedUser.email,
+                phone: updatedUser.phone
+            }), { expires: 7 });
+    
+            // Mettre à jour editableUser avec les nouvelles valeurs
             setEditableUser({
                 name: updatedUser.name || "",
                 lastName: updatedUser.lastName || "",
@@ -195,43 +225,86 @@ const [pointToDelete, setPointToDelete] = useState(null);
         }
     }, [user]);
 
-    const [errors, setErrors] = useState({
-        name: "",
-        lastName: "",
-        birthDate: "",
-        email: "",
-        phone: ""
-    });
-    
-    const [isFormValid, setIsFormValid] = useState(false);
-    
-    const validateField = (field) => {
-        const newErrors = { ...errors };
-        if (editableUser[field] === "") {
-            newErrors[field] = `${field.replace(/([A-Z])/g, ' $1')} is required.`;
-        } else {
-            newErrors[field] = "";
+    const validateField = (field, value) => {
+        let error = "";
+        switch (field) {
+            case "name":
+                if (!value) error = "Name is required";
+                else if (value.length < 2) error = "Name must be at least 2 characters";
+                else if (!/^[a-zA-Z\s]*$/.test(value)) error = "Name can only contain letters and spaces";
+                break;
+            case "lastName":
+                if (!value) error = "Last name is required";
+                else if (value.length < 2) error = "Last name must be at least 2 characters";
+                else if (!/^[a-zA-Z\s]*$/.test(value)) error = "Last name can only contain letters and spaces";
+                break;
+            case "email":
+                if (!value) error = "Email is required";
+                else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) error = "Invalid email format";
+                break;
+            case "phone":
+                if (!value) {
+                    error = "Phone number is required";
+                } else {
+                    // Supprimer les espaces et les caractères spéciaux pour la validation
+                    const cleanPhone = value.replace(/[\s-()]/g, '');
+                    if (!/^\+?[0-9]{8,15}$/.test(cleanPhone)) {
+                        error = "Phone number must be between 8 and 15 digits and can start with +";
+                    }
+                }
+                break;
+            case "birthDate":
+                if (!value) {
+                    error = "Birth date is required";
+                } else {
+                    const birthDate = new Date(value);
+                    const today = new Date();
+                    let age = today.getFullYear() - birthDate.getFullYear();
+                    const monthDiff = today.getMonth() - birthDate.getMonth();
+                    
+                    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                        age--;
+                    }
+                    
+                    if (age < 16) {
+                        error = "You must be at least 16 years old";
+                    } else if (birthDate > today) {
+                        error = "Birth date cannot be in the future";
+                    }
+                }
+                break;
         }
-    
-        if (field === "email" && editableUser[field] && !/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(editableUser[field])) {
-            newErrors[field] = "Invalid email format.";
-        }
-    
-        if (field === "phone" && editableUser[field] && !/^\+?[1-9]\d{1,14}$/.test(editableUser[field])) {
-            newErrors[field] = "Invalid phone number format.";
-        }
-    
-        if (field === "birthDate" && editableUser[field] && new Date(editableUser[field]) > new Date()) {
-            newErrors[field] = "Birth date cannot be in the future.";
-        }
-    
-        setErrors(newErrors);
-        checkFormValidity(newErrors);
+        return error;
     };
-    
-    const checkFormValidity = (newErrors) => {
-        setIsFormValid(!Object.values(newErrors).some(error => error !== '') && Object.values(editableUser).every(value => value !== ''));
+
+    const handleInputChange = (field, value) => {
+        // Formatage spécial pour le numéro de téléphone
+        if (field === "phone") {
+            // Supprimer tous les caractères non numériques sauf le + au début
+            const cleanValue = value.replace(/[^\d+]/g, '');
+            // Limiter la longueur à 15 caractères
+            const limitedValue = cleanValue.slice(0, 15);
+            value = limitedValue;
+        }
+
+        setEditableUser(prev => ({
+            ...prev,
+            [field]: value
+        }));
+
+        const error = validateField(field, value);
+        setErrors(prev => ({
+            ...prev,
+            [field]: error
+        }));
+
+        // Check if all fields are valid
+        const newErrors = { ...errors, [field]: error };
+        const isValid = !Object.values(newErrors).some(error => error !== '') && 
+                       Object.values(editableUser).every(value => value !== '');
+        setIsFormValid(isValid);
     };
+
     const openDeleteModal = (point) => {
         console.log("Selected point for deletion:", point); // Vérifie ce qui est sélectionné
         setPointToDelete(point);  // Assure-toi d'utiliser `point.value`
@@ -388,23 +461,27 @@ const [pointToDelete, setPointToDelete] = useState(null);
             <span className="edit-modal-close" onClick={closeModal}>&times;</span>
             <h4 className="edit-modal-title">Edit User Information</h4>
             <form className="edit-modal-form">
-                {Object.keys(editableUser).map((key, index) => (
-                    <div key={index} className="edit-form-group">
-                        <label className="edit-form-label">{key.replace(/([A-Z])/g, ' $1')}</label>
+                {["name", "lastName", "birthDate", "email", "phone"].map((field) => (
+                    <div key={field} className="edit-form-group">
+                        <label className="edit-form-label">
+                            {field.charAt(0).toUpperCase() + field.slice(1).replace(/([A-Z])/g, ' $1')}
+                        </label>
                         <input
-                            type={key === "birthDate" ? "date" : "text"}
-                            className="edit-form-control"
-                            value={editableUser[key]}
-                            onChange={(e) => {
-                                setEditableUser({ ...editableUser, [key]: e.target.value });
-                                validateField(key);
-                            }}
+                            type={field === "birthDate" ? "date" : field === "email" ? "email" : "text"}
+                            className={`edit-form-control ${errors[field] ? "is-invalid" : ""} ${field === "email" ? "readonly-input" : ""}`}
+                            value={editableUser[field]}
+                            onChange={(e) => handleInputChange(field, e.target.value)}
+                            readOnly={field === "email"}
                         />
-                        {errors[key] && <small className="text-danger">{errors[key]}</small>}
+                        {errors[field] && <small className="text-danger">{errors[field]}</small>}
                     </div>
                 ))}
                 <div className="edit-modal-footer">
-                    <button className="edit-save-button" onClick={handleSaveUser} disabled={!isFormValid}>
+                    <button 
+                        className="edit-save-button" 
+                        onClick={handleSaveUser} 
+                        disabled={!isFormValid}
+                    >
                         Save
                     </button>
                 </div>
