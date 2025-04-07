@@ -41,6 +41,7 @@ import QuizResultView from './components/user/Quiz/QuizResultView';
 import MarketInsights from './components/MarketInsights/MarketInsights';
 import CourseView from './components/video-course/CourseView';
 import { FaceRecognition } from './components/user/Quiz/FaceRecognition';
+import ChatbotPopup from './components/ChatbotPopup';
 
 
 function App() {
@@ -132,6 +133,8 @@ function App() {
 
         {/* Ne pas afficher le Footer si c'est une route Admin */}
         {!isAdminRoute && <Footer />}
+
+        <ChatbotPopup />
 
       </div>
     </GoogleOAuthProvider>

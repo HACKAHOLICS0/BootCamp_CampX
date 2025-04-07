@@ -31,8 +31,8 @@ class ChatbotPredictor:
         
         # Historique des conversations par utilisateur
         self.conversation_history = defaultdict(list)
-        self.response_history = defaultdict(dict)
-        self.last_responses = defaultdict(str)
+        self.response_history = defaultdict(list)  # Historique des réponses par utilisateur
+        self.last_responses = defaultdict(str)    # Dernière réponse par utilisateur
         
         # Charger les abréviations
         try:
@@ -296,6 +296,32 @@ class ChatbotPredictor:
                 "response": "Une erreur s'est produite lors de la recherche du cours."
             }
 
+    def _get_unique_response(self, responses, user_id):
+        """Retourne une réponse unique qui n'a pas été utilisée récemment"""
+        if not responses:
+            return "Je ne suis pas sûr de comprendre. Pouvez-vous reformuler ?"
+            
+        # Filtrer les réponses qui n'ont pas été utilisées récemment
+        available_responses = [r for r in responses if r != self.last_responses[user_id]]
+        
+        if not available_responses:
+            # Si toutes les réponses ont été utilisées, réinitialiser l'historique
+            self.response_history[user_id] = []
+            available_responses = responses
+            
+        # Choisir une réponse aléatoire parmi celles disponibles
+        response = random.choice(available_responses)
+        
+        # Mettre à jour l'historique
+        self.last_responses[user_id] = response
+        self.response_history[user_id].append(response)
+        
+        # Limiter la taille de l'historique à 5 réponses
+        if len(self.response_history[user_id]) > 5:
+            self.response_history[user_id].pop(0)
+            
+        return response
+
     def get_response(self, message, user_id=None):
         """Génère une réponse en fonction du message de l'utilisateur"""
         # Normaliser l'entrée
@@ -322,7 +348,7 @@ class ChatbotPredictor:
         # Pour les autres intentions, continuer avec le traitement normal
         for intent_data in self.intents["intents"]:
             if intent_data["tag"] == intent:
-                response = random.choice(intent_data["responses"])
+                response = self._get_unique_response(intent_data["responses"], user_id)
                 return {
                     "response": response,
                     "action": intent_data.get("action"),

@@ -1,0 +1,56 @@
+{
+  "status": "success",
+  "timestamp": "2025-04-07T22:02:28.655758",
+  "search_term": "data science",
+  "total_courses": 6,
+  "platform_distribution": {
+    "Coursera": 5,
+    "Udemy": 1
+  },
+  "average_price": 5,
+  "average_rating": 4.6,
+  "courses": [
+    {
+      "platform": "Coursera",
+      "title": "IBM Data Science",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/professional-certificates/ibm-data-science"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Python for Data Science, AI & Development",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/learn/python-for-applied-data-science-ai"
+    },
+    {
+      "platform": "Coursera",
+      "title": "DeepLearning.AI Data Analytics",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/professional-certificates/data-analytics"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Microsoft Data Visualization",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/professional-certificates/microsoft-data-visualization"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Data Science",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/specializations/jhu-data-science"
+    },
+    {
+      "platform": "Udemy",
+      "title": "Data Science A-Z�: Real-Life Data Science Exercises",
+      "price": 29.99,
+      "rating": 4.6,
+      "url": "https://www.udemy.com/course/datascience/"
+    }
+  ]
+}
