@@ -304,7 +304,7 @@ const CourseView = () => {
               <div className="chatroom-placeholder">
                 <FaComments size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
                 <h3>Chat room</h3>
-                <p>Cette fonctionnalité sera bientôt disponible...</p>
+             <button onClick={() => navigate(`/chat`)}>Chat</button>
               </div>
             )}
           </div>

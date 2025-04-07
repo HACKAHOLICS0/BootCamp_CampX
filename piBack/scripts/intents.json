@@ -10,7 +10,34 @@
                 "Bonjour! Comment puis-je vous aider avec nos cours?",
                 "Salut! Que puis-je faire pour vous aujourd'hui?",
                 "Bonjour! En quoi puis-je vous être utile pour votre apprentissage?",
-                "Hey! Je peux vous aider à trouver vos cours ou répondre à vos questions."
+                "Hey! Je peux vous aider à trouver vos cours ou répondre à vos questions.",
+                "Salut! Je suis là pour vous aider avec votre apprentissage.",
+                "Bonjour! Comment puis-je vous assister aujourd'hui?",
+                "Hey! En quoi puis-je vous être utile?",
+                "Salut! Je suis ravi de vous aider avec vos cours.",
+                "Bonjour! Que puis-je faire pour vous?",
+                "Hey! Comment puis-je vous aider dans votre apprentissage?"
+            ]
+        },
+        {
+            "tag": "how_are_you",
+            "patterns": [
+                "comment allez vous", "comment vas tu", "ça va", "comment ça va",
+                "comment tu vas", "comment vous allez", "comment allez-vous",
+                "comment vas-tu", "comment ça va aujourd'hui", "comment allez-vous aujourd'hui",
+                "salut comment ça va", "bonjour comment allez vous"
+            ],
+            "responses": [
+                "Je vais très bien, merci! Et vous?",
+                "Tout va bien de mon côté! Et vous, comment allez-vous?",
+                "Je suis en pleine forme! Et vous, comment ça va?",
+                "Je suis prêt à vous aider! Comment allez-vous aujourd'hui?",
+                "Je vais bien, merci de demander! Et vous?",
+                "Tout va bien, je suis là pour vous aider! Et vous?",
+                "Je suis en forme et prêt à vous assister! Et vous?",
+                "Je vais bien, merci! Comment puis-je vous aider?",
+                "Tout va bien de mon côté! En quoi puis-je vous être utile?",
+                "Je suis en pleine forme! Que puis-je faire pour vous?"
             ]
         },
         {
@@ -97,18 +124,21 @@
         {
             "tag": "merci",
             "patterns": [
-                "Merci",
-                "Je vous remercie",
-                "C'est gentil",
-                "Merci beaucoup",
-                "Super, merci"
+                "merci", "je vous remercie", "c'est gentil", "merci beaucoup",
+                "super, merci", "merci bien", "merci beaucoup pour votre aide"
             ],
             "responses": [
-                "De rien!",
-                "C'est un plaisir de vous aider!",
-                "N'hésitez pas si vous avez d'autres questions."
-            ],
-            "context": []
+                "De rien! C'est un plaisir de vous aider!",
+                "Je vous en prie! N'hésitez pas si vous avez d'autres questions.",
+                "Avec plaisir! Je suis là pour vous aider.",
+                "C'est normal! N'hésitez pas à revenir vers moi si besoin.",
+                "De rien! C'est toujours un plaisir d'aider.",
+                "Je vous en prie! Bonne continuation dans votre apprentissage.",
+                "Avec plaisir! Bon courage pour la suite.",
+                "De rien! N'hésitez pas si vous avez besoin d'aide.",
+                "Je vous en prie! Bonne journée.",
+                "Avec plaisir! À bientôt!"
+            ]
         },
         {
             "tag": "cours",
