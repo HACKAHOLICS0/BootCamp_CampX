@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import axios from 'axios';
+import Cookies from 'js-cookie';
 import './PaymentForm.css';
 
 // Initialize Stripe
@@ -18,10 +19,22 @@ const PaymentForm = ({ courseId, amount, onSuccess, onCancel }) => {
     setProcessing(true);
 
     try {
+      const token = Cookies.get('token');
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+
+      const config = {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      };
+
       // Create payment intent
       const { data: { clientSecret } } = await axios.post('http://localhost:5000/api/payments/create-payment-intent', {
         courseId
-      });
+      }, config);
 
       // Confirm the payment
       const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
@@ -37,13 +50,14 @@ const PaymentForm = ({ courseId, amount, onSuccess, onCancel }) => {
       }
 
       // Confirm payment on our backend
-      await axios.post('/api/payments/confirm-payment', {
+      await axios.post('http://localhost:5000/api/payments/confirm-payment', {
         paymentIntentId: paymentIntent.id
-      });
+      }, config);
 
       onSuccess();
     } catch (err) {
-      setError(err.message);
+      console.error('Payment error:', err);
+      setError(err.response?.data?.message || err.message || 'Payment failed');
     } finally {
       setProcessing(false);
     }
