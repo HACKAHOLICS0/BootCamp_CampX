@@ -18,6 +18,7 @@ const chatRoutes = require('./routes/chatRoutes');
 const ChatRoom = require("./Model/ChatRoom");
 const marketInsightsRoutes = require('./routes/marketInsights');
 const connectDB = require("./config/dbConfig");
+const paymentRoutes = require('./routes/paymentRoutes'); // Add payment routes
 
 require("dotenv").config({ path: "./config/.env" }); 
 
@@ -124,6 +125,7 @@ app.use('/api/courses', courseRoutes);
 app.use('/api/chat', chatRoutes); // Ajout des routes du chatbot
 app.use('/api/market-insights', marketInsightsRoutes);
 app.use('/api/questions', questionRoutes);
+app.use('/api/payments', paymentRoutes); // Mount payment routes
 
 // Socket.IO events
 io.on('connection', (socket) => {
