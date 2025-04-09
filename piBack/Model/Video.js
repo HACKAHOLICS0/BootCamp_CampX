@@ -1,16 +1,40 @@
 const mongoose = require("mongoose");
 
-const VideoSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  videoUrl: { type: String, required: true }, // Lien de la vidéo stockée
-  quiz: [
-    {
-      timestamp: { type: Number, required: true }, // Moment où la vidéo doit s'arrêter (en secondes)
-      question: { type: String, required: true }, // Question à poser
-      options: [{ type: String }], // Options de réponse
-      answer: { type: String, required: true }, // Réponse correcte
+const videoSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true
+  },
+  description: {
+    type: String,
+    required: true
+  },
+  courseId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Course',
+    required: true
+  },
+  videoUrl: {
+    type: String,
+    required: true
+  },
+  interactivePoints: [{
+    timestamp: {
+      type: Number, // Temps en secondes où la question apparaît
+      required: true
     },
-  ],
+    question: {
+      type: String,
+      required: true
+    },
+    options: [{
+      text: String,
+      isCorrect: Boolean
+    }],
+    explanation: String // Explication de la réponse correcte
+  }]
+}, {
+  timestamps: true
 });
 
-module.exports = mongoose.model("Video", VideoSchema);
+module.exports = mongoose.model("Video", videoSchema);

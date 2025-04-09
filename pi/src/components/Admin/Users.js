@@ -70,7 +70,7 @@ const Users = () => {
               <th>Email</th>
               <th>Phone</th>
               <th>Interest Points</th> {/* Fixed column name */}
-              <th>Progrès</th> {/* Ajout de la colonne pour le progrès */}
+              <th>Status</th> {/* Ajout de la colonne pour le progrès */}
               <th>Actions</th>
             </tr>
           </thead>

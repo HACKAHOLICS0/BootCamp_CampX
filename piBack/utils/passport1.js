@@ -14,31 +14,26 @@ passport.use(new GitHubStrategy(
   },
   async (accessToken, refreshToken, profile, done) => {
     try {
-      // Vérifie si un utilisateur existe déjà avec cet email
-      let user = await User.findOne({ email: profile.emails?.[0]?.value });
+      // Vérifier uniquement par GitHub ID
+      let user = await User.findOne({ githubId: profile.id });
 
-      // Si l'utilisateur existe, on met à jour son GitHubId, sinon on en crée un nouveau
-      if (user) {
-        if (!user.githubId) {
-          user.githubId = profile.id;
-          await user.save(); // Mettre à jour l'ID GitHub
-        }
-      } else {
-        // Crée un nouvel utilisateur si aucun n'est trouvé
+      // Si l'utilisateur n'existe pas, créer un nouveau compte même si l'email existe ailleurs
+      if (!user) {
         user = new User({
           githubId: profile.id,
           name: profile.displayName || profile.username,
           email: profile.emails?.[0]?.value || null,
           image: profile.photos?.[0]?.value || null,
+          authProvider: 'github',
           typeUser: 'user',
+          isVerified: true // Les utilisateurs GitHub sont automatiquement vérifiés
         });
         await user.save();
-
       }
 
       // Génération du JWT
       const token = jwt.sign(
-        { id: user._id, githubId: user.githubId },
+        { id: user._id, githubId: user.githubId, authProvider: user.authProvider },
         process.env.JWT_SECRET,
         { expiresIn: '1d' }
       );
@@ -51,10 +46,10 @@ passport.use(new GitHubStrategy(
   }
 ));
 
+
 // Sérialisation de l'utilisateur (stocker uniquement l'ID dans la session)
 passport.serializeUser((data, done) => {
   const user = data.user;
-  console.log("User being serialized:", user);
 
   if (!user || !user._id || !mongoose.Types.ObjectId.isValid(user._id)) {
     return done(new Error("Invalid user ID format"), null);

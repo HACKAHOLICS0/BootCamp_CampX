@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const twilio = require('twilio');
 const User = require('../Model/User');
 const axios = require("axios");
+
 require('dotenv').config();
 const sendEmail = require('../utils/email');
 // Check if an email exists
@@ -15,6 +16,24 @@ const checkEmailExists = async (req, res) => {
     console.error('Error during email check:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
+};
+
+// Get current user profile
+const getCurrentUser = async (req, res) => {
+  try {
+    const userId = req.params.id; // Get the user ID from the URL parameters
+    const user = await User.findById(userId); // Fetch the user from the database
+
+    if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Return the user data you need, e.g., image
+    res.json({ image: user.image }); // Adjust according to your user model
+} catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+}
 };
 
 const signup = async (req, res) => {
@@ -475,7 +494,8 @@ const forgotPasswordEmail = async (req, res) => {
         const { token } = req.body;
         const decoded = jwt.decode(token);
 
-        let user = await User.findOne({ email: decoded.email });
+        // Rechercher l'utilisateur par Google ID
+        let user = await User.findOne({ googleId: decoded.sub });
 
         if (!user) {
             user = new User({
@@ -483,20 +503,22 @@ const forgotPasswordEmail = async (req, res) => {
                 name: decoded.name,
                 email: decoded.email,
                 typeUser: "user",
-                image: decoded.picture, // Stocke l'URL de la photo de profil Google
+                image: decoded.picture,
+                authProvider: 'google',
+                isVerified: true // Les utilisateurs Google sont automatiquement vérifiés
             });
             await user.save();
-        } else {
-            // Met à jour l'image de l'utilisateur avec l'image Google s'il n'a pas déjà une image locale
-            if (!user.image || user.image.startsWith("uploads/")) {
-                user.image = decoded.picture;
-                await user.save();
-            }
         }
 
-        const appToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-            expiresIn: "1h",
-        });
+        const appToken = jwt.sign(
+            { 
+                id: user._id, 
+                googleId: user.googleId, 
+                authProvider: user.authProvider 
+            }, 
+            process.env.JWT_SECRET, 
+            { expiresIn: "1h" }
+        );
 
         res.json({ token: appToken, user });
     } catch (err) {
@@ -507,5 +529,5 @@ const forgotPasswordEmail = async (req, res) => {
 
 
   
-  module.exports = { googleTokenAuth,signup,authenticate, signin, checkEmailExists,verifyEmail, sendVerificationCode,editUser,getUserById, verifyCode, resetPassword, resetPasswordEmail, forgotPasswordEmail };
+  module.exports = { googleTokenAuth, signup, authenticate, signin, checkEmailExists, getCurrentUser, verifyEmail, sendVerificationCode, editUser, getUserById, verifyCode, resetPassword, resetPasswordEmail, forgotPasswordEmail };
   

@@ -1,4 +1,3 @@
-
 const mongoose = require('mongoose');
 
 const courseSchema = new mongoose.Schema({
@@ -16,10 +15,10 @@ const courseSchema = new mongoose.Schema({
         ref: 'Module',
         required: true
     },
-    quiz: {
+    quizzes: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Quiz'
-    },
+    }],
     price: {
         type: Number,
         required: true
@@ -51,6 +50,7 @@ const courseSchema = new mongoose.Schema({
     videos: [{
         title: String,
         url: String,
+        duration: Number,
         description: String
     }]
 });

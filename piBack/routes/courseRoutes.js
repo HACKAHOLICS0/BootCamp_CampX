@@ -1,42 +1,33 @@
 const express = require('express');
 const router = express.Router();
+const { authMiddleware, adminMiddleware } = require('../middleware/authMiddleware');
 const {
+    getAllCourses,
+    getCoursesByModule,
+    getCourseById,
     createCourse,
     updateCourse,
-    archiveCourse,
-    getCoursesByModule,
     purchaseCourse,
-    getAllCourses,
-    getCourseDetails,
-    saveQuizResponse
+    addQuizToCourse,
+    removeQuizFromCourse,
+    archiveCourse
 } = require('../controllers/courseController');
-const auth = require('../middleware/auth');
 
-// Routes publiques (accessibles à tous)
-// Get all courses (Public)
+// Public routes
 router.get('/', getAllCourses);
-
-// Get courses by module
 router.get('/module/:moduleId', getCoursesByModule);
+router.get('/:id', getCourseById);
 
-// Get details of a specific course with videos and quizzes
-router.get('/details/:id', getCourseDetails);
+// Protected routes - require authentication
+router.post('/:courseId/purchase', authMiddleware, purchaseCourse);
 
-// Routes qui nécessitent des privilèges d'administrateur
-// Add a course to a module 
-router.post('/', auth, createCourse);
+// Admin routes - require authentication and admin role
+router.post('/', [authMiddleware, adminMiddleware], createCourse);
+router.put('/:id', [authMiddleware, adminMiddleware], updateCourse);
+router.patch('/:id/archive', [authMiddleware, adminMiddleware], archiveCourse);
 
-// Edit a course 
-router.patch('/:id', auth, updateCourse);
-
-// Archive a course 
-router.patch('/:id/archive', auth, archiveCourse);
-
-// Routes qui nécessitent authentification (mais pas forcément admin)
-// Purchase a course
-router.post('/:id/purchase', purchaseCourse);
-
-// Save quiz response
-router.post('/save-quiz-response', saveQuizResponse);
+// Quiz management routes
+router.post('/:courseId/quiz/:quizId', [authMiddleware, adminMiddleware], addQuizToCourse);
+router.delete('/:courseId/quiz/:quizId', [authMiddleware, adminMiddleware], removeQuizFromCourse);
 
 module.exports = router;

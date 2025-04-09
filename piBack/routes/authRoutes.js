@@ -10,9 +10,8 @@ router.get('/check/:email', authController.checkEmailExists);
 
 // Inscription (avec upload d'image)
 router.post('/signup', upload.single('image'), authController.signup);
-
-// Vérification de l'email
 router.post('/verify-email/:token', authController.verifyEmail);
+router.get('/profile/:id', authController.getCurrentUser);
 
 // Connexion
 router.post('/signin', authController.signin);
@@ -54,7 +53,6 @@ router.get(
 );
 router.put("/:id", upload.single('image'), authController.editUser);
 router.get("/:id", authController.getUserById);
-
 
 router.get('/github/callback', passport.authenticate('github', { failureRedirect: '/signin' }), (req, res) => {
   // Utilisateur récupéré après la redirection GitHub

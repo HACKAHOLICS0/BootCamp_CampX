@@ -1,0 +1,70 @@
+.market-insights-container {
+    padding: 24px;
+}
+
+.market-insights-paper {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.search-field {
+    margin-bottom: 16px;
+}
+
+.chart-container {
+    margin-top: 24px;
+    margin-bottom: 24px;
+    height: 300px;
+}
+
+.timeline-card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.timeline-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.chip-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.analysis-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.analysis-card-content {
+    flex-grow: 1;
+}
+
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+}
+
+.error-message {
+    color: #d32f2f;
+    margin: 16px 0;
+    padding: 8px;
+    border-radius: 4px;
+    background-color: rgba(211, 47, 47, 0.1);
+}
+
+@media (max-width: 600px) {
+    .market-insights-container {
+        padding: 16px;
+    }
+
+    .chart-container {
+        height: 250px;
+    }
+} 

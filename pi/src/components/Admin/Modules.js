@@ -57,18 +57,13 @@ const Modules = () => {
   // Handle modifying module
   const handleModify = (moduleId) => {
     const moduleToModify = modules.find((mod) => mod._id === moduleId);
-    if (!moduleToModify) {
-      console.error("Module not found with ID:", moduleId);
-      return;
-    }
-    
     setSelectedModule(moduleToModify);
     setFormData({
-      title: moduleToModify.title || "",
-      description: moduleToModify.description || "",
-      category: moduleToModify.category && moduleToModify.category._id ? moduleToModify.category._id : "",
-      duration: moduleToModify.duration || "",
-      difficulty: moduleToModify.difficulty || "intermediate",
+      title: moduleToModify.title,
+      description: moduleToModify.description,
+      category: moduleToModify.category._id,
+      duration: moduleToModify.duration,
+      difficulty: moduleToModify.difficulty,
       image: moduleToModify.image || ""
     });
     setIsAdding(false);

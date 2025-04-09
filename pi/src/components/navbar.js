@@ -3,15 +3,18 @@ import { Link, useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../Navbar.css";
 import Cookies from "js-cookie"; 
+import axios from 'axios';
 
 export default function Navbar() {
   const [user, setUser] = useState(null);
   const navigate = useNavigate(); 
+  const [categories, setCategories] = useState([]);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
     const user = params.get("user"); // Si ton backend envoie l'user sous forme de chaîne JSON
-    
+
     if (token && user) {
       Cookies.set("token", token, { expires: 7 });
       Cookies.set("user", user, { expires: 7 });
@@ -76,7 +79,35 @@ export default function Navbar() {
     };
   }, []);
   
-  
+  useEffect(() => {
+    updateUser();
+    
+    const handleUserUpdate = () => updateUser();
+    window.addEventListener("userUpdated", handleUserUpdate);
+
+    const fetchCategories = async () => {
+      try {
+        const token = Cookies.get('token');
+        const response = await axios.get('http://localhost:5000/api/categories', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (response.data) {
+          setCategories(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+        setCategories([]); // En cas d'erreur, on met un tableau vide
+      }
+    };
+
+    fetchCategories();
+
+    return () => {
+      window.removeEventListener("userUpdated", handleUserUpdate);
+    };
+  }, []);
 
   // Fonction pour déconnecter l'utilisateur
   const handleSignOut = (e) => {
@@ -90,6 +121,11 @@ export default function Navbar() {
 
   console.log("Utilisateur actuel :", user); // 🔍 Vérification
 
+
+
+  const handleCategoryClick = (categoryId) => {
+    navigate(`/categories/${categoryId}/modules`);
+  };
   return (
     <div id="header" className="bg-white text-dark py-3 shadow-lg">
       <div className="container d-flex align-items-center justify-content-between">
@@ -105,15 +141,45 @@ export default function Navbar() {
                 Home
               </Link>
             </li>
-            <li className="nav-item">
-              <Link to="/modules" className="nav-link text-dark hover-effect">
-                Modules
-              </Link>
-            </li>
+            {user && ( // N'afficher le dropdown que si l'utilisateur est connecté
+              <li className="nav-item dropdown">
+                <span 
+                  className="nav-link text-dark hover-effect dropdown-toggle"
+                >
+                  Categories
+                </span>
+                <ul className="dropdown-menu">
+                  {categories.map(category => (
+                    <li key={category._id}>
+                      <button 
+                        className="dropdown-item"
+                        onClick={() => handleCategoryClick(category._id)}
+                      >
+                        {category.name}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            )}
             {user ? (
               <li className="nav-item d-flex">
+                {user.role === 'admin' && (
+                  <Link to="/admin" className="nav-link text-dark hover-effect">
+                    Admin Dashboard
+                  </Link>
+                )}
                 <Link to="/profile" className="nav-link text-dark hover-effect">
                   Profile
+                </Link>
+                <Link to="/market-insights" className="nav-link text-dark hover-effect">
+                  Market Insights
+                </Link>
+                <Link to="/chatbot" className="nav-link text-dark hover-effect">
+                  chatbot
+                </Link>
+                <Link to="/chat" className="nav-link text-dark hover-effect">
+                  Chat
                 </Link>
                 <button
                   onClick={handleSignOut}
@@ -134,6 +200,7 @@ export default function Navbar() {
                     Sign Up
                   </Link>
                 </li>
+               
               </>
             )}
           </ul>
