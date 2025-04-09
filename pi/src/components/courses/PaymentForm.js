@@ -19,7 +19,7 @@ const PaymentForm = ({ courseId, amount, onSuccess, onCancel }) => {
 
     try {
       // Create payment intent
-      const { data: { clientSecret } } = await axios.post('/api/payments/create-payment-intent', {
+      const { data: { clientSecret } } = await axios.post('http://localhost:5000/api/payments/create-payment-intent', {
         courseId
       });
 
