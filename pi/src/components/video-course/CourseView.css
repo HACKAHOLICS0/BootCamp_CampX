@@ -706,3 +706,72 @@
 .no-video-message p {
   color: #666;
 }
+
+.video-player {
+  position: relative;
+  width: 100%;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.video-loading,
+.video-error {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  z-index: 1;
+}
+
+.video-error button {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background: #007bff;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+}
+
+.video-error button:hover {
+  background: #0056b3;
+}
+
+video {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Add these styles to your existing CSS */
+.video-section-container {
+  display: flex;
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.video-player-container {
+  flex: 2;
+  min-height: 400px;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.video-list {
+  flex: 1;
+  max-height: 600px;
+  overflow-y: auto;
+  padding: 1rem;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}

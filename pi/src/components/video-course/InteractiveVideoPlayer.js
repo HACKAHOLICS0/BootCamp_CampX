@@ -1,105 +1,132 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Box, Typography, Button, Paper, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 
-const InteractiveVideoPlayer = ({ videoUrl }) => {
+// Language options mapping
+const LANGUAGE_CODES = {
+  'en': 'en-US',
+  'fr': 'fr-FR',
+  'es': 'es-ES',
+  'de': 'de-DE',
+  'it': 'it-IT',
+  'pt': 'pt-PT'
+};
+
+const InteractiveVideoPlayer = ({ videoUrl, videoTitle, language = 'en' }) => {
   const videoRef = useRef(null);
+  const transcriptionBoxRef = useRef(null);
   const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [transcription, setTranscription] = useState('');
   const [isRecognizing, setIsRecognizing] = useState(false);
   const recognitionRef = useRef(null);
-  const transcriptionRef = useRef(''); // Pour stocker la transcription complète
+  const transcriptionRef = useRef('');
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [showExplanation, setShowExplanation] = useState(false);
   const [lastQuestionTime, setLastQuestionTime] = useState(0);
   const questionIntervalRef = useRef(null);
+  const [micPermission, setMicPermission] = useState(false);
 
-  useEffect(() => {
-    // Vérifier si la reconnaissance vocale est supportée
-    if (!window.webkitSpeechRecognition) {
-      console.error("La reconnaissance vocale n'est pas supportée par ce navigateur");
-      return;
+  // Request microphone permission and initialize speech recognition
+  const initializeSpeechRecognition = async () => {
+    try {
+      // First, request microphone permission
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(track => track.stop()); // Stop the stream after getting permission
+      setMicPermission(true);
+
+      // Initialize speech recognition
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        console.log("Speech recognition not supported");
+        return;
+      }
+
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = true;
+      recognitionRef.current.interimResults = true;
+      recognitionRef.current.lang = LANGUAGE_CODES[language] || 'en-US';
+
+      recognitionRef.current.onstart = () => {
+        console.log('Speech recognition started');
+        setIsRecognizing(true);
+      };
+
+      recognitionRef.current.onresult = (event) => {
+        let finalTranscript = '';
+        let interimTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+
+        if (finalTranscript) {
+          console.log('Received transcript:', finalTranscript);
+          transcriptionRef.current += finalTranscript;
+          setTranscription(prev => prev + finalTranscript);
+        }
+      };
+
+      recognitionRef.current.onerror = (event) => {
+        console.log('Speech recognition error:', event.error);
+        if (event.error === 'not-allowed') {
+          setError("Veuillez autoriser l'accès au microphone pour la transcription");
+          setMicPermission(false);
+        }
+        setIsRecognizing(false);
+      };
+
+      recognitionRef.current.onend = () => {
+        console.log('Speech recognition ended');
+        setIsRecognizing(false);
+        if (videoRef.current && !videoRef.current.paused && !videoRef.current.ended && micPermission) {
+          try {
+            recognitionRef.current.start();
+          } catch (error) {
+            console.log('Error restarting recognition:', error);
+          }
+        }
+      };
+
+    } catch (error) {
+      console.log('Error initializing speech recognition:', error);
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        setError("L'accès au microphone est nécessaire pour la transcription. Veuillez l'autoriser dans les paramètres de votre navigateur.");
+        setMicPermission(false);
+      }
     }
+  };
 
-    // Créer une nouvelle instance de reconnaissance vocale
-    const SpeechRecognition = window.webkitSpeechRecognition;
-    recognitionRef.current = new SpeechRecognition();
-    
-    // Configurer la reconnaissance vocale
-    recognitionRef.current.continuous = true;
-    recognitionRef.current.interimResults = true;
-    recognitionRef.current.lang = 'fr-FR';
-
-    // Gérer les résultats de la reconnaissance
-    recognitionRef.current.onresult = (event) => {
-      let finalTranscript = '';
-      let interimTranscript = '';
-
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript + ' ';
-        } else {
-          interimTranscript += transcript;
-        }
-      }
-
-      if (finalTranscript) {
-        // Mettre à jour la transcription complète
-        transcriptionRef.current += finalTranscript;
-        setTranscription(transcriptionRef.current);
-      }
-    };
-
-    // Gérer les erreurs
-    recognitionRef.current.onerror = (event) => {
-      console.error('Erreur de reconnaissance vocale:', event.error);
-      setIsRecognizing(false);
-    };
-
-    // Gérer la fin de la reconnaissance
-    recognitionRef.current.onend = () => {
-      setIsRecognizing(false);
-      // Redémarrer automatiquement si la vidéo est toujours en lecture
-      if (videoRef.current && !videoRef.current.paused && !videoRef.current.ended) {
-        try {
-          recognitionRef.current.start();
-          setIsRecognizing(true);
-        } catch (error) {
-          console.error('Erreur lors du redémarrage de la reconnaissance:', error);
-        }
-      }
-    };
-
+  // Initialize on component mount
+  useEffect(() => {
+    initializeSpeechRecognition();
     return () => {
       if (recognitionRef.current) {
-        recognitionRef.current.stop();
+        try {
+          recognitionRef.current.stop();
+        } catch (error) {
+          console.log('Error stopping recognition:', error);
+        }
       }
     };
   }, []);
 
-  const handleError = (e) => {
-    console.error("Erreur de chargement de la vidéo:", e);
-    setError("La vidéo n'a pas pu être chargée. Veuillez réessayer.");
-  };
-
-  const handleRetry = () => {
-    if (videoRef.current) {
-      videoRef.current.load();
-      setError(null);
-      // Réinitialiser la transcription
-      transcriptionRef.current = '';
-      setTranscription('');
+  // Handle video events
+  const handlePlay = async () => {
+    if (!micPermission) {
+      await initializeSpeechRecognition();
     }
-  };
-
-  const handlePlay = () => {
-    if (recognitionRef.current && !isRecognizing) {
+    
+    if (recognitionRef.current && !isRecognizing && micPermission) {
       try {
         recognitionRef.current.start();
-        setIsRecognizing(true);
       } catch (error) {
-        console.error('Erreur lors du démarrage de la reconnaissance:', error);
+        console.log('Error starting recognition:', error);
       }
     }
   };
@@ -108,16 +135,24 @@ const InteractiveVideoPlayer = ({ videoUrl }) => {
     if (recognitionRef.current && isRecognizing) {
       try {
         recognitionRef.current.stop();
-        setIsRecognizing(false);
       } catch (error) {
-        console.error('Erreur lors de l\'arrêt de la reconnaissance:', error);
+        console.log('Error stopping recognition:', error);
       }
     }
   };
 
-  const transcriptionBoxRef = useRef(null);
+  const handleError = (e) => {
+    console.error("Video loading error:", e);
+    setError("La vidéo n'a pas pu être chargée. Veuillez réessayer.");
+    setIsLoading(false);
+  };
 
-  // Effet pour faire défiler automatiquement vers le bas
+  const handleLoadedData = () => {
+    setIsLoading(false);
+    setError(null);
+  };
+
+  // Auto-scroll transcription
   useEffect(() => {
     if (transcriptionBoxRef.current) {
       transcriptionBoxRef.current.scrollTop = transcriptionBoxRef.current.scrollHeight;
@@ -208,59 +243,46 @@ const InteractiveVideoPlayer = ({ videoUrl }) => {
 
   if (!videoUrl) {
     return (
-      <Box sx={{ 
-        width: '100%',
-        textAlign: 'center',
-        p: 2
-      }}>
-        <Typography>Vidéo non disponible</Typography>
-      </Box>
+      <div className="video-error">
+        <p>Aucune vidéo sélectionnée</p>
+      </div>
     );
   }
 
   return (
-    <Box sx={{ width: '100%', maxWidth: 1200, mx: 'auto', mt: 4 }}>
-      <Box sx={{ position: 'relative', backgroundColor: '#000', borderRadius: '8px', overflow: 'hidden' }}>
-        <video
-          ref={videoRef}
-          style={{ 
-            width: '100%',
-            display: 'block'
-          }}
-          controls
-          onError={handleError}
-          onPlay={handlePlay}
-          onPause={handlePause}
-        >
-          <source src="http://localhost:5000/uploads/videos/1743717333866.mp4" type="video/mp4" />
-          Votre navigateur ne supporte pas la lecture des vidéos.
-        </video>
-        {error && (
-          <Box sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            bgcolor: 'rgba(0, 0, 0, 0.7)',
-            color: 'white',
-            p: 2,
-            borderRadius: 1,
-            textAlign: 'center'
-          }}>
-            <Typography>{error}</Typography>
-            <Button 
-              variant="contained" 
-              color="primary"
-              onClick={handleRetry}
-              sx={{ mt: 2 }}
-            >
-              Réessayer
-            </Button>
-          </Box>
-        )}
-      </Box>
+    <div className="video-player">
+      {isLoading && (
+        <div className="video-loading">
+          <p>Chargement de la vidéo...</p>
+        </div>
+      )}
+      {error && (
+        <div className="video-error">
+          <p>{error}</p>
+          <button onClick={() => window.location.reload()}>
+            Réessayer
+          </button>
+        </div>
+      )}
+      <video
+        ref={videoRef}
+        controls
+        width="100%"
+        onError={handleError}
+        onLoadedData={handleLoadedData}
+        onPlay={handlePlay}
+        onPause={handlePause}
+        crossOrigin="anonymous"
+        playsInline
+      >
+        <source 
+          src={videoUrl} 
+          type="video/mp4"
+        />
+        Votre navigateur ne supporte pas la lecture des vidéos.
+      </video>
 
-      {/* Zone de transcription */}
+      {/* Transcription section */}
       <Paper 
         ref={transcriptionBoxRef}
         elevation={3}
@@ -275,8 +297,41 @@ const InteractiveVideoPlayer = ({ videoUrl }) => {
         }}
       >
         <Typography variant="h6" gutterBottom>
-          Transcription complète
+          Transcription en direct
         </Typography>
+        {!micPermission ? (
+          <Typography 
+            variant="body2" 
+            color="error" 
+            sx={{ mb: 1 }}
+          >
+            L'accès au microphone est nécessaire pour la transcription. 
+            <Button 
+              onClick={initializeSpeechRecognition}
+              color="primary"
+              size="small"
+              sx={{ ml: 1 }}
+            >
+              Autoriser le microphone
+            </Button>
+          </Typography>
+        ) : isRecognizing ? (
+          <Typography 
+            variant="body2" 
+            color="success.main" 
+            sx={{ mb: 1 }}
+          >
+            Transcription en cours...
+          </Typography>
+        ) : (
+          <Typography 
+            variant="body2" 
+            color="text.secondary" 
+            sx={{ mb: 1 }}
+          >
+            La transcription démarrera avec la lecture de la vidéo
+          </Typography>
+        )}
         <Typography 
           variant="body1"
           sx={{
@@ -352,7 +407,7 @@ const InteractiveVideoPlayer = ({ videoUrl }) => {
           )}
         </DialogActions>
       </Dialog>
-    </Box>
+    </div>
   );
 };
 

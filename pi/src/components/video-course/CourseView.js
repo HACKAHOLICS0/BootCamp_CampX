@@ -60,11 +60,12 @@ const CourseView = () => {
 
       if (videosResponse.ok) {
         const videosData = await videosResponse.json();
-        // Format video URLs to include the full server URL
+        // Format video URLs to include the full server URL, removing any duplicate slashes
         const formattedVideos = videosData.map(video => ({
           ...video,
-          videoUrl: video.videoUrl ? `${config.API_URL}/${video.videoUrl}` : null
+          videoUrl: video.videoUrl ? `${config.API_URL}${video.videoUrl}` : null
         }));
+        console.log('Formatted videos:', formattedVideos); // Add logging
         setVideos(formattedVideos);
         if (formattedVideos.length > 0) {
           setSelectedVideo(formattedVideos[0]);
