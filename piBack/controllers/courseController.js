@@ -221,26 +221,59 @@ const updateCourse = async (req, res) => {
 // Purchase course
 const purchaseCourse = async (req, res) => {
   try {
-    const { courseId } = req.params;
-    const { userId } = req.body;
+    const courseId = req.params.courseId;
+    const userId = req.user.id; // Get user ID from auth middleware
 
-    if (!mongoose.Types.ObjectId.isValid(courseId) || !mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ error: "Invalid course or user ID" });
+    if (!mongoose.Types.ObjectId.isValid(courseId)) {
+      return res.status(400).json({ error: "Invalid course ID" });
     }
 
-    const user = await User.findById(userId);
-    const course = await Course.findById(courseId);
+    const [user, course] = await Promise.all([
+      User.findById(userId),
+      Course.findById(courseId)
+    ]);
 
     if (!user || !course) {
       return res.status(404).json({ error: "User or course not found" });
     }
 
-    if (!user.purchasedCourses.includes(courseId)) {
-      user.purchasedCourses.push(courseId);
-      await user.save();
+    // Check if user has already purchased the course
+    const isAlreadyPurchased = course.purchasedBy.includes(userId);
+    if (isAlreadyPurchased) {
+      return res.status(400).json({ error: "You have already purchased this course" });
     }
 
-    res.status(200).json({ message: "Course purchased successfully" });
+    // Add user to course's purchasedBy array
+    course.purchasedBy.push(userId);
+
+    // Add course to user's enrolledCourses
+    const enrolledCourse = {
+      courseId: courseId,
+      progress: 0,
+      timeSpent: 0,
+      quizzesCompleted: 0
+    };
+
+    // Check if course is already in enrolledCourses
+    const courseIndex = user.enrolledCourses.findIndex(
+      course => course.courseId.toString() === courseId
+    );
+
+    if (courseIndex === -1) {
+      user.enrolledCourses.push(enrolledCourse);
+    }
+
+    // Save both documents
+    await Promise.all([course.save(), user.save()]);
+
+    res.status(200).json({ 
+      message: "Course purchased successfully",
+      course: {
+        id: course._id,
+        title: course.title,
+        description: course.description
+      }
+    });
   } catch (err) {
     console.error("Purchase course error:", err);
     res.status(500).json({ error: err.message });
@@ -331,6 +364,70 @@ const archiveCourse = async (req, res) => {
   }
 };
 
+// Get purchased courses for the authenticated user
+const getPurchasedCourses = async (req, res) => {
+  try {
+    console.log('Fetching purchased courses for user:', req.user.id);
+    const userId = req.user.id;
+
+    // Find the user first
+    const user = await User.findById(userId);
+    if (!user) {
+      console.log('User not found:', userId);
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Get all enrolled course IDs
+    const enrolledCourseIds = user.enrolledCourses.map(course => course.courseId);
+
+    // Fetch the courses with populated fields, including category through module
+    const courses = await Course.find({
+      _id: { $in: enrolledCourseIds }
+    }).populate({
+      path: 'module',
+      select: 'title category',
+      populate: {
+        path: 'category',
+        select: 'name'
+      }
+    });
+
+    // Map the courses with enrollment data
+    const purchasedCourses = courses.map(course => {
+      const enrollment = user.enrolledCourses.find(
+        e => e.courseId.toString() === course._id.toString()
+      );
+
+      return {
+        _id: course._id,
+        title: course.title || 'Untitled Course',
+        description: course.description || 'No description available',
+        price: course.price || 0,
+        duration: course.duration || 0,
+        category: course.module?.category || null,
+        module: {
+          _id: course.module?._id || null,
+          title: course.module?.title || 'Unknown Module'
+        },
+        progress: enrollment?.progress || 0,
+        timeSpent: enrollment?.timeSpent || 0,
+        quizzesCompleted: enrollment?.quizzesCompleted || 0,
+        totalQuizzes: course.quizzes?.length || 0,
+        totalVideos: course.videos?.length || 0
+      };
+    });
+
+    console.log('Sending purchased courses:', purchasedCourses);
+    res.json(purchasedCourses);
+  } catch (error) {
+    console.error('Error fetching purchased courses:', error);
+    res.status(500).json({ 
+      message: 'Error fetching purchased courses', 
+      error: error.message 
+    });
+  }
+};
+
 module.exports = {
   getAllCourses,
   getCoursesByModule,
@@ -340,5 +437,6 @@ module.exports = {
   purchaseCourse,
   addQuizToCourse,
   removeQuizFromCourse,
-  archiveCourse
+  archiveCourse,
+  getPurchasedCourses
 };

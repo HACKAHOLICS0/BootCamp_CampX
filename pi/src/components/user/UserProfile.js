@@ -2,7 +2,7 @@ import "../../assets/css/user.css";
 import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import 'bootstrap-icons/font/bootstrap-icons.css';
-
+import { useNavigate } from 'react-router-dom';
 
 const backendURL = "http://localhost:5000";
 const getImageUrl = (user) => {
@@ -20,13 +20,16 @@ const getImageUrl = (user) => {
     return `${backendURL}/${user.image.replace(/\\/g, "/")}`;  // Assurez-vous que le chemin soit correctement formaté
 };
 
-
 export default function UserProfile() {
+    const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isInterestPointModalOpen, setIsInterestPointModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-const [pointToDelete, setPointToDelete] = useState(null);
+    const [pointToDelete, setPointToDelete] = useState(null);
+    const [purchasedCourses, setPurchasedCourses] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     const [editableUser, setEditableUser] = useState({
         name: "", lastName: "", birthDate: "", email: "", phone: ""
@@ -291,7 +294,48 @@ const [pointToDelete, setPointToDelete] = useState(null);
         }
     };
     
-    
+    const fetchPurchasedCourses = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const token = Cookies.get('token');
+            
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
+
+            const response = await fetch(`${backendURL}/api/courses/purchased`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.message || 'Failed to fetch purchased courses');
+            }
+
+            const courses = await response.json();
+            console.log('Fetched purchased courses:', courses);
+            setPurchasedCourses(courses);
+        } catch (error) {
+            console.error('Error fetching purchased courses:', error);
+            setError(error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (user) {
+            fetchPurchasedCourses();
+        }
+    }, [user]);
+
+    const navigateToCourse = (categoryId, moduleId, courseId) => {
+        navigate(`/categories/${categoryId}/modules/${moduleId}/courses/${courseId}`);
+    };
 
     if (!user) {
         return (
@@ -458,6 +502,74 @@ const [pointToDelete, setPointToDelete] = useState(null);
     </div>
 )}
 
+<div className="card mb-4">
+    <div className="card-header">
+        <h5 className="mb-0">Purchased Courses</h5>
+    </div>
+    <div className="card-body">
+        {loading ? (
+            <div className="text-center">
+                <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        ) : error ? (
+            <div className="alert alert-danger" role="alert">
+                {error}
+            </div>
+        ) : purchasedCourses.length === 0 ? (
+            <div className="text-center">
+                <p className="text-muted mb-0">You haven't purchased any courses yet.</p>
+                <button 
+                    className="btn btn-primary mt-3"
+                    onClick={() => navigate('/categories')}
+                >
+                    Browse Courses
+                </button>
+            </div>
+        ) : (
+            <div className="row">
+                {purchasedCourses.map(course => (
+                    <div key={course._id} className="col-md-6 mb-3">
+                        <div className="card h-100">
+                            <div className="card-body">
+                                <h5 className="card-title">{course.title}</h5>
+                                <p className="card-text">{course.description}</p>
+                                
+                                <div className="progress mb-3">
+                                    <div 
+                                        className="progress-bar" 
+                                        role="progressbar" 
+                                        style={{ width: `${course.progress}%` }}
+                                        aria-valuenow={course.progress} 
+                                        aria-valuemin="0" 
+                                        aria-valuemax="100"
+                                    >
+                                        {course.progress}%
+                                    </div>
+                                </div>
+
+                                <div className="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <small className="text-muted">
+                                            Quizzes: {course.quizzesCompleted}/{course.totalQuizzes}
+                                        </small>
+                                    </div>
+                                    <button
+                                        className="btn btn-primary btn-sm"
+                                        onClick={() => navigate(`/categories/${course.category?._id}/modules/${course.module?._id}/courses/${course._id}`)}
+                                    >
+                                        Continue Learning
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        )}
+    </div>
+</div>
 
             </div>
         </div>
