@@ -16,6 +16,7 @@ const courseRoutes = require('./routes/courseRoutes');
 const videoQuizRoutes = require('./routes/videoQuizRoutes');
 const chatRoutes = require('./routes/chatRoutes'); // Importation des routes du chatbot
 const ChatRoom = require("./Model/ChatRoom");
+const eventRoutes = require('./routes/eventRoutes');
 
 require("dotenv").config({ path: "./config/.env" }); // Load .env from config folder
 
@@ -93,6 +94,7 @@ app.use('/api/modules', moduleRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/videoquiz', videoQuizRoutes);
 app.use('/api/chat', chatRoutes); // Ajout des routes du chatbot
+app.use('/api/events', eventRoutes);
 
 // Socket.IO events
 io.on('connection', (socket) => {

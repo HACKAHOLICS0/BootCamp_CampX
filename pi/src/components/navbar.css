@@ -85,3 +85,87 @@
     width: 100%;
   }
 }
+
+/* Navbar.css */
+.navbar-toggler {
+  border: none;
+  padding: 0.5rem;
+}
+
+.navbar-toggler:focus {
+  box-shadow: none;
+  outline: none;
+}
+
+@media (max-width: 991.98px) {
+  .navbar-collapse {
+    padding-top: 1rem;
+  }
+  
+  .dropdown-menu {
+    position: static !important;
+    border: none;
+  }
+}
+
+.hover-effect:hover {
+  opacity: 0.8;
+}
+
+.logo-text {
+  font-weight: bold;
+  font-size: 1.5rem;
+  color: #000; /* Adjust to match your design */
+}
+
+/* Navbar.css */
+.navbar {
+  min-height: 60px; /* Reduced from default */
+}
+
+.navbar-nav .nav-item {
+  margin: 0 0.15rem; /* Reduced spacing between items */
+}
+
+.nav-link, .navbar-brand {
+  padding: 0.25rem 0.5rem !important; /* Reduced padding */
+}
+
+.logo-text {
+  font-weight: bold;
+  font-size: 1.3rem; /* Slightly reduced */
+  color: #000;
+}
+
+.hover-effect:hover {
+  opacity: 0.8;
+  transform: scale(1.02); /* Subtle hover effect */
+}
+
+/* Mobile view adjustments */
+@media (max-width: 991.98px) {
+  .navbar-collapse {
+    padding-top: 0.5rem;
+  }
+  
+  .navbar-nav .nav-item {
+    margin: 0.25rem 0;
+  }
+  
+  .dropdown-menu {
+    position: static !important;
+    border: none;
+    margin-left: 1rem;
+  }
+}
+
+/* Equal width for nav items if needed */
+.navbar-nav {
+  display: flex;
+  align-items: center;
+}
+
+.nav-item {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}

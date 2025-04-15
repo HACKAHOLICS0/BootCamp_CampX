@@ -43,6 +43,13 @@ import PaymentsSubscriptions from "./components/helpcenter/PaymentsSubscriptions
 import Enrollment from './components/helpcenter/Enrollment';
 import Community from './components/helpcenter/Community'
 import "bootstrap-icons/font/bootstrap-icons.css";
+import EventList from './components/events/EventList';
+import EventForm from './components/events/EventForm';
+import EventDetails from './components/events/EventDetails';
+import CodeEditorInterface from './components/CodeEditorInterface';
+
+
+
 
 function App() {
   const location = useLocation();
@@ -98,6 +105,15 @@ function App() {
           <Route path="/courses/:courseId/quiz/:quizId" element={<QuizView />} />
           <Route path="/chatbot" element={<Chatbot />} />
           <Route path="/chat" element={<ChatTest />} />
+
+          {/* Code Editor Route */}
+          <Route path="/code-editor" element={<CodeEditorInterface />} />
+          
+          {/* Event Routes */}
+          <Route path="/events" element={<EventList />} />
+          <Route path="/events/create" element={<EventForm />} />
+          <Route path="/events/:id" element={<EventDetails />} />
+          <Route path="/events/:id/edit" element={<EventForm />} />
 
           {/* Routes Admin protégées */}
           <Route element={<ProtectedAdminRoute />}>

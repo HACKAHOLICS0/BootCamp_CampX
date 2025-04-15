@@ -146,6 +146,11 @@ export default function Navbar() {
                 Modules
               </Link>
             </li>
+            <li className="nav-item">
+              <Link to="/events" className="nav-link text-dark hover-effect">
+                Events
+              </Link>
+            </li>
             {/* Add the Learner Help Center button here */}
             <li className="nav-item">
               <Link to="/learner-help-center" className="nav-link text-dark hover-effect">
@@ -217,4 +222,5 @@ export default function Navbar() {
       </div>
     </div>
   );
+  
 }
