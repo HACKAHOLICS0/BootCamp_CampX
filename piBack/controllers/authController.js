@@ -3,8 +3,11 @@ const jwt = require('jsonwebtoken');
 const twilio = require('twilio');
 const User = require('../Model/User');
 const axios = require("axios");
-
+const { spawn } = require('child_process');
+const path = require('path');
 require('dotenv').config();
+
+
 const sendEmail = require('../utils/email');
 // Check if an email exists
 const checkEmailExists = async (req, res) => {
@@ -143,7 +146,60 @@ const verifyEmail = async (req, res) => {
       res.status(400).json({ message: 'Invalid or expired token' });
   }
 };
+const validateImage = async (req, res) => {
+  if (!req.file) {
+      return res.status(400).json({ error: 'Aucune image fournie' });
+  }
+
+  try {
+      const faceValidation = await validateFace(req.file.path);
+      res.json(faceValidation);
+  } catch (error) {
+      res.status(500).json({ error: error.message });
+  }
+};
   
+const validateFace = async (imagePath) => {
+  return new Promise((resolve, reject) => {
+      const pythonProcess = spawn('python', [
+          path.join(__dirname, '../scripts/face_validator_cli.py'),
+          imagePath
+      ]);
+
+      let result = '';
+      let error = '';
+
+      pythonProcess.stdout.on('data', (data) => {
+          result += data.toString();
+      });
+
+      pythonProcess.stderr.on('data', (data) => {
+          error += data.toString();
+      });
+
+      pythonProcess.on('close', (code) => {
+          if (code !== 0) {
+              console.error('Python script error:', error);
+              reject(new Error(error || 'Erreur lors de la validation du visage'));
+          } else {
+              try {
+                  // Nettoyez la réponse pour s'assurer qu'elle est un JSON valide
+                  const cleanResult = result.trim();
+                  if (!cleanResult) {
+                      reject(new Error('Réponse vide du script Python'));
+                      return;
+                  }
+                  
+                  const response = JSON.parse(cleanResult);
+                  resolve(response);
+              } catch (e) {
+                  console.error('Parse error:', e, 'Raw result:', result);
+                  reject(new Error('Erreur lors du parsing de la réponse: ' + e.message));
+              }
+          }
+      });
+  });
+};
 
 
 const signin = async (req, res) => {
@@ -529,5 +585,5 @@ const forgotPasswordEmail = async (req, res) => {
 
 
   
-  module.exports = { googleTokenAuth,signup,authenticate, signin, checkEmailExists,getCurrentUser,verifyEmail, sendVerificationCode,editUser,getUserById, verifyCode, resetPassword, resetPasswordEmail, forgotPasswordEmail };
+  module.exports = { validateImage,validateFace,googleTokenAuth,signup,authenticate, signin, checkEmailExists,getCurrentUser,verifyEmail, sendVerificationCode,editUser,getUserById, verifyCode, resetPassword, resetPasswordEmail, forgotPasswordEmail };
   

@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import '../../assets/css/signup.css'; // Ajoute les styles
+import axios from "axios";
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function Signup() {
     const history = useNavigate();
@@ -27,6 +30,11 @@ export default function Signup() {
         type: "user",
         image: null, // Ajout d'une clé pour l'image
     });
+
+    const [imagePreview, setImagePreview] = useState(null);
+    const [isValidating, setIsValidating] = useState(false);
+    const [isImageValid, setIsImageValid] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const onChange = (e) => {
         const { name, value } = e.target;
@@ -139,6 +147,84 @@ export default function Signup() {
         }
     };
 
+    const validateImage = async (file) => {
+        setIsValidating(true);
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            const response = await axios.post('http://localhost:5000/api/auth/validate-image', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            
+            if (response.data.isValid) {
+                setIsImageValid(true);
+                toast.success('Image valide !', {
+                    position: "top-right",
+                    autoClose: false, // Le toast ne disparaît pas automatiquement
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    style: {
+                        backgroundColor: '#4CAF50',
+                        color: 'white'
+                    }
+                });
+            } else {
+                setIsImageValid(false);
+                toast.error('Image invalide. Veuillez télécharger une image contenant votre visage.', {
+                    position: "top-right",
+                    autoClose: false, // Le toast ne disparaît pas automatiquement
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    style: {
+                        backgroundColor: '#f44336',
+                        color: 'white'
+                    }
+                });
+            }
+            return response.data;
+        } catch (error) {
+            setIsImageValid(false);
+            toast.error('Erreur lors de la validation de l\'image', {
+                position: "top-right",
+                autoClose: false, // Le toast ne disparaît pas automatiquement
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                style: {
+                    backgroundColor: '#f44336',
+                    color: 'white'
+                }
+            });
+            return { isValid: false, message: error.response?.data?.error || 'Erreur lors de la validation de l\'image' };
+        } finally {
+            setIsValidating(false);
+        }
+    };
+
+    const handleImageChange = async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            // Afficher un aperçu de l'image
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+
+            // Valider l'image
+            const validation = await validateImage(file);
+            setFormData(prev => ({ ...prev, image: file }));
+        }
+    };
+
     // Déterminer si le formulaire est valide ou non pour ajuster la couleur du bouton
     const isFormValid = Object.values(formErrors).every((err) => err === "") && Object.values(formData).every((val) => val !== "");
 
@@ -247,14 +333,36 @@ export default function Signup() {
                 </div>
 
                 <div className="form-group">
+                    <label>Photo de profil</label>
                     <input
                         type="file"
-                        className={`form-control ${formErrors.image ? "is-invalid" : ""}`}
-                        id="image"
-                        name="image"
-                        onChange={(e) => setFormData({ ...formData, image: e.target.files[0] })}
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="form-control"
+                        disabled={isValidating}
                     />
-                    {formErrors.image && <div className="invalid-feedback">{formErrors.image}</div>}
+                    {imagePreview && (
+                        <div className="image-preview mt-3">
+                            <img 
+                                src={imagePreview} 
+                                alt="Preview" 
+                                style={{ 
+                                    maxWidth: '200px', 
+                                    maxHeight: '200px',
+                                    objectFit: 'cover',
+                                    borderRadius: '8px',
+                                    border: '2px solid #ddd'
+                                }} 
+                            />
+                        </div>
+                    )}
+                    {isValidating && (
+                        <div className="mt-2 text-center">
+                            <div className="spinner-border text-primary" role="status">
+                                <span className="visually-hidden">Validation...</span>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Error Display */}
@@ -264,9 +372,9 @@ export default function Signup() {
                 <button
                     type="submit"
                     className={`ms-auto my-2 btn ${isFormValid ? "btn-success" : "btn-secondary"}`}
-                    disabled={!isFormValid}
+                    disabled={!isFormValid || !isImageValid || isSubmitting}
                 >
-                    Submit
+                    {isSubmitting ? 'Validation...' : 'S\'inscrire'}
                 </button>
             </form>
         </div>

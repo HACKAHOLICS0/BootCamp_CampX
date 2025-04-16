@@ -330,6 +330,69 @@ const archiveCourse = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+// Get purchased courses for the authenticated user
+const getPurchasedCourses = async (req, res) => {
+  try {
+    console.log('Fetching purchased courses for user:', req.user.id);
+    const userId = req.user.id;
+
+    // Find the user first
+    const user = await User.findById(userId);
+    if (!user) {
+      console.log('User not found:', userId);
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Get all enrolled course IDs
+    const enrolledCourseIds = user.enrolledCourses.map(course => course.courseId);
+
+    // Fetch the courses with populated fields, including category through module
+    const courses = await Course.find({
+      _id: { $in: enrolledCourseIds }
+    }).populate({
+      path: 'module',
+      select: 'title category',
+      populate: {
+        path: 'category',
+        select: 'name'
+      }
+    });
+
+    // Map the courses with enrollment data
+    const purchasedCourses = courses.map(course => {
+      const enrollment = user.enrolledCourses.find(
+        e => e.courseId.toString() === course._id.toString()
+      );
+
+      return {
+        _id: course._id,
+        title: course.title || 'Untitled Course',
+        description: course.description || 'No description available',
+        price: course.price || 0,
+        duration: course.duration || 0,
+        category: course.module?.category || null,
+        module: {
+          _id: course.module?._id || null,
+          title: course.module?.title || 'Unknown Module'
+        },
+        progress: enrollment?.progress || 0,
+        timeSpent: enrollment?.timeSpent || 0,
+        quizzesCompleted: enrollment?.quizzesCompleted || 0,
+        totalQuizzes: course.quizzes?.length || 0,
+        totalVideos: course.videos?.length || 0
+      };
+    });
+
+    console.log('Sending purchased courses:', purchasedCourses);
+    res.json(purchasedCourses);
+  } catch (error) {
+    console.error('Error fetching purchased courses:', error);
+    res.status(500).json({ 
+      message: 'Error fetching purchased courses', 
+      error: error.message 
+    });
+  }
+};
 
 module.exports = {
   getAllCourses,
@@ -340,5 +403,6 @@ module.exports = {
   purchaseCourse,
   addQuizToCourse,
   removeQuizFromCourse,
-  archiveCourse
+  archiveCourse,
+  getPurchasedCourses
 };

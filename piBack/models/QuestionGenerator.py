@@ -12,6 +12,7 @@ import json
 class QuestionGenerator:
     def __init__(self):
         # Télécharger les ressources NLTK nécessaires
+        
         try:
             nltk.data.find('tokenizers/punkt')
             nltk.data.find('corpora/stopwords')

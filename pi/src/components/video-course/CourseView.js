@@ -6,6 +6,7 @@ import Cookies from 'js-cookie';
 import config from '../../config';
 import InteractiveVideoPlayer from './InteractiveVideoPlayer';
 import './CourseView.css';
+import CourseProgress from '../user/Course/CourseProgress';
 
 const CourseView = () => {
   const { courseId } = useParams();
@@ -98,11 +99,27 @@ const CourseView = () => {
               }
               const quizData = await res.json();
               console.log(`Quiz ${quizId} data:`, quizData);
+
+              // Récupérer les résultats du quiz pour l'utilisateur actuel
+              const resultsResponse = await fetch(`${config.API_URL}/api/quiz/results/${quizId}`, {
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Accept': 'application/json'
+                }
+              });
+
+              let completed = false;
+              if (resultsResponse.ok) {
+                const results = await resultsResponse.json();
+                completed = results.length > 0;
+              }
+
               return {
                 ...quizData,
                 _id: quizId,
                 title: quizData.title || quizData.nom || 'Quiz sans titre',
-                duration: quizData.duration || quizData.duree || quizData.chronoVal || 0
+                duration: quizData.duration || quizData.duree || quizData.chronoVal || 0,
+                completed
               };
             }).catch(error => {
               console.warn(`Erreur lors de la récupération du quiz ${quizId}:`, error);
@@ -112,35 +129,37 @@ const CourseView = () => {
 
           const quizDetails = await Promise.all(quizPromises);
           console.log("All quiz details received:", quizDetails);
-          
-          // Filtrer les quiz valides
-          const validQuizzes = quizDetails.filter(quiz => quiz !== null);
-          console.log("Valid quizzes after processing:", validQuizzes);
-          setQuizzes(validQuizzes);
 
-          // Calculer la progression
-          if (validQuizzes.length > 0) {
-            const completedQuizzes = validQuizzes.filter(quiz => quiz.completed).length;
-            const progressPercentage = (completedQuizzes / validQuizzes.length) * 100;
-            setProgress(progressPercentage);
-          }
-        } catch (error) {
-          console.error('Error fetching quiz details:', error);
-          setError('Erreur lors de la récupération des quiz. Veuillez rafraîchir la page.');
-        }
-      } else {
-        console.log("No quizzes found for this course");
-        setQuizzes([]);
-        setProgress(0);
-      }
 
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching course:', error);
-      setError(error.message);
-      setLoading(false);
-    }
-  };
+
+         // Filtrer les quiz valides
+         const validQuizzes = quizDetails.filter(quiz => quiz !== null);
+         console.log("Valid quizzes after processing:", validQuizzes);
+         setQuizzes(validQuizzes);
+
+         // Calculer la progression
+         if (validQuizzes.length > 0) {
+           const completedQuizzes = validQuizzes.filter(quiz => quiz.completed).length;
+           const progressPercentage = (completedQuizzes / validQuizzes.length) * 100;
+           setProgress(progressPercentage);
+         }
+       } catch (error) {
+         console.error('Error fetching quiz details:', error);
+         setError('Erreur lors de la récupération des quiz. Veuillez rafraîchir la page.');
+       }
+     } else {
+       console.log("No quizzes found for this course");
+       setQuizzes([]);
+       setProgress(0);
+     }
+
+     setLoading(false);
+   } catch (error) {
+     console.error('Error fetching course:', error);
+     setError(error.message);
+     setLoading(false);
+   }
+ };
 
   const startQuiz = (quizId) => {
     navigate(`/categories/${categoryId}/modules/${moduleId}/courses/${courseId}/quiz/${quizId}`);
@@ -258,7 +277,7 @@ const CourseView = () => {
               </div>
             )}
 
-            {activeTab === 'quiz' && (
+{activeTab === 'quiz' && (
               <div className="quiz-list">
                 {quizzes && quizzes.length > 0 ? (
                   quizzes.map((quiz, index) => (
@@ -271,10 +290,9 @@ const CourseView = () => {
                             {formatDuration(quiz.duration)}
                           </span>
                           <span>
-  <FaQuestionCircle /> 
-  {quiz.Questions ? quiz.Questions.length : 0} questions
-</span>
-
+                            <FaQuestionCircle /> 
+                            {quiz.Questions ? quiz.Questions.length : 0} questions
+                          </span>
                           {quiz.completed && (
                             <span className="completed-badge">
                               ✓ Complété
@@ -290,7 +308,7 @@ const CourseView = () => {
                       </button>
                     </div>
                   ))
-                ) : (
+                )  : (
                   <div className="no-quiz-message">
                     <FaQuestionCircle size={48} />
                     <h3>Aucun quiz disponible</h3>
@@ -313,18 +331,10 @@ const CourseView = () => {
         <div className="sidebar">
           <div className="sidebar-card">
             <h2>Progression</h2>
-            <div className="progress-info">
-              <div className="progress-bar">
-                <div 
-                  className="progress-fill" 
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>{Math.round(progress)}% complété</span>
-                <span>{quizzes.length} quiz</span>
-              </div>
-            </div>
+            <CourseProgress 
+              completedQuizzes={quizzes.filter(q => q.completed).length}
+              totalQuizzes={quizzes.length}
+            />
           </div>
 
           <div className="sidebar-card">

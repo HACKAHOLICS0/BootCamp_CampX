@@ -471,3 +471,14 @@ body.modal-open {
 .edit-save-button:hover:not(:disabled) {
     background-color: #45a049;
 }
+
+.readonly-input {
+    background-color: #f8f9fa;
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+.readonly-input:focus {
+    border-color: #ddd;
+    box-shadow: none;
+}

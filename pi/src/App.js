@@ -42,6 +42,8 @@ import MarketInsights from './components/MarketInsights/MarketInsights';
 import CourseView from './components/video-course/CourseView';
 import { FaceRecognition } from './components/user/Quiz/FaceRecognition';
 import ChatbotPopup from './components/ChatbotPopup';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 function App() {
@@ -69,6 +71,7 @@ function App() {
 
   return (
     <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
+        <ToastContainer />
       <div className="App">
         {/* Afficher Navbar uniquement si ce n'est pas une route admin */}
         {!isAdminRoute && <Navbar />}

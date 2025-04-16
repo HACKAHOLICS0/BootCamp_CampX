@@ -114,7 +114,7 @@ const ChatbotPopup = () => {
                         console.log("Redirection vers le cours:", courseId);
                         // Attendre un peu pour que l'utilisateur puisse lire la réponse
                         setTimeout(() => {
-                            navigate(`/categories/${categoryId}/modules/${moduleId}/courses/${courseId}`);
+                            navigate(`/categories/${categoryId}/modules/${moduleId}`);
                             setIsOpen(false); // Fermer le popup après la redirection
                         }, 1500);
                     } else {
