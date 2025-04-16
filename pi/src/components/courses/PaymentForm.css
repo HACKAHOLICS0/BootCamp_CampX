@@ -1,0 +1,80 @@
+.payment-form {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .payment-amount {
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 4px;
+  }
+  
+  .card-element-container {
+    padding: 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    background: #fff;
+  }
+  
+  .payment-error {
+    color: #dc3545;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #f8d7da;
+    border-radius: 4px;
+    text-align: center;
+  }
+  
+  .payment-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  
+  .pay-button,
+  .cancel-button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .pay-button {
+    background: #28a745;
+    color: white;
+    flex: 2;
+  }
+  
+  .pay-button:hover {
+    background: #218838;
+  }
+  
+  .pay-button:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+  }
+  
+  .cancel-button {
+    background: #f8f9fa;
+    color: #6c757d;
+    border: 1px solid #dee2e6;
+    flex: 1;
+  }
+  
+  .cancel-button:hover {
+    background: #e2e6ea;
+  }
+  
+  .cancel-button:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }

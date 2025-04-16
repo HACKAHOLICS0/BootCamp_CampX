@@ -34,16 +34,24 @@ const { initializePoints } = require("./controllers/intrestpoint");
 const interestPointRoutes = require("./routes/intrestRoutes");
 
 const questionRoutes = require('./routes/questionRoutes');
+const paymentRoutes = require('./routes/paymentRoutes'); // Add payment routes
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: "http://localhost:3000",
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"]
-  }
+    allowedHeaders: [
+      "Content-Type", 
+      "Authorization", 
+      "X-Requested-With",
+      "Accept",
+      "Origin",
+      "Cache-Control"
+    ],
+    exposedHeaders: ["Content-Range", "X-Content-Range"]  }
 });
 
 // Configuration de l'API Hugging Face
@@ -112,7 +120,14 @@ app.use("/api/videos", videoRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/modules", moduleRoutes);
-app.use("/api/courses", courseRoutes);
+app.use("/api/courses",cors({
+  origin: "http://localhost:3000",
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin", "Cache-Control"],
+  credentials: true,
+}), courseRoutes);
+app.options('/api/courses/:id', cors());
+
 app.use("/api/quizzes", quizRoutes);
 app.use("/api/videos", videoRoutes);
 app.use("/api", interestPointRoutes);
@@ -124,6 +139,8 @@ app.use('/api/courses', courseRoutes);
 app.use('/api/chat', chatRoutes); // Ajout des routes du chatbot
 app.use('/api/market-insights', marketInsightsRoutes);
 app.use('/api/questions', questionRoutes);
+app.use('/api/payments', paymentRoutes); // Mount payment routes
+
 
 // Socket.IO events
 io.on('connection', (socket) => {
