@@ -34,14 +34,14 @@ import CourseList from './components/courses/CourseList';
 import QuizView from './components/user/Quiz/QuizView';
 import ProtectedAdminRoute from './components/ProtectedAdminRoute';
 import PrivateRoute from './components/PrivateRoute';
-import Chatbot from './components/chatbot/Chatbot';
-import ChatbotAdmin from './components/Admin/ChatbotAdmin';
 import ChatTest from './components/chatbot/ChatTest';
 import QuizResultView from './components/user/Quiz/QuizResultView';
 import MarketInsights from './components/MarketInsights/MarketInsights';
 import CourseView from './components/video-course/CourseView';
+import MarketVideosPage from './components/courses/MarketVideosPage';
+import ExternalVideoPlayer from './components/video-course/ExternalVideoPlayer';
 import { FaceRecognition } from './components/user/Quiz/FaceRecognition';
-import ChatbotPopup from './components/ChatbotPopup';
+import ChatbotPopup from './components/chatbot/ChatbotPopup';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -100,9 +100,8 @@ function App() {
           {/* Quiz Routes */}
           <Route path="/quiz/:quizId" element={<QuizView />} />
           <Route path="/quiz/:quizId/result" element={<QuizResultView />} />
-          
+
           {/* Routes pour le chat et le chatbot */}
-          <Route path="/chatbot" element={<Chatbot />} />
           <Route path="/chat" element={<ChatTest />} />
 
           {/* Routes Admin protégées */}
@@ -120,13 +119,22 @@ function App() {
               <Route path="modules" element={<Modules />} />
               <Route path="courses" element={<Courses />} />
               <Route path="videos" element={<Videos />} />
-              <Route path="chatbot" element={<ChatbotAdmin />} />
             </Route>
           </Route>
 
           <Route path="/market-insights" element={
             <PrivateRoute>
               <MarketInsights />
+            </PrivateRoute>
+          } />
+          <Route path="/market-videos" element={
+            <PrivateRoute>
+              <MarketVideosPage />
+            </PrivateRoute>
+          } />
+          <Route path="/external-video" element={
+            <PrivateRoute>
+              <ExternalVideoPlayer />
             </PrivateRoute>
           } />
         </Routes>

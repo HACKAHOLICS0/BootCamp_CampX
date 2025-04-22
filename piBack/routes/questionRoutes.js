@@ -6,16 +6,20 @@ const path = require('path');
 // Route pour générer des questions à partir de la transcription
 router.post('/generate', async (req, res) => {
     try {
-        const { transcript } = req.body;
-        
+        const { transcript, videoTitle } = req.body;
+
         if (!transcript) {
             return res.status(400).json({ error: 'Transcription requise' });
         }
 
-        // Lancer le script Python avec la transcription comme argument
+        console.log(`Génération de questions pour la vidéo: ${videoTitle || 'Sans titre'}`);
+        console.log(`Longueur de la transcription: ${transcript.length} caractères`);
+
+        // Lancer le script Python avec la transcription et le titre comme arguments
         const pythonProcess = spawn('python', [
             path.join(__dirname, '../models/QuestionGenerator.py'),
-            transcript
+            transcript,
+            videoTitle || ''
         ]);
 
         let questionData = '';
@@ -36,7 +40,7 @@ router.post('/generate', async (req, res) => {
         pythonProcess.on('close', (code) => {
             if (code !== 0) {
                 console.error('Erreur du processus Python:', errorData);
-                return res.status(500).json({ 
+                return res.status(500).json({
                     error: 'Erreur lors de la génération des questions',
                     details: errorData
                 });
@@ -52,7 +56,7 @@ router.post('/generate', async (req, res) => {
                 }
 
                 const questions = JSON.parse(questionData);
-                
+
                 // Vérifier si nous avons des questions valides
                 if (!Array.isArray(questions) || questions.length === 0) {
                     return res.status(500).json({
@@ -64,7 +68,7 @@ router.post('/generate', async (req, res) => {
                 res.json(questions);
             } catch (error) {
                 console.error('Erreur de parsing JSON:', error, 'Data:', questionData);
-                res.status(500).json({ 
+                res.status(500).json({
                     error: 'Erreur lors du parsing des questions',
                     details: error.message,
                     rawData: questionData
@@ -74,11 +78,11 @@ router.post('/generate', async (req, res) => {
 
     } catch (error) {
         console.error('Erreur serveur:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Erreur serveur',
             details: error.message
         });
     }
 });
 
-module.exports = router; 
+module.exports = router;
