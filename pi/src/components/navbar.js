@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom"; 
+import { Link, useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../Navbar.css";
-import Cookies from "js-cookie"; 
+import Cookies from "js-cookie";
 import axios from 'axios';
 
 export default function Navbar() {
   const [user, setUser] = useState(null);
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
@@ -18,25 +18,25 @@ export default function Navbar() {
     if (token && user) {
       Cookies.set("token", token, { expires: 7 });
       Cookies.set("user", user, { expires: 7 });
-  
+
       setUser(JSON.parse(user)); // Met à jour l'état avec les données utilisateur
       navigate("/"); // Redirige vers la page d'accueil après login
     }
   }, []);
-  
+
   useEffect(() => {
     const token = new URLSearchParams(window.location.search).get("token");
-  
+
     if (token) {
       // Stocker le token dans le localStorage ou dans les cookies
       localStorage.setItem("token", token);
       Cookies.set("token", token, { expires: 7 });
-  
+
       // Vous pouvez aussi récupérer le profil utilisateur si nécessaire
       fetchUserProfile(token);
     }
   }, []);
-  
+
   const fetchUserProfile = async (token) => {
     try {
       const response = await fetch("http://localhost:5000/api/user/profile", {
@@ -44,7 +44,7 @@ export default function Navbar() {
           "Authorization": `Bearer ${token}`
         }
       });
-  
+
       const data = await response.json();
       if (data.user) {
         setUser(data.user); // Mettre à jour l'état utilisateur
@@ -53,7 +53,7 @@ export default function Navbar() {
       console.error("Error fetching user profile", err);
     }
   };
-  
+
   // Fonction pour récupérer l'utilisateur stocké dans les cookies
   const updateUser = () => {
     const storedUser = Cookies.get("user");
@@ -67,21 +67,21 @@ export default function Navbar() {
   // Charger l'utilisateur au montage et écouter les mises à jour
   useEffect(() => {
     updateUser();
-  
+
     const handleUserUpdate = () => {
       updateUser();
     };
-  
+
     window.addEventListener("userUpdated", handleUserUpdate);
-  
+
     return () => {
       window.removeEventListener("userUpdated", handleUserUpdate);
     };
   }, []);
-  
+
   useEffect(() => {
     updateUser();
-    
+
     const handleUserUpdate = () => updateUser();
     window.addEventListener("userUpdated", handleUserUpdate);
 
@@ -113,10 +113,10 @@ export default function Navbar() {
   const handleSignOut = (e) => {
     e.preventDefault();
     Cookies.remove("user");
-    Cookies.remove("token"); 
+    Cookies.remove("token");
     setUser(null);
     window.dispatchEvent(new Event("userUpdated"));
-    navigate("/signin"); 
+    navigate("/signin");
   };
 
   console.log("Utilisateur actuel :", user); // 🔍 Vérification
@@ -143,7 +143,7 @@ export default function Navbar() {
             </li>
             {user && ( // N'afficher le dropdown que si l'utilisateur est connecté
               <li className="nav-item dropdown">
-                <span 
+                <span
                   className="nav-link text-dark hover-effect dropdown-toggle"
                 >
                   Categories
@@ -151,7 +151,7 @@ export default function Navbar() {
                 <ul className="dropdown-menu">
                   {categories.map(category => (
                     <li key={category._id}>
-                      <button 
+                      <button
                         className="dropdown-item"
                         onClick={() => handleCategoryClick(category._id)}
                       >
@@ -175,6 +175,9 @@ export default function Navbar() {
                 <Link to="/market-insights" className="nav-link text-dark hover-effect">
                   Market Insights
                 </Link>
+                <Link to="/market-videos" className="nav-link text-dark hover-effect">
+                  Vidéos recommandées
+                </Link>
                 <button
                   onClick={handleSignOut}
                   className="nav-link btn btn-link text-dark hover-effect"
@@ -194,7 +197,7 @@ export default function Navbar() {
                     Sign Up
                   </Link>
                 </li>
-               
+
               </>
             )}
           </ul>

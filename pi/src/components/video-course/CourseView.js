@@ -30,7 +30,7 @@ const CourseView = () => {
       setLoading(true);
       setError(null);
       const token = Cookies.get('token');
-      
+
       if (!token) {
         throw new Error('Authentication required');
       }
@@ -61,13 +61,21 @@ const CourseView = () => {
 
       if (videosResponse.ok) {
         const videosData = await videosResponse.json();
+        console.log("Vidéos récupérées du serveur:", videosData);
+
         // Format video URLs to include the full server URL
-        const formattedVideos = videosData.map(video => ({
-          ...video,
-          videoUrl: video.videoUrl ? `${config.API_URL}/${video.videoUrl}` : null
-        }));
+        const formattedVideos = videosData.map(video => {
+          const formattedVideo = {
+            ...video,
+            videoUrl: video.videoUrl ? `${config.API_URL}${video.videoUrl}` : null
+          };
+          console.log("URL de vidéo formatée:", formattedVideo.videoUrl);
+          return formattedVideo;
+        });
+
         setVideos(formattedVideos);
         if (formattedVideos.length > 0) {
+          console.log("Vidéo sélectionnée:", formattedVideos[0]);
           setSelectedVideo(formattedVideos[0]);
         }
       }
@@ -214,19 +222,19 @@ const CourseView = () => {
       <div className="course-content">
         <div className="main-content">
           <div className="content-tabs">
-            <div 
+            <div
               className={`content-tab ${activeTab === 'video' ? 'active' : ''}`}
               onClick={() => setActiveTab('video')}
             >
               <FaPlay /> Vidéos
             </div>
-            <div 
+            <div
               className={`content-tab ${activeTab === 'quiz' ? 'active' : ''}`}
               onClick={() => setActiveTab('quiz')}
             >
               <FaQuestionCircle /> Quiz
             </div>
-            <div 
+            <div
               className={`content-tab ${activeTab === 'chat' ? 'active' : ''}`}
               onClick={() => setActiveTab('chat')}
             >
@@ -241,7 +249,7 @@ const CourseView = () => {
                   <>
                     <div className="video-player-container">
                       {selectedVideo && (
-                        <InteractiveVideoPlayer 
+                        <InteractiveVideoPlayer
                           videoUrl={selectedVideo.videoUrl}
                           videoTitle={selectedVideo.title}
                           onQuestionAnswered={(answer, question) => {
@@ -286,11 +294,11 @@ const CourseView = () => {
                         <h3>{quiz.title}</h3>
                         <div className="quiz-meta">
                           <span>
-                            <FaClock /> 
+                            <FaClock />
                             {formatDuration(quiz.duration)}
                           </span>
                           <span>
-                            <FaQuestionCircle /> 
+                            <FaQuestionCircle />
                             {quiz.Questions ? quiz.Questions.length : 0} questions
                           </span>
                           {quiz.completed && (
@@ -300,7 +308,7 @@ const CourseView = () => {
                           )}
                         </div>
                       </div>
-                      <button 
+                      <button
                         className="start-quiz-btn"
                         onClick={() => startQuiz(quiz._id)}
                       >
@@ -331,7 +339,7 @@ const CourseView = () => {
         <div className="sidebar">
           <div className="sidebar-card">
             <h2>Progression</h2>
-            <CourseProgress 
+            <CourseProgress
               completedQuizzes={quizzes.filter(q => q.completed).length}
               totalQuizzes={quizzes.length}
             />

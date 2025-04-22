@@ -4,6 +4,7 @@ import { Container, Row, Col, Card, Button, Spinner, Alert, Modal } from 'react-
 import { FaUsers, FaClock, FaBook, FaGraduationCap, FaStar, FaChartLine, FaShoppingCart } from 'react-icons/fa';
 import Cookies from 'js-cookie';
 import PaymentForm from './PaymentForm';
+import RecommendedVideos from './RecommendedVideos';
 import './CourseStyle.css';
 
 const backendURL = "http://localhost:5000/api";
@@ -50,7 +51,7 @@ const CourseList = () => {
       setLoading(true);
       setError(null);
       const token = Cookies.get('token');
-      
+
       if (!token) {
         throw new Error('Authentication required');
       }
@@ -129,7 +130,7 @@ const CourseList = () => {
           {module?.description || 'Découvrez nos cours interactifs et enrichissants'}
         </p>
       </div>
-      
+
       {courses.length === 0 ? (
         <Alert variant="info">
           <p className="mb-0">Aucun cours n'est disponible pour ce module.</p>
@@ -139,14 +140,14 @@ const CourseList = () => {
         <Row xs={1} md={2} lg={3} className="g-4">
           {courses.map(course => {
             const isEnrolled = userEnrolledCourses.includes(course._id);
-            
+
             return (
               <Col key={course._id}>
                 <Card className="course-card">
                   <Card.Body>
                     <Card.Title>{course.title}</Card.Title>
                     <Card.Text>{course.description}</Card.Text>
-                    
+
                     <div className="course-meta">
                       <div className="course-stats-grid">
                         <div className="stat-item">
@@ -158,7 +159,7 @@ const CourseList = () => {
                             <span className="stat-value">{course.purchasedBy?.length || 0}</span>
                           </div>
                         </div>
-                        
+
                         <div className="stat-item">
                           <div className="stat-icon">
                             <FaClock />
@@ -210,7 +211,7 @@ const CourseList = () => {
                       {course.price} DT
                     </div>
                     {isEnrolled ? (
-                      <Button 
+                      <Button
                         variant="success"
                         onClick={() => navigateToCourse(course._id)}
                       >
@@ -218,7 +219,7 @@ const CourseList = () => {
                         Accéder au cours
                       </Button>
                     ) : (
-                      <Button 
+                      <Button
                         variant="primary"
                         onClick={() => handlePurchaseClick(course)}
                       >
@@ -252,6 +253,14 @@ const CourseList = () => {
           )}
         </Modal.Body>
       </Modal>
+
+      {/* Section des vidéos recommandées */}
+      <div className="recommended-videos-section mt-5">
+        <RecommendedVideos
+          category={module?.name}
+          limit={3}
+        />
+      </div>
     </Container>
   );
 };

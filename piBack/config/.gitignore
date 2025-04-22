@@ -1,0 +1,7 @@
+# Ignorer les fichiers de clés d'API
+google-credentials.json
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!.eslintrc.json

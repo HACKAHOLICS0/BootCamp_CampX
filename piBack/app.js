@@ -7,19 +7,20 @@ const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const fs = require('fs'); // Add fs module import
 const interestPointModel = require("./Model/Interestpoint")
-const adminRoutes = require("./routes/AdminRoutes"); 
+const adminRoutes = require("./routes/AdminRoutes");
 const moduleRoutes = require("./routes/moduleRoutes");
 const http = require("http");
 const { Server } = require("socket.io");
 const quizRoutes=require('./routes/quizRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const courseRoutes = require('./routes/courseRoutes');
-const chatRoutes = require('./routes/chatRoutes'); 
+const chatRoutes = require('./routes/chatRoutes');
 const ChatRoom = require("./Model/ChatRoom");
 const marketInsightsRoutes = require('./routes/marketInsights');
+const transcriptionRoutes = require('./routes/transcriptionRoutes');
 const connectDB = require("./config/dbConfig");
 
-require("dotenv").config({ path: "./config/.env" }); 
+require("dotenv").config({ path: "./config/.env" });
 
 require("./utils/passport"); // Local auth
 require("./utils/passport1") // Pass the app to githubAuth.js
@@ -44,8 +45,8 @@ const io = new Server(server, {
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
     credentials: true,
     allowedHeaders: [
-      "Content-Type", 
-      "Authorization", 
+      "Content-Type",
+      "Authorization",
       "X-Requested-With",
       "Accept",
       "Origin",
@@ -62,8 +63,8 @@ app.use(cors({
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"],
   allowedHeaders: [
-    "Content-Type", 
-    "Authorization", 
+    "Content-Type",
+    "Authorization",
     "X-Requested-With",
     "Accept",
     "Origin",
@@ -74,8 +75,8 @@ app.use(cors({
 // Attacher io à l'application pour qu'il soit accessible dans les routes
 app.use(session({
   secret: process.env.SESSION_SECRET, // Vous pouvez mettre cette valeur dans votre fichier .env
-  resave: false, 
-  saveUninitialized: true, 
+  resave: false,
+  saveUninitialized: true,
   cookie: { secure: false } // Mettre 'true' si vous utilisez HTTPS
 }));
 
@@ -102,7 +103,7 @@ const startServer = async () => {
     await connectDB();
     console.log("Connexion à MongoDB réussie");
     initializePoints();
-    
+
     // Start Server
     const port = process.env.PORT || 5000;
     server.listen(port, () => {
@@ -140,6 +141,7 @@ app.use('/api/chat', chatRoutes); // Ajout des routes du chatbot
 app.use('/api/market-insights', marketInsightsRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/payments', paymentRoutes); // Mount payment routes
+app.use('/api', transcriptionRoutes); // Routes pour la transcription audio
 
 
 // Socket.IO events
@@ -152,7 +154,7 @@ io.on('connection', (socket) => {
     try {
       const { token, userId, displayName, avatar } = data;
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      
+
       currentUser = { ...decoded, userId, displayName, avatar };
       socket.userId = userId;
       socket.displayName = displayName;
@@ -169,7 +171,7 @@ io.on('connection', (socket) => {
     try {
       const { roomId, userId, displayName, avatar } = data;
       console.log('Join room data:', data);
-      
+
       if (!roomId || !userId || !displayName) {
         console.error('Données manquantes:', data);
         return;
@@ -177,7 +179,7 @@ io.on('connection', (socket) => {
 
       // Vérifier si la room existe, sinon la créer
       let chatRoom = await ChatRoom.findOne({ name: roomId });
-      
+
       try {
         if (!chatRoom) {
           chatRoom = new ChatRoom({
@@ -219,7 +221,7 @@ io.on('connection', (socket) => {
             username: participant?.username || msg.username
           };
         });
-        
+
         console.log('Sending message history with avatars:', messagesWithAvatars);
         socket.emit('message_history', messagesWithAvatars);
 
@@ -244,7 +246,7 @@ io.on('connection', (socket) => {
     try {
       const { roomId, userId, message, username, displayName, avatar } = data;
       console.log('Message reçu:', data);
-      
+
       if (!userId || !roomId || !message) {
         console.error('Données manquantes:', data);
         return;
@@ -279,7 +281,7 @@ io.on('connection', (socket) => {
 
       // Récupérer le dernier message ajouté
       const newMessage = chatRoom.messages[chatRoom.messages.length - 1].toObject();
-      
+
       // Préparer le message à envoyer avec toutes les informations
       const messageToSend = {
         ...newMessage,
@@ -306,7 +308,7 @@ io.on('connection', (socket) => {
 
 app.get('/api/points', async (req, res) => {
   try {
-      const interestPointModel = require('./Model/Interestpoint'); 
+      const interestPointModel = require('./Model/Interestpoint');
       const points = await interestPointModel.find();
       res.status(200).json(points);
   } catch (err) {
@@ -330,7 +332,7 @@ app.post('/api/generate-question', async (req, res) => {
     // Extraire le sujet de la vidéo de l'URL et du chemin
     const videoPath = videoUrl.toLowerCase();
     let videoSubject = 'programmation';
-    
+
     // Détection automatique du sujet basée sur le chemin de la vidéo
     if (videoPath.includes('html') || videoPath.includes('web')) {
       videoSubject = 'développement web';
@@ -362,9 +364,9 @@ app.post('/api/generate-question', async (req, res) => {
 
     // Générer une question basée sur le contenu analysé
     const question = await videoAnalysisService.createQuestionFromText(videoAnalysis.content);
-    
+
     if (!question) {
-      return res.status(500).json({ 
+      return res.status(500).json({
         error: 'Impossible de générer une question valide',
         details: 'Le contenu de la vidéo ne permet pas de générer une question pertinente'
       });
@@ -396,9 +398,9 @@ app.post('/api/generate-question', async (req, res) => {
     });
   } catch (error) {
     console.error('Erreur lors de la génération de la question:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Erreur lors de la génération de la question',
-      details: error.message 
+      details: error.message
     });
   }
 });

@@ -1,0 +1,70 @@
+{
+  "status": "success",
+  "timestamp": "2025-04-22T14:18:13.134913",
+  "search_term": "programmation",
+  "total_courses": 8,
+  "platform_distribution": {
+    "Coursera": 5,
+    "Udemy": 3
+  },
+  "average_price": 11.25,
+  "average_rating": 4.6,
+  "courses": [
+    {
+      "platform": "Coursera",
+      "title": "Initiation à la programmation (en C++)",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/learn/initiation-programmation-cpp"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Learn to Program: The Fundamentals",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/learn/learn-to-program"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Introduction à la programmation orientée objet (en C++)",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/learn/programmation-orientee-objet-cpp"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Initiation à la programmation (en Java)",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/learn/initiation-programmation-java"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Programmation pour tous (mise en route de Python)",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/learn/python-fr"
+    },
+    {
+      "platform": "Udemy",
+      "title": "Complete Programmation Course 2025",
+      "price": 29.99,
+      "rating": 4.5,
+      "url": "https://www.udemy.com/course/programmation/"
+    },
+    {
+      "platform": "Udemy",
+      "title": "Programmation Bootcamp: Zero to Mastery",
+      "price": 24.99,
+      "rating": 4.6,
+      "url": "https://www.udemy.com/course/programmation-bootcamp/"
+    },
+    {
+      "platform": "Udemy",
+      "title": "Advanced Programmation Projects",
+      "price": 34.99,
+      "rating": 4.7,
+      "url": "https://www.udemy.com/course/advanced-programmation/"
+    }
+  ]
+}
