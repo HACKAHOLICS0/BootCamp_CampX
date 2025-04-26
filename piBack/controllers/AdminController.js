@@ -1,10 +1,16 @@
 const User = require('../Model/User');
 const Course = require('../Model/Course');
 
-// Get all users with typeUser = "user"
+// Get all users with typeUser = "user" and populate enrolled courses
 const getUsers = async (req, res) => {
   try {
-    const users = await User.find({ typeUser: "user" }); // 
+    // Find users and populate their enrolled courses with course details
+    const users = await User.find({ typeUser: "user" })
+      .populate({
+        path: 'enrolledCourses.courseId',
+        select: 'title description' // Select only the fields we need
+      });
+
     res.status(200).json(users);
   } catch (error) {
     console.error("Error fetching users:", error);

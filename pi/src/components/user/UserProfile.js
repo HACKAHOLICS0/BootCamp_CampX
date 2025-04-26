@@ -614,9 +614,7 @@ export default function UserProfile() {
 
                                 <div className="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <small className="text-muted">
-                                            Quizzes: {course.quizzesCompleted}/{course.totalQuizzes}
-                                        </small>
+                                        
                                     </div>
                                     <button
                                         className="btn btn-primary btn-sm"
