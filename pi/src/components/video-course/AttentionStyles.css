@@ -1,0 +1,152 @@
+/* Styles pour la détection d'attention */
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+}
+
+@keyframes grimace-alert {
+  0% {
+    transform: scale(0.98);
+    box-shadow: 0 0 0 0 rgba(255, 0, 255, 0.7);
+  }
+  70% {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 10px rgba(255, 0, 255, 0);
+  }
+  100% {
+    transform: scale(0.98);
+    box-shadow: 0 0 0 0 rgba(255, 0, 255, 0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dot-flashing {
+  0% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.2;
+  }
+}
+
+.attention-indicator {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 4px;
+  z-index: 5;
+  transition: background-color 0.3s;
+}
+
+.attention-indicator.attentive {
+  background-color: rgba(76, 175, 80, 0.8);
+}
+
+.attention-indicator.inattentive {
+  background-color: rgba(244, 67, 54, 0.8);
+}
+
+.attention-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.attention-dot.attentive {
+  background-color: #4CAF50;
+}
+
+.attention-dot.inattentive {
+  background-color: #F44336;
+  animation: pulse 1.5s infinite;
+}
+
+.camera-container {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+
+.camera-container.attentive {
+  border: 2px solid #4CAF50;
+}
+
+.camera-container.inattentive {
+  border: 2px solid #F44336;
+}
+
+.attention-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background-color: #333;
+}
+
+.attention-level {
+  height: 100%;
+  transition: width 0.3s, background-color 0.3s;
+}
+
+.attention-level.attentive {
+  background-color: #4CAF50;
+}
+
+.attention-level.inattentive {
+  background-color: #F44336;
+}
+
+.attention-warning {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  text-align: center;
+  animation: fadeIn 0.3s;
+  z-index: 100; /* Augmenté pour être sûr qu'il est au-dessus de tout */
+  max-width: 80%;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  backdrop-filter: blur(5px); /* Effet de flou derrière l'alerte */
+  border: 2px solid white;
+  font-weight: bold;
+}
+
+/* Style spécifique pour les grimaces */
+.grimace-alert {
+  background-color: rgba(255, 0, 255, 0.9) !important;
+  animation: grimace-alert 1.2s infinite !important;
+}

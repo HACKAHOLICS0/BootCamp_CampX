@@ -32,7 +32,7 @@ body.dark {
   position: relative;
   z-index: 50;
   box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
-} 
+}
 
 .dark .sidebar {
   background: linear-gradient(180deg, #0f172a 0%, #020617 100%);
@@ -712,6 +712,38 @@ input:checked + .slider:before {
 
 .action-btn.archive:hover {
   background-color: #ea580c;
+}
+
+/* Enrolled Courses List */
+.enrolled-courses-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.enrolled-courses-list li {
+  padding: 5px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.enrolled-courses-list li:last-child {
+  border-bottom: none;
+}
+
+.course-title {
+  font-weight: 500;
+  margin-bottom: 3px;
+}
+
+.course-progress {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.dark .course-progress {
+  color: #94a3b8;
 }
 
 /* Responsive Design */

@@ -317,6 +317,55 @@ app.get('/api/points', async (req, res) => {
   }
 });
 
+// Route pour récupérer les informations de l'utilisateur connecté
+const { authMiddleware } = require('./middleware/authMiddleware');
+const User = require('./Model/User');
+app.get('/api/users/me', authMiddleware, async (req, res) => {
+  try {
+    // L'utilisateur est déjà disponible dans req.user grâce au middleware d'authentification
+    const user = req.user;
+
+    console.log("Récupération des informations utilisateur pour:", user._id);
+
+    // Récupérer l'utilisateur avec les cours achetés
+    const userWithCourses = await User.findById(user._id)
+      .populate('enrolledCourses.courseId', 'title description');
+
+    if (!userWithCourses) {
+      console.log("Utilisateur non trouvé dans la base de données");
+      return res.status(404).json({ message: 'Utilisateur non trouvé' });
+    }
+
+    // Vérifier et formater les données des cours achetés
+    if (userWithCourses.enrolledCourses && Array.isArray(userWithCourses.enrolledCourses)) {
+      console.log("Nombre de cours achetés:", userWithCourses.enrolledCourses.length);
+
+      // Afficher les détails des cours achetés pour le débogage
+      userWithCourses.enrolledCourses.forEach((course, index) => {
+        console.log(`Cours ${index + 1}:`, course);
+        if (course.courseId) {
+          if (typeof course.courseId === 'object') {
+            console.log(`- ID: ${course.courseId._id}`);
+            console.log(`- Titre: ${course.courseId.title}`);
+          } else {
+            console.log(`- ID: ${course.courseId}`);
+          }
+        } else {
+          console.log("- Cours sans ID valide");
+        }
+      });
+    } else {
+      console.log("Aucun cours acheté trouvé ou format inattendu");
+    }
+
+    // Retourner les informations de l'utilisateur
+    res.status(200).json(userWithCourses);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des informations utilisateur:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
 
 
 // Route pour générer des questions

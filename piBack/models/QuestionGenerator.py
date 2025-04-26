@@ -63,8 +63,17 @@ class QuestionGenerator:
             'html': ['html', 'balise', 'tag', 'markup', 'document', 'structure', 'web', 'page', 'div', 'span', 'p', 'h1', 'h2', 'body', 'head'],
             'css': ['css', 'style', 'stylesheet', 'design', 'layout', 'responsive', 'flexbox', 'grid', 'color', 'margin', 'padding', 'position', 'display', 'selector'],
             'javascript': ['javascript', 'js', 'function', 'variable', 'const', 'let', 'var', 'array', 'object', 'event', 'callback', 'promise', 'async', 'dom'],
+            'sql': ['sql', 'mysql', 'database', 'base de données', 'requête', 'query', 'select', 'insert', 'update', 'delete', 'from', 'where', 'join', 'table', 'colonne', 'ligne', 'primary key', 'foreign key', 'index', 'constraint'],
             'programmation': ['algorithme', 'fonction', 'variable', 'boucle', 'condition', 'classe', 'objet', 'héritage', 'interface', 'type', 'compilation']
         }
+
+        # Templates spécifiques à SQL
+        self.sql_templates = [
+            "Quel est le rôle de {keyword} en SQL ?",
+            "Comment utiliser {keyword} dans une requête SQL ?",
+            "À quoi sert la clause {keyword} en SQL ?",
+            "Quelle est la fonction de {keyword} dans MySQL ?"
+        ]
 
     def preprocess_text(self, text):
         # Nettoyer et tokenizer le texte
@@ -130,7 +139,7 @@ class QuestionGenerator:
         return max_domain[0]
 
     def extract_short_answer(self, sentence, max_length=50):
-        """Extraire une réponse courte à partir d'une phrase"""
+        """Générer une réponse courte et bien formulée à partir d'une phrase"""
         # Vérifier si nous avons une question sur "Où écrire le code JavaScript"
         if hasattr(self, 'current_topic') and self.current_topic:
             topic_lower = self.current_topic.lower()
@@ -165,25 +174,131 @@ class QuestionGenerator:
                 # Réponse par défaut pour ce sujet
                 return "Ajouter de l'interactivité aux pages web"
 
-        # Extraire des mots-clés pour générer une réponse courte et générique
-        # plutôt que d'utiliser directement la phrase de la transcription
+        # Extraire les mots-clés importants de la phrase
         keywords = self.extract_keywords(sentence)
-        if keywords and len(keywords) >= 2:
-            # Générer une réponse courte basée sur les mots-clés
-            return f"Concept lié à {keywords[0]} et {keywords[1]}"
-        elif keywords and len(keywords) == 1:
-            return f"Concept de {keywords[0]}"
 
-        # Si nous n'avons pas pu extraire de mots-clés, utiliser une approche plus simple
-        # Limiter à 3-4 mots pour éviter d'utiliser des phrases complètes de la transcription
-        words = sentence.split()
-        if len(words) > 4:
-            short_answer = ' '.join(words[:4]) + "..."
-            if len(short_answer) > max_length:
-                return short_answer[:max_length-3] + '...'
-            return short_answer
-        else:
-            return "Concept abordé dans la vidéo"
+        # Déterminer le domaine pour générer une réponse adaptée
+        domain = self.detect_domain(sentence)
+
+        # Analyser la structure de la phrase pour déterminer le type de réponse à générer
+        sentence_lower = sentence.lower()
+
+        # Détecter les termes techniques dans la phrase
+        technical_terms = []
+        if keywords:
+            technical_terms = keywords
+
+        # Générer une réponse basée sur les termes techniques et le contexte
+        if technical_terms and len(technical_terms) >= 1:
+            main_term = technical_terms[0]
+
+            # Détecter le type de question pour adapter la réponse
+            if "comment" in sentence_lower or "comment" in self.current_topic.lower() if hasattr(self, 'current_topic') and self.current_topic else False:
+                # Question de type "Comment..."
+                response_templates = [
+                    f"En utilisant {main_term} de manière appropriée",
+                    f"Par l'application correcte de {main_term}",
+                    f"En implémentant {main_term} selon les bonnes pratiques",
+                    f"Grâce à une utilisation efficace de {main_term}"
+                ]
+                if len(technical_terms) >= 2:
+                    response_templates.extend([
+                        f"En combinant {main_term} avec {technical_terms[1]}",
+                        f"En utilisant {main_term} conjointement avec {technical_terms[1]}"
+                    ])
+                return np.random.choice(response_templates)
+
+            elif "pourquoi" in sentence_lower or "pourquoi" in self.current_topic.lower() if hasattr(self, 'current_topic') and self.current_topic else False:
+                # Question de type "Pourquoi..."
+                response_templates = [
+                    f"Car {main_term} est essentiel pour optimiser les performances",
+                    f"Parce que {main_term} permet d'améliorer la qualité du résultat",
+                    f"En raison de l'importance de {main_term} dans ce contexte",
+                    f"Pour garantir la fiabilité grâce à {main_term}"
+                ]
+                return np.random.choice(response_templates)
+
+            elif "qu'est-ce" in sentence_lower or "qu'est-ce" in self.current_topic.lower() if hasattr(self, 'current_topic') and self.current_topic else False:
+                # Question de type "Qu'est-ce que..."
+                response_templates = [
+                    f"Un concept fondamental basé sur {main_term}",
+                    f"Une technique qui utilise {main_term} pour résoudre des problèmes",
+                    f"Un principe qui s'appuie sur {main_term}",
+                    f"Une approche centrée sur {main_term}"
+                ]
+                return np.random.choice(response_templates)
+
+            elif "quel" in sentence_lower or "quelle" in sentence_lower:
+                # Question de type "Quel/Quelle..."
+                response_templates = [
+                    f"L'élément {main_term} qui joue un rôle central",
+                    f"Le concept de {main_term} appliqué correctement",
+                    f"La technique utilisant {main_term} de façon optimale",
+                    f"L'approche basée sur {main_term}"
+                ]
+                return np.random.choice(response_templates)
+
+            else:
+                # Autres types de questions
+                if domain == 'html':
+                    return f"La balise ou l'élément {main_term} en HTML"
+                elif domain == 'css':
+                    return f"La propriété ou le sélecteur {main_term} en CSS"
+                elif domain == 'javascript':
+                    return f"La fonction ou méthode {main_term} en JavaScript"
+                elif domain == 'programmation':
+                    return f"Le concept de {main_term} en programmation"
+                else:
+                    # Réponse générique basée sur le terme principal
+                    response_templates = [
+                        f"Le principe de {main_term} appliqué dans ce contexte",
+                        f"L'utilisation appropriée de {main_term}",
+                        f"La mise en œuvre efficace de {main_term}",
+                        f"L'application correcte de {main_term}"
+                    ]
+                    return np.random.choice(response_templates)
+
+        # Si aucun terme technique n'est trouvé, utiliser des réponses génériques par domaine
+        domain_answers = {
+            'html': [
+                "La structure sémantique du document HTML",
+                "L'organisation hiérarchique des éléments HTML",
+                "L'utilisation appropriée des balises HTML",
+                "La structure fondamentale d'une page web"
+            ],
+            'css': [
+                "L'application correcte des styles CSS",
+                "La mise en forme efficace des éléments web",
+                "L'utilisation des sélecteurs CSS appropriés",
+                "Le positionnement optimal des éléments"
+            ],
+            'javascript': [
+                "L'implémentation efficace des fonctions JavaScript",
+                "La manipulation dynamique du contenu web",
+                "La gestion appropriée des événements utilisateur",
+                "L'utilisation optimale des structures de données"
+            ],
+            'programmation': [
+                "L'application des principes fondamentaux de programmation",
+                "L'utilisation efficace des structures de contrôle",
+                "L'implémentation correcte des algorithmes",
+                "L'organisation optimale du code source"
+            ],
+            'general': [
+                "Le concept fondamental présenté dans cette section",
+                "Le principe essentiel expliqué dans la vidéo",
+                "La technique principale démontrée dans ce passage",
+                "L'approche méthodique décrite dans cette partie"
+            ]
+        }
+
+        # Sélectionner une réponse prédéfinie selon le domaine
+        if domain in domain_answers:
+            answers = domain_answers[domain]
+            return answers[np.random.randint(0, len(answers))]
+
+        # Réponse par défaut si aucune approche précédente n'a fonctionné
+        return "Le principe fondamental expliqué dans cette section"
 
     def generate_options(self, correct_answer, domain, keywords=None, all_sentences=None):
         """Générer des options de réponse courtes et pertinentes"""
@@ -228,6 +343,75 @@ class QuestionGenerator:
             np.random.shuffle(js_role_options)
             return js_role_options, correct_answer
 
+        # Vérifier si nous avons une question sur SQL
+        if hasattr(self, 'sql_question') and self.sql_question:
+            # Déterminer le type de question SQL
+            if "select" in correct_answer.lower():
+                sql_options = [
+                    "La commande SELECT permet d'extraire des données d'une table",
+                    "La commande SELECT permet de modifier des données existantes",
+                    "La commande SELECT permet d'ajouter de nouvelles lignes",
+                    "La commande SELECT permet de supprimer des données"
+                ]
+                correct_answer = "La commande SELECT permet d'extraire des données d'une table"
+            elif "insert" in correct_answer.lower():
+                sql_options = [
+                    "La commande INSERT permet d'ajouter de nouvelles lignes dans une table",
+                    "La commande INSERT permet de modifier des données existantes",
+                    "La commande INSERT permet d'extraire des données d'une table",
+                    "La commande INSERT permet de supprimer des lignes d'une table"
+                ]
+                correct_answer = "La commande INSERT permet d'ajouter de nouvelles lignes dans une table"
+            elif "update" in correct_answer.lower():
+                sql_options = [
+                    "La commande UPDATE permet de modifier des données existantes",
+                    "La commande UPDATE permet d'ajouter de nouvelles lignes",
+                    "La commande UPDATE permet d'extraire des données d'une table",
+                    "La commande UPDATE permet de supprimer des lignes d'une table"
+                ]
+                correct_answer = "La commande UPDATE permet de modifier des données existantes"
+            elif "delete" in correct_answer.lower():
+                sql_options = [
+                    "La commande DELETE permet de supprimer des lignes d'une table",
+                    "La commande DELETE permet de modifier des données existantes",
+                    "La commande DELETE permet d'ajouter de nouvelles lignes",
+                    "La commande DELETE permet d'extraire des données d'une table"
+                ]
+                correct_answer = "La commande DELETE permet de supprimer des lignes d'une table"
+            elif "where" in correct_answer.lower():
+                sql_options = [
+                    "La clause WHERE filtre les résultats selon des conditions",
+                    "La clause WHERE spécifie la table source des données",
+                    "La clause WHERE regroupe les résultats selon des critères",
+                    "La clause WHERE trie les résultats selon une ou plusieurs colonnes"
+                ]
+                correct_answer = "La clause WHERE filtre les résultats selon des conditions"
+            elif "join" in correct_answer.lower():
+                sql_options = [
+                    "Les JOINs permettent de combiner des données de plusieurs tables",
+                    "Les JOINs permettent de filtrer les résultats selon des conditions",
+                    "Les JOINs permettent de trier les résultats selon une colonne",
+                    "Les JOINs permettent de regrouper les résultats selon des critères"
+                ]
+                correct_answer = "Les JOINs permettent de combiner des données de plusieurs tables"
+            else:
+                # Options génériques pour SQL
+                sql_options = [
+                    "Les requêtes SQL permettent de manipuler les données dans une base de données",
+                    "SQL est un langage de programmation orienté objet",
+                    "SQL est utilisé principalement pour le développement d'interfaces utilisateur",
+                    "SQL est un protocole de communication réseau"
+                ]
+                correct_answer = "Les requêtes SQL permettent de manipuler les données dans une base de données"
+
+            # Mélanger les options
+            np.random.shuffle(sql_options)
+            # S'assurer que la réponse correcte est dans les options
+            if correct_answer not in sql_options:
+                sql_options[0] = correct_answer
+
+            return sql_options, correct_answer
+
         # Options prédéfinies par domaine - courtes et bien formulées
         domain_options = {
             'html': [
@@ -253,6 +437,16 @@ class QuestionGenerator:
                 "Un langage de manipulation du DOM",
                 "Un langage de traitement asynchrone",
                 "Un langage multi-paradigme"
+            ],
+            'sql': [
+                "Un langage de requête structuré",
+                "Un système de gestion de base de données",
+                "Un langage de définition de données",
+                "Un langage de manipulation de données",
+                "Un protocole de communication avec les bases de données",
+                "Un standard pour l'interrogation de données",
+                "Un langage déclaratif pour les bases de données",
+                "Un outil d'analyse de données relationnelles"
             ],
             'programmation': [
                 "Un processus de résolution de problèmes",
@@ -358,6 +552,14 @@ class QuestionGenerator:
             # Utiliser des templates spécifiques à JavaScript
             template = np.random.choice(self.js_templates)
             raw_question = template.format(keyword=keywords[0])
+        elif domain == 'sql' and len(keywords) >= 1 and np.random.random() < 0.8:
+            # Utiliser des templates spécifiques à SQL
+            template = np.random.choice(self.sql_templates)
+            # Filtrer les mots-clés pour trouver ceux liés à SQL
+            sql_keywords = [k for k in keywords if k.lower() in ['select', 'insert', 'update', 'delete', 'from', 'where', 'join', 'table', 'database', 'requête', 'query']]
+            # Utiliser un mot-clé SQL si disponible, sinon utiliser le premier mot-clé
+            keyword = sql_keywords[0] if sql_keywords else keywords[0]
+            raw_question = template.format(keyword=keyword)
         elif len(keywords) >= 2 and np.random.random() < 0.3:
             # Question de comparaison entre deux concepts
             template = np.random.choice(self.comparison_templates)
@@ -370,8 +572,21 @@ class QuestionGenerator:
                 template = np.random.choice(self.application_templates)
             raw_question = template.format(keyword=keywords[0])
         else:
-            # Question générale sur le concept
-            raw_question = np.random.choice(self.concept_templates)
+            # Question générale sur le concept, mais éviter toujours la même question
+            # Utiliser un template aléatoire avec une probabilité plus élevée pour les questions spécifiques
+            if np.random.random() < 0.7 and len(keywords) >= 1:
+                if domain == 'sql':
+                    raw_question = f"Comment fonctionne {keywords[0]} dans une base de données ?"
+                elif domain == 'javascript':
+                    raw_question = f"Comment s'utilise {keywords[0]} en JavaScript ?"
+                elif domain == 'html':
+                    raw_question = f"À quoi sert la balise {keywords[0]} en HTML ?"
+                elif domain == 'css':
+                    raw_question = f"Comment appliquer {keywords[0]} en CSS ?"
+                else:
+                    raw_question = f"Expliquez le concept de {keywords[0]} présenté dans cette vidéo."
+            else:
+                raw_question = np.random.choice(self.concept_templates)
 
         # Simplifier et raccourcir la question
         question = self.simplify_question(raw_question)
@@ -406,11 +621,11 @@ class QuestionGenerator:
         questions = []
 
         # Si nous avons un temps actuel, extraire seulement la partie récente de la transcription
-        if current_time is not None and current_time > 120:  # Si nous sommes à plus de 2 minutes
-            # Estimer la taille de la transcription pour 2 minutes (environ 150 mots par minute)
-            recent_transcript = self.extract_recent_transcript(transcript, words_per_minute=150, minutes=2)
+        if current_time is not None and current_time > 300:  # Si nous sommes à plus de 5 minutes
+            # Estimer la taille de la transcription pour 5 minutes (environ 150 mots par minute)
+            recent_transcript = self.extract_recent_transcript(transcript, words_per_minute=150, minutes=5)
             segments = self.split_transcript(recent_transcript)
-            print(f"Utilisation des 2 dernières minutes de transcription ({len(segments)} segments)", file=sys.stderr)
+            print(f"Utilisation des 5 dernières minutes de transcription ({len(segments)} segments)", file=sys.stderr)
         else:
             segments = self.split_transcript(transcript)
             print(f"Utilisation de la transcription complète ({len(segments)} segments)", file=sys.stderr)
@@ -506,7 +721,7 @@ class QuestionGenerator:
 
         return questions
 
-    def extract_recent_transcript(self, transcript, words_per_minute=150, minutes=2):
+    def extract_recent_transcript(self, transcript, words_per_minute=150, minutes=5):
         """Extraire la partie récente de la transcription basée sur un nombre estimé de mots"""
         # Estimer le nombre de mots pour la durée spécifiée
         target_word_count = words_per_minute * minutes
@@ -625,7 +840,38 @@ class QuestionGenerator:
         # Convertir le sujet en minuscules pour les comparaisons
         topic_lower = topic.lower()
 
-        # Questions spécifiques pour d'autres sujets JavaScript courants
+        # Extraire les termes techniques du sujet
+        technical_terms = []
+        if keywords and len(keywords) > 0:
+            technical_terms = keywords
+        else:
+            # Extraire des mots-clés du titre si aucun n'est fourni
+            words = re.findall(r'\b\w+\b', topic_lower)
+            # Filtrer les mots courts et les mots communs
+            common_words = ['le', 'la', 'les', 'un', 'une', 'des', 'et', 'ou', 'pour', 'dans', 'sur', 'avec', 'par', 'ce', 'cette', 'ces']
+            technical_terms = [w for w in words if len(w) > 3 and w not in common_words]
+
+        # Si nous avons des termes techniques, générer une question spécifique
+        if technical_terms and len(technical_terms) > 0:
+            # Sélectionner un terme technique aléatoire
+            term = technical_terms[0]
+
+            # Modèles de questions variés basés sur le terme technique
+            question_templates = [
+                f"Quel est le rôle de {term} présenté dans cette vidéo ?",
+                f"Comment fonctionne {term} dans ce contexte ?",
+                f"À quoi sert {term} dans ce domaine ?",
+                f"Comment utiliser {term} efficacement ?",
+                f"Quelle est la fonction principale de {term} ?",
+                f"Pourquoi {term} est-il important dans ce contexte ?",
+                f"Comment {term} s'intègre-t-il dans l'ensemble ?",
+                f"Quelles sont les caractéristiques principales de {term} ?"
+            ]
+
+            # Sélectionner un modèle de question aléatoire
+            return np.random.choice(question_templates)
+
+        # Questions spécifiques pour JavaScript
         if "javascript" in topic_lower:
             if "variable" in topic_lower:
                 return "Comment déclare-t-on une variable en JavaScript ?"
@@ -643,8 +889,30 @@ class QuestionGenerator:
                 self.js_role_question = True
                 return "Quel est le role du JavaScript dans le developpement web ?"
 
-        # Éviter les questions génériques qui commencent par "Que nous apprend"
-        return "Quel est le concept principal aborde dans cette video ?"
+        # Générer une question basée sur le sujet de la vidéo
+        topic_based_templates = [
+            f"Quel est le concept principal de {topic} présenté dans cette vidéo ?",
+            f"Comment fonctionne {topic} selon cette vidéo ?",
+            f"Quelle est la caractéristique essentielle de {topic} ?",
+            f"Quel aspect de {topic} est mis en avant dans cette vidéo ?"
+        ]
+
+        # Si le sujet est trop long, utiliser des questions plus génériques
+        if len(topic) > 30:
+            # Éviter les questions génériques qui commencent toujours par la même formulation
+            general_questions = [
+                "Quel est le concept principal abordé dans cette vidéo ?",
+                "Quel est le sujet principal de cette vidéo ?",
+                "Quelle est la notion fondamentale expliquée dans cette vidéo ?",
+                "Quel est l'élément clé présenté dans cette vidéo ?",
+                "Quelle technique importante est démontrée dans cette vidéo ?",
+                "Quel principe essentiel est expliqué dans cette vidéo ?",
+                "Quelle est l'idée centrale développée dans cette vidéo ?",
+                "Quel est le point fondamental à retenir de cette vidéo ?"
+            ]
+            return np.random.choice(general_questions)
+        else:
+            return np.random.choice(topic_based_templates)
 
 if __name__ == "__main__":
     # Lire la transcription depuis les arguments

@@ -1,0 +1,70 @@
+{
+  "status": "success",
+  "timestamp": "2025-04-22T16:48:35.252844",
+  "search_term": "machine learning",
+  "total_courses": 8,
+  "platform_distribution": {
+    "Coursera": 5,
+    "Udemy": 3
+  },
+  "average_price": 11.25,
+  "average_rating": 4.6,
+  "courses": [
+    {
+      "platform": "Coursera",
+      "title": "Machine Learning",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/specializations/machine-learning-introduction"
+    },
+    {
+      "platform": "Coursera",
+      "title": "IBM Machine Learning",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/professional-certificates/ibm-machine-learning"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Microsoft Copilot for Data Science",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/specializations/microsoft-copilot-for-data-science"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Microsoft AI & ML Engineering",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/professional-certificates/microsoft-ai-and-ml-engineering"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Machine Learning with Python",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/learn/machine-learning-with-python"
+    },
+    {
+      "platform": "Udemy",
+      "title": "Complete Machine Learning Course 2025",
+      "price": 29.99,
+      "rating": 4.5,
+      "url": "https://www.udemy.com/course/machine-learning/"
+    },
+    {
+      "platform": "Udemy",
+      "title": "Machine Learning Bootcamp: Zero to Mastery",
+      "price": 24.99,
+      "rating": 4.6,
+      "url": "https://www.udemy.com/course/machine-learning-bootcamp/"
+    },
+    {
+      "platform": "Udemy",
+      "title": "Advanced Machine Learning Projects",
+      "price": 34.99,
+      "rating": 4.7,
+      "url": "https://www.udemy.com/course/advanced-machine-learning/"
+    }
+  ]
+}

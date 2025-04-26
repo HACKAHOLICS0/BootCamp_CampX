@@ -69,7 +69,7 @@ const Users = () => {
               <th>Name</th>
               <th>Email</th>
               <th>Phone</th>
-              <th>Interest Points</th> {/* Fixed column name */}
+              <th>Enrolled Courses</th>
               <th>Status</th> {/* Ajout de la colonne pour le progrès */}
               <th>Actions</th>
             </tr>
@@ -89,9 +89,18 @@ const Users = () => {
                   <td>{user.email}</td>
                   <td>{user.phone || "N/A"}</td>
                   <td>
-                    {user.refinterestpoints?.length > 0 
-                      ? user.refinterestpoints.join(", ")  // Convert array to a comma-separated string
-                      : "null"}
+                    {user.enrolledCourses?.length > 0
+                      ? (
+                        <ul className="enrolled-courses-list">
+                          {user.enrolledCourses.map((enrollment) => (
+                            <li key={enrollment._id}>
+                              <div className="course-title">{enrollment.courseId?.title || 'Unknown Course'}</div>
+                              <div className="course-progress">Progress: {enrollment.progress || 0}%</div>
+                            </li>
+                          ))}
+                        </ul>
+                      )
+                      : "No courses"}
                   </td>
                   <td>
                   {/* Affichage du progrès pour chaque utilisateur */}
@@ -105,10 +114,10 @@ const Users = () => {
                   </ul>
                 </td>
                   <td>
-                    
+
                     <button className="action-btn delete" onClick={() => handleDelete(user._id)}>Delete</button>
                   </td>
-                  
+
                 </tr>
               ))
             ) : (

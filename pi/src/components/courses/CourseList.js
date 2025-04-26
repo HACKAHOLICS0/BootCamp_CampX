@@ -25,6 +25,18 @@ const CourseList = () => {
     fetchUserEnrolledCourses();
   }, [moduleId]);
 
+  // Effet pour vérifier les cours achetés après le chargement des cours
+  useEffect(() => {
+    if (courses.length > 0 && userEnrolledCourses.length > 0) {
+      console.log("Vérification des cours achetés après chargement:");
+      courses.forEach(course => {
+        const courseIdStr = course._id.toString();
+        const isEnrolled = userEnrolledCourses.includes(courseIdStr);
+        console.log(`- Cours "${course.title}" (ID: ${courseIdStr}): ${isEnrolled ? 'Déjà acheté' : 'Non acheté'}`);
+      });
+    }
+  }, [courses, userEnrolledCourses]);
+
   const fetchUserEnrolledCourses = async () => {
     try {
       const token = Cookies.get('token');
@@ -39,10 +51,44 @@ const CourseList = () => {
 
       if (response.ok) {
         const userData = await response.json();
-        setUserEnrolledCourses(userData.enrolledCourses.map(course => course.courseId));
+        console.log("Données utilisateur complètes:", userData);
+
+        // Afficher la structure exacte des données pour le débogage
+        if (userData.enrolledCourses) {
+          console.log("Structure des cours achetés:", JSON.stringify(userData.enrolledCourses, null, 2));
+        }
+
+        // Extraire les IDs des cours achetés et les convertir en chaînes de caractères
+        if (userData.enrolledCourses && Array.isArray(userData.enrolledCourses)) {
+          // Récupérer les IDs des cours achetés
+          const enrolledCourseIds = userData.enrolledCourses.map(course => {
+            console.log("Traitement du cours:", course);
+
+            // Vérifier si courseId est un objet ou une chaîne
+            if (course.courseId && typeof course.courseId === 'object' && course.courseId._id) {
+              console.log("courseId est un objet avec _id:", course.courseId._id);
+              return course.courseId._id.toString();
+            } else if (course.courseId) {
+              console.log("courseId est une chaîne ou un autre type:", course.courseId);
+              return course.courseId.toString();
+            } else {
+              console.log("courseId est null ou undefined");
+              return null;
+            }
+          }).filter(id => id !== null); // Filtrer les valeurs null
+
+          console.log("Cours achetés (IDs finaux):", enrolledCourseIds);
+          setUserEnrolledCourses(enrolledCourseIds);
+        } else {
+          console.warn("Aucun cours acheté trouvé ou format inattendu:", userData.enrolledCourses);
+          setUserEnrolledCourses([]);
+        }
+      } else {
+        console.error("Erreur lors de la récupération des données utilisateur:", response.status);
       }
     } catch (error) {
       console.error('Failed to fetch user courses:', error);
+      setUserEnrolledCourses([]);
     }
   };
 
@@ -88,8 +134,47 @@ const CourseList = () => {
   };
 
   const handlePurchaseClick = (course) => {
-    setSelectedCourse(course);
-    setShowPaymentModal(true);
+    // Vérifier si l'utilisateur a déjà acheté ce cours
+    const courseIdStr = course._id.toString();
+    console.log("Tentative d'achat du cours:", course.title);
+    console.log("ID du cours:", courseIdStr);
+    console.log("Liste des cours achetés:", userEnrolledCourses);
+
+    // Utiliser une méthode plus robuste pour vérifier si le cours est acheté
+    let isAlreadyPurchased = false;
+
+    // Méthode 1: Vérifier si l'ID du cours est dans la liste des cours achetés
+    if (userEnrolledCourses.includes(courseIdStr)) {
+      isAlreadyPurchased = true;
+    }
+
+    // Méthode 2: Vérifier si l'ID du cours est dans la liste des cours achetés (comparaison manuelle)
+    if (!isAlreadyPurchased) {
+      for (const enrolledId of userEnrolledCourses) {
+        if (enrolledId === courseIdStr) {
+          isAlreadyPurchased = true;
+          break;
+        }
+      }
+    }
+
+    // Méthode 3: Vérifier si le cours est dans la liste des cours achetés par son ID (comparaison partielle)
+    if (!isAlreadyPurchased && courseIdStr && userEnrolledCourses.some(id => id && courseIdStr.includes(id))) {
+      isAlreadyPurchased = true;
+    }
+
+    console.log("Le cours est-il déjà acheté?", isAlreadyPurchased);
+
+    if (isAlreadyPurchased) {
+      // Afficher un message d'alerte
+      alert("Vous avez déjà acheté ce cours. Vous pouvez y accéder depuis votre profil ou en cliquant sur 'Accéder au cours'.");
+      // Rediriger vers le cours
+      navigateToCourse(course._id);
+    } else {
+      // Afficher le modal de paiement
+      setSelectedCourse(course);
+      setShowPaymentModal(true);
+    }
   };
 
   const handlePaymentSuccess = () => {
@@ -139,7 +224,34 @@ const CourseList = () => {
       ) : (
         <Row xs={1} md={2} lg={3} className="g-4">
           {courses.map(course => {
-            const isEnrolled = userEnrolledCourses.includes(course._id);
+            // Vérifier si le cours est dans la liste des cours achetés
+            const courseIdStr = course._id.toString();
+
+            // Utiliser une méthode plus robuste pour vérifier si le cours est acheté
+            let isEnrolled = false;
+
+            // Méthode 1: Vérifier si l'ID du cours est dans la liste des cours achetés
+            if (userEnrolledCourses.includes(courseIdStr)) {
+              isEnrolled = true;
+            }
+
+            // Méthode 2: Vérifier si l'ID du cours est dans la liste des cours achetés (comparaison manuelle)
+            if (!isEnrolled) {
+              for (const enrolledId of userEnrolledCourses) {
+                if (enrolledId === courseIdStr) {
+                  isEnrolled = true;
+                  break;
+                }
+              }
+            }
+
+            // Méthode 3: Vérifier si le cours est dans la liste des cours achetés par son ID (comparaison partielle)
+            if (!isEnrolled && courseIdStr && userEnrolledCourses.some(id => id && courseIdStr.includes(id))) {
+              isEnrolled = true;
+            }
+
+            console.log(`Cours ${course.title} (ID: ${courseIdStr}): ${isEnrolled ? 'Déjà acheté' : 'Non acheté'}`);
+            console.log(`Liste des cours achetés: ${userEnrolledCourses.join(', ')}`);
 
             return (
               <Col key={course._id}>
@@ -207,24 +319,34 @@ const CourseList = () => {
                   </Card.Body>
 
                   <div className="course-footer">
-                    <div className="course-price">
-                      {course.price} DT
-                    </div>
                     {isEnrolled ? (
-                      <Button
-                        variant="success"
-                        onClick={() => navigateToCourse(course._id)}
-                      >
-                        <FaBook className="me-2" />
-                        Accéder au cours
-                      </Button>
+                      <div className="d-flex flex-column align-items-stretch w-100">
+                        <div className="course-purchased-alert mb-2">
+                          <FaShoppingCart className="me-1" />
+                          Vous avez déjà acheté ce cours
+                        </div>
+                        <Button
+                          variant="success"
+                          onClick={() => navigateToCourse(course._id)}
+                          className="w-100"
+                        >
+                          <FaBook className="me-2" />
+                          Accéder au cours
+                        </Button>
+                      </div>
                     ) : (
-                      <Button
-                        variant="primary"
-                        onClick={() => handlePurchaseClick(course)}
-                      >
-                        Acheter
-                      </Button>
+                      <>
+                        <div className="course-price">
+                          {course.price} DT
+                        </div>
+                        <Button
+                          variant="primary"
+                          onClick={() => handlePurchaseClick(course)}
+                        >
+                          <FaShoppingCart className="me-2" />
+                          Acheter
+                        </Button>
+                      </>
                     )}
                   </div>
                 </Card>
@@ -243,12 +365,25 @@ const CourseList = () => {
             <div className="payment-course-info">
               <h4>{selectedCourse.title}</h4>
               <p className="text-muted">{selectedCourse.description}</p>
-              <PaymentForm
-                courseId={selectedCourse._id}
-                amount={selectedCourse.price}
-                onSuccess={handlePaymentSuccess}
-                onCancel={() => setShowPaymentModal(false)}
-              />
+
+              {/* Vérifier si le cours est déjà acheté */}
+              {userEnrolledCourses.includes(selectedCourse._id.toString()) ? (
+                <div className="alert alert-info">
+                  <h5>Cours déjà acheté</h5>
+                  <p>Vous avez déjà acheté ce cours. Vous allez être redirigé vers la page du cours...</p>
+                  {setTimeout(() => {
+                    setShowPaymentModal(false);
+                    navigateToCourse(selectedCourse._id);
+                  }, 2000) && null}
+                </div>
+              ) : (
+                <PaymentForm
+                  courseId={selectedCourse._id}
+                  amount={selectedCourse.price}
+                  onSuccess={handlePaymentSuccess}
+                  onCancel={() => setShowPaymentModal(false)}
+                />
+              )}
             </div>
           )}
         </Modal.Body>

@@ -1,0 +1,56 @@
+{
+  "status": "success",
+  "timestamp": "2025-04-26T13:36:50.703896",
+  "search_term": "web development",
+  "total_courses": 6,
+  "platform_distribution": {
+    "Coursera": 5,
+    "Udemy": 1
+  },
+  "average_price": 5,
+  "average_rating": 4.7,
+  "courses": [
+    {
+      "platform": "Coursera",
+      "title": "Meta Front-End Developer",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/professional-certificates/meta-front-end-developer"
+    },
+    {
+      "platform": "Coursera",
+      "title": "HTML, CSS, and Javascript for Web Developers",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/specializations/html-css-javascript-for-web-developers"
+    },
+    {
+      "platform": "Coursera",
+      "title": "UX Design Toolkit",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/professional-certificates/coursera-ux-design-toolkit"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Web Design for Everybody: Basics of Web Development & Coding",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/specializations/web-design"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Introduction to Web Development",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/learn/web-development"
+    },
+    {
+      "platform": "Udemy",
+      "title": "The Web Developer Bootcamp",
+      "price": 29.99,
+      "rating": 4.7,
+      "url": "https://www.udemy.com/course/the-web-developer-bootcamp/"
+    }
+  ]
+}

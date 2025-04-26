@@ -3,6 +3,7 @@ import { Box, Typography, Button, Paper, Dialog, DialogTitle, DialogContent, Dia
 import axios from 'axios';
 import config from '../../config';
 import './TranscriptionStyles.css'; // Importer les styles CSS pour la transcription
+import CameraRequiredVideoPlayer from './CameraRequiredVideoPlayer'; // Importer le composant de vérification de caméra
 
 const InteractiveVideoPlayer = ({ videoUrl, videoTitle }) => {
   console.log("InteractiveVideoPlayer - videoUrl:", videoUrl);
@@ -410,13 +411,13 @@ const InteractiveVideoPlayer = ({ videoUrl, videoTitle }) => {
     }
   }, [transcription]);
 
-  // Fonction pour extraire la transcription des 2 dernières minutes
+  // Fonction pour extraire la transcription des 5 dernières minutes
   const getRecentTranscription = () => {
     const fullTranscription = transcriptionRef.current.replace(/<[^>]*>/g, '').trim();
     if (!fullTranscription) return "";
 
-    // Si la vidéo est en cours de lecture depuis moins de 2 minutes, utiliser toute la transcription
-    if (videoRef.current && videoRef.current.currentTime < 120) {
+    // Si la vidéo est en cours de lecture depuis moins de 5 minutes, utiliser toute la transcription
+    if (videoRef.current && videoRef.current.currentTime < 300) {
       return fullTranscription;
     }
 
@@ -425,9 +426,9 @@ const InteractiveVideoPlayer = ({ videoUrl, videoTitle }) => {
 
     // Estimer le nombre de mots par minute (en moyenne 150 mots par minute)
     const wordsPerMinute = 150;
-    const wordsForTwoMinutes = wordsPerMinute * 2;
+    const wordsForFiveMinutes = wordsPerMinute * 5;
 
-    // Compter à rebours depuis la fin pour obtenir environ 2 minutes de contenu
+    // Compter à rebours depuis la fin pour obtenir environ 5 minutes de contenu
     let wordCount = 0;
     let recentSentences = [];
 
@@ -436,7 +437,7 @@ const InteractiveVideoPlayer = ({ videoUrl, videoTitle }) => {
       wordCount += sentenceWords;
       recentSentences.unshift(sentences[i]);
 
-      if (wordCount >= wordsForTwoMinutes) {
+      if (wordCount >= wordsForFiveMinutes) {
         break;
       }
     }
@@ -446,7 +447,7 @@ const InteractiveVideoPlayer = ({ videoUrl, videoTitle }) => {
 
   // Fonction pour générer une question
   const generateQuestion = async () => {
-    // Extraire la transcription des 2 dernières minutes
+    // Extraire la transcription des 5 dernières minutes
     const recentTranscription = getRecentTranscription();
     if (!recentTranscription) {
       console.log("Pas de transcription récente disponible pour générer une question");
@@ -533,7 +534,7 @@ const InteractiveVideoPlayer = ({ videoUrl, videoTitle }) => {
     const checkForQuestion = () => {
       if (videoRef.current && !videoRef.current.paused && !currentQuestion) {
         const currentTime = videoRef.current.currentTime;
-        if (currentTime - lastQuestionTime >= 120) { // 120 secondes = 2 minutes
+        if (currentTime - lastQuestionTime >= 300) { // 300 secondes = 5 minutes
           console.log("Génération d'une question à", currentTime);
           generateQuestion();
           setLastQuestionTime(currentTime);
@@ -632,86 +633,90 @@ const InteractiveVideoPlayer = ({ videoUrl, videoTitle }) => {
 
   return (
     <Box sx={{ width: '100%', maxWidth: 1200, mx: 'auto', mt: 4 }}>
-      <Box sx={{ position: 'relative', backgroundColor: '#000', borderRadius: '8px', overflow: 'hidden' }}>
-        <Box sx={{ position: 'relative' }}>
-          <video
-            ref={videoRef}
-            style={{
-              width: '100%',
-              display: 'block'
-            }}
-            controls
-            onError={handleError}
-            onPlay={handlePlay}
-            onPause={handlePause}
-            onEnded={handleEnded}
-            onLoadedMetadata={handleLoadedMetadata}
-            crossOrigin="anonymous" // Nécessaire pour capturer l'audio
-          >
-            <source src={videoUrl} type="video/mp4" />
-            Votre navigateur ne supporte pas la lecture des vidéos.
-          </video>
+      <CameraRequiredVideoPlayer
+        videoUrl={videoUrl}
+        videoTitle={videoTitle}
+        onVideoReady={(element) => {
+          videoRef.current = element;
+        }}
+      >
+        <video
+          style={{
+            width: '100%',
+            display: 'block'
+          }}
+          controls
+          onError={handleError}
+          onPlay={handlePlay}
+          onPause={handlePause}
+          onEnded={handleEnded}
+          onLoadedMetadata={handleLoadedMetadata}
+          crossOrigin="anonymous" // Nécessaire pour capturer l'audio
+        >
+          <source src={videoUrl} type="video/mp4" />
+          Votre navigateur ne supporte pas la lecture des vidéos.
+        </video>
+      </CameraRequiredVideoPlayer>
 
-          {/* Message de redirection */}
-          {redirectMessage && (
-            <Box sx={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              bgcolor: 'rgba(0, 0, 0, 0.8)',
-              color: 'white',
-              p: 3,
-              borderRadius: 2,
-              textAlign: 'center',
-              animation: 'fadeIn 0.5s',
-              zIndex: 10,
-              maxWidth: '80%'
-            }}>
-              <Typography variant="h6" sx={{ mb: 1 }}>
-                {redirectMessage}
-              </Typography>
-              <Typography variant="body2">
-                Vous devez revoir cette partie pour mieux comprendre le contenu.
-              </Typography>
-            </Box>
-          )}
-
-          {error && (
-            <Box sx={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              bgcolor: 'rgba(0, 0, 0, 0.7)',
-              color: 'white',
-              p: 2,
-              borderRadius: 1,
-              textAlign: 'center'
-            }}>
-              <Typography>{error}</Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleRetry}
-                  sx={{ mt: 2 }}
-                >
-                  Réessayer
-                </Button>
-                <Button
-                  variant="outlined"
-                  color="info"
-                  onClick={() => window.open(videoUrl, '_blank')}
-                  sx={{ mt: 1 }}
-                >
-                  Ouvrir la vidéo dans un nouvel onglet
-                </Button>
-              </Box>
-            </Box>
-          )}
+      {/* Message de redirection */}
+      {redirectMessage && (
+        <Box sx={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          bgcolor: 'rgba(0, 0, 0, 0.8)',
+          color: 'white',
+          p: 3,
+          borderRadius: 2,
+          textAlign: 'center',
+          animation: 'fadeIn 0.5s',
+          zIndex: 1000,
+          maxWidth: '80%'
+        }}>
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            {redirectMessage}
+          </Typography>
+          <Typography variant="body2">
+            Vous devez revoir cette partie pour mieux comprendre le contenu.
+          </Typography>
         </Box>
-      </Box>
+      )}
+
+      {error && (
+        <Box sx={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          bgcolor: 'rgba(0, 0, 0, 0.7)',
+          color: 'white',
+          p: 2,
+          borderRadius: 1,
+          textAlign: 'center',
+          zIndex: 1000
+        }}>
+          <Typography>{error}</Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleRetry}
+              sx={{ mt: 2 }}
+            >
+              Réessayer
+            </Button>
+            <Button
+              variant="outlined"
+              color="info"
+              onClick={() => window.open(videoUrl, '_blank')}
+              sx={{ mt: 1 }}
+            >
+              Ouvrir la vidéo dans un nouvel onglet
+            </Button>
+          </Box>
+        </Box>
+      )}
 
       {/* Zone de transcription */}
       <Paper
