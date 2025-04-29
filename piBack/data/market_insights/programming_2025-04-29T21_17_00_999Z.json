@@ -1,0 +1,70 @@
+{
+  "status": "success",
+  "timestamp": "2025-04-29T22:17:07.801658",
+  "search_term": "programming",
+  "total_courses": 8,
+  "platform_distribution": {
+    "Coursera": 5,
+    "Udemy": 3
+  },
+  "average_price": 11.25,
+  "average_rating": 4.6,
+  "courses": [
+    {
+      "platform": "Coursera",
+      "title": "Computer Science: Programming with a Purpose",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/learn/cs-programming-java"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Programming Fundamentals",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/learn/programming-fundamentals"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Programming Languages, Part A",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/learn/programming-languages"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Code Yourself! An Introduction to Programming",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/learn/intro-programming"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Python 3 Programming",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/specializations/python-3-programming"
+    },
+    {
+      "platform": "Udemy",
+      "title": "Complete Programming Course 2025",
+      "price": 29.99,
+      "rating": 4.5,
+      "url": "https://www.udemy.com/course/programming/"
+    },
+    {
+      "platform": "Udemy",
+      "title": "Programming Bootcamp: Zero to Mastery",
+      "price": 24.99,
+      "rating": 4.6,
+      "url": "https://www.udemy.com/course/programming-bootcamp/"
+    },
+    {
+      "platform": "Udemy",
+      "title": "Advanced Programming Projects",
+      "price": 34.99,
+      "rating": 4.7,
+      "url": "https://www.udemy.com/course/advanced-programming/"
+    }
+  ]
+}

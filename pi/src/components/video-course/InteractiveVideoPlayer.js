@@ -135,11 +135,14 @@ const InteractiveVideoPlayer = ({ videoUrl, videoTitle }) => {
         recognitionRef.current = new SpeechRecognition();
       }
 
-      // Configurer pour une réponse plus rapide
+      // Configurer pour une réponse plus rapide et une meilleure tolérance
       recognitionRef.current.lang = 'fr-FR'; // Langue française
       recognitionRef.current.continuous = true; // Reconnaissance continue
       recognitionRef.current.interimResults = true; // Résultats intermédiaires
-      recognitionRef.current.maxAlternatives = 1; // Une seule alternative
+      recognitionRef.current.maxAlternatives = 3; // Augmenter les alternatives pour améliorer les chances de reconnaissance
+
+      // Initialiser le compteur d'erreurs no-speech
+      recognitionRef.current.noSpeechErrorCount = 0;
 
       // Ajouter un message d'attente immédiat avec animation
       setTranscription('<span class="waiting-text" style="color: #888;">Initialisation de la transcription <span class="dot-animation">...</span></span>');
@@ -162,6 +165,12 @@ const InteractiveVideoPlayer = ({ videoUrl, videoTitle }) => {
       recognitionRef.current.onresult = (event) => {
         let interimTranscript = '';
         let finalTranscript = '';
+
+        // Réinitialiser le compteur d'erreurs no-speech lorsqu'on reçoit des résultats
+        if (recognitionRef.current.noSpeechErrorCount) {
+          recognitionRef.current.noSpeechErrorCount = 0;
+          console.log("Compteur d'erreurs no-speech réinitialisé");
+        }
 
         // Traiter tous les résultats
         for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -196,8 +205,27 @@ const InteractiveVideoPlayer = ({ videoUrl, videoTitle }) => {
       recognitionRef.current.onerror = (event) => {
         console.error('Erreur de reconnaissance vocale:', event.error);
 
-        // Basculer en mode de secours en cas d'erreur
-        if (event.error === 'no-speech' || event.error === 'audio-capture' || event.error === 'not-allowed') {
+        // Compteur d'erreurs no-speech
+        if (!recognitionRef.current.noSpeechErrorCount) {
+          recognitionRef.current.noSpeechErrorCount = 0;
+        }
+
+        // Traiter différemment selon le type d'erreur
+        if (event.error === 'no-speech') {
+          // Incrémenter le compteur d'erreurs no-speech
+          recognitionRef.current.noSpeechErrorCount++;
+          console.log(`Erreur no-speech (${recognitionRef.current.noSpeechErrorCount}/3)`);
+
+          // Ne passer en mode de secours qu'après plusieurs erreurs consécutives
+          if (recognitionRef.current.noSpeechErrorCount >= 3) {
+            console.log("Trop d'erreurs no-speech consécutives, passage en mode de secours");
+            setIsFallbackMode(true);
+            useFallbackTranscription();
+          }
+        }
+        // Pour les autres types d'erreurs critiques, passer immédiatement en mode de secours
+        else if (event.error === 'audio-capture' || event.error === 'not-allowed') {
+          console.log("Erreur critique de reconnaissance vocale, passage en mode de secours");
           setIsFallbackMode(true);
           useFallbackTranscription();
         }
@@ -208,20 +236,44 @@ const InteractiveVideoPlayer = ({ videoUrl, videoTitle }) => {
         // Redémarrer la reconnaissance si la vidéo est toujours en lecture
         if (isVideoPlaying && videoRef.current && !videoRef.current.paused) {
           console.log('Reconnaissance terminée, redémarrage...');
-          // Redémarrer immédiatement pour éviter les délais
-          try {
-            recognitionRef.current.start();
-          } catch (e) {
-            // Si on ne peut pas redémarrer immédiatement (erreur "already started")
-            setTimeout(() => {
-              try {
-                recognitionRef.current.start();
-              } catch (error) {
-                console.error('Erreur lors du redémarrage de la reconnaissance:', error);
-              }
-            }, 100);
+
+          // Vérifier si nous sommes en mode de secours
+          if (isFallbackMode) {
+            console.log('Mode de secours actif, pas de redémarrage de la reconnaissance vocale');
+            return;
           }
+
+          // Ajouter un délai progressif pour éviter de surcharger le navigateur
+          // en cas d'erreurs répétées
+          const delayBeforeRestart = recognitionRef.current.noSpeechErrorCount > 0
+            ? Math.min(recognitionRef.current.noSpeechErrorCount * 500, 2000) // Délai progressif jusqu'à 2 secondes max
+            : 100; // Délai minimal
+
+          setTimeout(() => {
+            try {
+              // Vérifier à nouveau si la vidéo est toujours en lecture
+              if (videoRef.current && !videoRef.current.paused) {
+                console.log(`Redémarrage de la reconnaissance après ${delayBeforeRestart}ms`);
+                recognitionRef.current.start();
+              } else {
+                console.log('La vidéo a été mise en pause pendant le délai, annulation du redémarrage');
+                setIsTranscribing(false);
+              }
+            } catch (error) {
+              console.error('Erreur lors du redémarrage de la reconnaissance:', error);
+
+              // En cas d'erreur répétée, passer en mode de secours
+              if (error.message && error.message.includes('already started')) {
+                console.log('La reconnaissance est déjà en cours, pas besoin de redémarrer');
+              } else {
+                console.error('Erreur inattendue, passage en mode de secours');
+                setIsFallbackMode(true);
+                useFallbackTranscription();
+              }
+            }
+          }, delayBeforeRestart);
         } else {
+          console.log('Vidéo en pause, arrêt de la transcription');
           setIsTranscribing(false);
         }
       };
@@ -239,36 +291,76 @@ const InteractiveVideoPlayer = ({ videoUrl, videoTitle }) => {
 
   // Fonction pour utiliser la transcription de secours
   const useFallbackTranscription = () => {
-    // Afficher immédiatement un message indiquant que le mode de secours est activé
-    setTranscription('<span style="color: #ff9800; font-weight: bold;">Mode de secours activé</span><br/>Génération de la transcription basée sur le contenu...');
+    // Conserver la transcription existante si elle existe
+    const existingTranscription = transcriptionRef.current;
+
+    // Afficher un message d'information sur le mode de secours
+    const fallbackNotice = existingTranscription ?
+      `<div style="margin: 10px 0; padding: 8px; background-color: rgba(255, 152, 0, 0.1); border-left: 3px solid #ff9800; font-size: 0.9em;">
+        <span style="color: #ff9800; font-weight: bold;">⚠️ Mode de secours activé</span><br/>
+        <span style="font-size: 0.85em; color: #666;">La reconnaissance vocale automatique n'a pas pu détecter l'audio de la vidéo.
+        Une transcription approximative basée sur le titre sera générée.</span>
+      </div>` :
+      '<span style="color: #ff9800; font-weight: bold;">⚠️ Mode de secours activé</span><br/>Génération de la transcription basée sur le contenu...';
+
+    // Mettre à jour la transcription avec le message de mode de secours
+    if (existingTranscription) {
+      setTranscription(existingTranscription + fallbackNotice);
+    } else {
+      setTranscription(fallbackNotice);
+    }
 
     // Générer une transcription basée sur le titre de la vidéo
     const generateFallbackText = () => {
-      // Base de données de phrases par sujet
+      // Base de données de phrases par sujet étendue
       const phrasesDatabase = {
         'html': [
           "Dans cette partie, nous allons explorer les balises HTML fondamentales.",
           "Le HTML est la structure de base de toute page web.",
           "Les balises div et span sont essentielles pour organiser le contenu.",
-          "N'oubliez pas de toujours fermer vos balises correctement."
+          "N'oubliez pas de toujours fermer vos balises correctement.",
+          "Les attributs permettent de configurer le comportement des éléments HTML.",
+          "La sémantique HTML5 améliore l'accessibilité et le référencement."
         ],
         'css': [
           "Le CSS permet de styliser vos pages web.",
           "Les sélecteurs CSS ciblent des éléments spécifiques de votre page.",
           "Avec les media queries, vous pouvez créer des designs responsives.",
-          "Les propriétés flex et grid simplifient la mise en page."
+          "Les propriétés flex et grid simplifient la mise en page.",
+          "Les animations CSS permettent d'ajouter du dynamisme à vos interfaces.",
+          "Les variables CSS facilitent la maintenance de vos styles."
         ],
         'javascript': [
           "JavaScript permet d'ajouter de l'interactivité à vos sites.",
           "Les fonctions sont des blocs de code réutilisables.",
           "Les événements permettent de réagir aux actions des utilisateurs.",
-          "Les variables let et const ont remplacé var dans le JavaScript moderne."
+          "Les variables let et const ont remplacé var dans le JavaScript moderne.",
+          "Les promesses et async/await simplifient la gestion des opérations asynchrones.",
+          "Les modules ES6 permettent de mieux organiser votre code."
+        ],
+        'sql': [
+          "SQL est un langage de requête pour les bases de données relationnelles.",
+          "Les requêtes SELECT permettent d'extraire des données des tables.",
+          "Les jointures combinent les données de plusieurs tables.",
+          "Les index améliorent les performances des requêtes.",
+          "Les transactions garantissent l'intégrité des données.",
+          "Les procédures stockées encapsulent la logique métier dans la base de données."
+        ],
+        'mongodb': [
+          "MongoDB est une base de données NoSQL orientée documents.",
+          "Les documents sont stockés au format BSON, similaire au JSON.",
+          "Les collections regroupent des documents de même nature.",
+          "Les requêtes d'agrégation permettent de transformer et d'analyser les données.",
+          "Les index améliorent les performances des opérations de lecture.",
+          "Le schéma flexible permet d'adapter facilement la structure des données."
         ],
         'default': [
           "Cette vidéo présente les concepts fondamentaux du sujet.",
           "L'instructeur explique étape par étape comment procéder.",
           "Ces techniques peuvent être appliquées dans différents contextes.",
-          "N'hésitez pas à pratiquer pour maîtriser ces concepts."
+          "N'hésitez pas à pratiquer pour maîtriser ces concepts.",
+          "Les exemples concrets illustrent l'application pratique de la théorie.",
+          "La compréhension de ces principes est essentielle pour progresser."
         ]
       };
 
@@ -283,25 +375,38 @@ const InteractiveVideoPlayer = ({ videoUrl, videoTitle }) => {
         relevantCategories : ['default'];
 
       // Construire une transcription à partir des phrases pertinentes
-      let fallbackText = "[Mode de secours activé] Transcription simulée basée sur le titre:\n\n";
+      let fallbackText = "";
 
-      // Ajouter 2-3 phrases de chaque catégorie pertinente
+      // Ajouter 3-4 phrases de chaque catégorie pertinente
       categoriesToUse.forEach(category => {
         const phrases = phrasesDatabase[category];
         const selectedPhrases = phrases
           .sort(() => Math.random() - 0.5)
-          .slice(0, 3);
+          .slice(0, Math.min(4, phrases.length));
 
-        fallbackText += selectedPhrases.join(' ') + '\n';
+        fallbackText += selectedPhrases.join(' ') + '\n\n';
       });
 
       return fallbackText;
     };
 
-    // Ajouter la transcription de secours
-    const fallbackText = generateFallbackText();
-    transcriptionRef.current += fallbackText;
-    setTranscription(transcriptionRef.current);
+    // Ajouter la transcription de secours après un court délai pour simuler le traitement
+    setTimeout(() => {
+      const fallbackText = generateFallbackText();
+
+      // Si une transcription existait déjà, la conserver et ajouter le texte de secours
+      if (existingTranscription) {
+        transcriptionRef.current = existingTranscription +
+          `<div style="margin: 10px 0; padding: 8px; background-color: rgba(255, 152, 0, 0.1); border-left: 3px solid #ff9800; font-size: 0.9em;">
+            <span style="color: #ff9800; font-weight: bold;">⚠️ Mode de secours activé</span>
+          </div>` +
+          fallbackText;
+      } else {
+        transcriptionRef.current = fallbackText;
+      }
+
+      setTranscription(transcriptionRef.current);
+    }, 1000);
   };
 
   // Fonction pour visualiser le niveau audio
