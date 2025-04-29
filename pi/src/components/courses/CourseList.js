@@ -4,7 +4,6 @@ import { Container, Row, Col, Card, Button, Spinner, Alert, Modal } from 'react-
 import { FaUsers, FaClock, FaBook, FaGraduationCap, FaStar, FaChartLine, FaShoppingCart } from 'react-icons/fa';
 import Cookies from 'js-cookie';
 import PaymentForm from './PaymentForm';
-import RecommendedVideos from './RecommendedVideos';
 import './CourseStyle.css';
 
 const backendURL = "http://localhost:5000/api";
@@ -388,14 +387,6 @@ const CourseList = () => {
           )}
         </Modal.Body>
       </Modal>
-
-      {/* Section des vidéos recommandées */}
-      <div className="recommended-videos-section mt-5">
-        <RecommendedVideos
-          category={module?.name}
-          limit={3}
-        />
-      </div>
     </Container>
   );
 };
