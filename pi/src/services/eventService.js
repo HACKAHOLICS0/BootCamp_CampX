@@ -113,6 +113,62 @@ class EventService {
             throw new Error('Failed to fetch event attendees');
         }
     }
+    async getEventStatistics() {
+        try {
+            // Simule un délai d'API
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Statistiques basées sur les mockEvents
+            const now = new Date();
+            const activeEvents = mockEvents.filter(event => 
+                new Date(event.date) > now
+            ).length;
+
+            // Calcul des participants
+            const totalAttendees = mockEvents.reduce(
+                (sum, event) => sum + event.attendees.length, 0
+            );
+
+            // Distribution par catégorie
+            const categoryCounts = {};
+            mockEvents.forEach(event => {
+                categoryCounts[event.category] = 
+                    (categoryCounts[event.category] || 0) + 1;
+            });
+
+            // Données mockées pour les graphiques
+            return {
+                totalEvents: mockEvents.length,
+                activeEvents,
+                totalAttendees: totalAttendees,
+                participationRate: Math.round((totalAttendees / (mockEvents.length * 10)) * 100),
+                categoryDistribution: Object.keys(categoryCounts).map(category => ({
+                    category,
+                    count: categoryCounts[category]
+                })),
+                monthlyAttendance: [
+                    { month: 'Jan', count: 12 },
+                    { month: 'Fév', count: 18 },
+                    { month: 'Mar', count: 15 },
+                    { month: 'Avr', count: 20 }
+                ],
+                topCategories: [
+                    { name: 'Technologie', eventCount: 8 },
+                    { name: 'Business', eventCount: 5 },
+                    { name: 'Art', eventCount: 3 }
+                ],
+                topEvents: mockEvents
+                    .sort((a, b) => b.attendees.length - a.attendees.length)
+                    .slice(0, 3)
+                    .map(event => ({
+                        title: event.title,
+                        attendeeCount: event.attendees.length
+                    }))
+            };
+        } catch (error) {
+            throw new Error('Failed to generate statistics');
+        }
+    }
 }
 
 export default new EventService();

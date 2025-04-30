@@ -47,6 +47,7 @@ import EventList from './components/events/EventList';
 import EventForm from './components/events/EventForm';
 import EventDetails from './components/events/EventDetails';
 import CodeEditorInterface from './components/CodeEditorInterface';
+import EventStats from './components/events/EventStats';
 
 
 
@@ -114,6 +115,8 @@ function App() {
           <Route path="/events/create" element={<EventForm />} />
           <Route path="/events/:id" element={<EventDetails />} />
           <Route path="/events/:id/edit" element={<EventForm />} />
+          <Route path="/events/stats" element={<EventStats />} />
+
 
           {/* Routes Admin protégées */}
           <Route element={<ProtectedAdminRoute />}>
