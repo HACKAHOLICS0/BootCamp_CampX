@@ -1,0 +1,67 @@
+/* Styles pour la transcription */
+
+/* Animation des points de suspension */
+@keyframes dotAnimation {
+  0% { content: "."; }
+  33% { content: ".."; }
+  66% { content: "..."; }
+  100% { content: ""; }
+}
+
+.dot-animation {
+  display: inline-block;
+  width: 20px;
+}
+
+.dot-animation::after {
+  content: "";
+  animation: dotAnimation 1.5s infinite;
+}
+
+/* Style pour le texte intermédiaire */
+.interim-text {
+  color: #888;
+  font-style: italic;
+}
+
+/* Style pour le texte en attente */
+.waiting-text {
+  color: #888;
+  font-style: italic;
+}
+
+/* Animation de pulsation pour l'indicateur de transcription */
+@keyframes pulse {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
+.pulse-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #4caf50;
+  margin-right: 8px;
+  animation: pulse 1.5s infinite;
+}
+
+/* Animation pour les points de chargement */
+@keyframes dot-flashing {
+  0% { opacity: 0.2; }
+  50% { opacity: 1; }
+  100% { opacity: 0.2; }
+}
+
+/* Style pour les questions */
+.question-domain {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.question-keywords {
+  font-style: italic;
+  color: #0288d1;
+}

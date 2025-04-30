@@ -1,0 +1,158 @@
+.certificate-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.certificate-card {
+  border: none;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.certificate-card .card-header {
+  background-color: #1E88E5;
+  color: white;
+  padding: 1.5rem;
+  border-bottom: 5px solid #1565C0;
+}
+
+.certificate-content {
+  padding: 2rem;
+  position: relative;
+  background-color: #f9f9f9;
+  border: 15px solid #fff;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.certificate-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.certificate-logo img {
+  max-width: 120px;
+}
+
+.certificate-title {
+  text-align: center;
+}
+
+.certificate-title h3 {
+  font-size: 2rem;
+  color: #1E88E5;
+  margin-bottom: 0.5rem;
+}
+
+.certificate-number {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.certificate-body {
+  text-align: center;
+  margin: 3rem 0;
+}
+
+.certificate-text {
+  font-size: 1.2rem;
+  color: #555;
+  margin: 1rem 0;
+}
+
+.certificate-name {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #333;
+  margin: 1.5rem 0;
+  font-family: 'Playfair Display', serif;
+}
+
+.certificate-course {
+  font-size: 1.5rem;
+  color: #1E88E5;
+  margin: 1.5rem 0;
+}
+
+.certificate-score {
+  font-size: 1.2rem;
+  color: #4CAF50;
+  font-weight: bold;
+  margin: 1rem 0;
+}
+
+.certificate-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 3rem;
+}
+
+.certificate-date {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.certificate-signature {
+  text-align: center;
+}
+
+.signature-line {
+  width: 200px;
+  height: 1px;
+  background-color: #333;
+  margin-top: 2rem;
+}
+
+.certificate-card .card-footer {
+  background-color: #f8f9fa;
+  padding: 1.5rem;
+}
+
+/* Effet de bordure décorative */
+.certificate-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px solid #1E88E5;
+  pointer-events: none;
+  margin: 10px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .certificate-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .certificate-logo {
+    margin-bottom: 1rem;
+  }
+  
+  .certificate-name {
+    font-size: 2rem;
+  }
+  
+  .certificate-course {
+    font-size: 1.2rem;
+  }
+  
+  .certificate-footer {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .certificate-date {
+    margin-bottom: 1.5rem;
+  }
+  
+  .signature-line {
+    margin: 1rem auto;
+  }
+}

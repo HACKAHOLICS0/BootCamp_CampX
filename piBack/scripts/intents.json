@@ -1,0 +1,297 @@
+{
+    "intents": [
+        {
+            "tag": "greeting",
+            "patterns": [
+                "bonjour", "salut", "hello", "hey", "bonsoir", "coucou",
+                "bnj", "slt", "bjr", "cc"
+            ],
+            "responses": [
+                "Bonjour! Comment puis-je vous aider avec nos cours?",
+                "Salut! Que puis-je faire pour vous aujourd'hui?",
+                "Bonjour! En quoi puis-je vous être utile pour votre apprentissage?",
+                "Hey! Je peux vous aider à trouver vos cours ou répondre à vos questions.",
+                "Salut! Je suis là pour vous aider avec votre apprentissage.",
+                "Bonjour! Comment puis-je vous assister aujourd'hui?",
+                "Hey! En quoi puis-je vous être utile?",
+                "Salut! Je suis ravi de vous aider avec vos cours.",
+                "Bonjour! Que puis-je faire pour vous?",
+                "Hey! Comment puis-je vous aider dans votre apprentissage?"
+            ]
+        },
+        {
+            "tag": "how_are_you",
+            "patterns": [
+                "comment allez vous", "comment vas tu", "ça va", "comment ça va",
+                "comment tu vas", "comment vous allez", "comment allez-vous",
+                "comment vas-tu", "comment ça va aujourd'hui", "comment allez-vous aujourd'hui",
+                "salut comment ça va", "bonjour comment allez vous"
+            ],
+            "responses": [
+                "Je vais très bien, merci! Et vous?",
+                "Tout va bien de mon côté! Et vous, comment allez-vous?",
+                "Je suis en pleine forme! Et vous, comment ça va?",
+                "Je suis prêt à vous aider! Comment allez-vous aujourd'hui?",
+                "Je vais bien, merci de demander! Et vous?",
+                "Tout va bien, je suis là pour vous aider! Et vous?",
+                "Je suis en forme et prêt à vous assister! Et vous?",
+                "Je vais bien, merci! Comment puis-je vous aider?",
+                "Tout va bien de mon côté! En quoi puis-je vous être utile?",
+                "Je suis en pleine forme! Que puis-je faire pour vous?"
+            ]
+        },
+        {
+            "tag": "course_search",
+            "patterns": [
+                "je cherche un cours", "trouver un cours", "accéder à mon cours",
+                "voir mes cours", "mes cours", "cours disponibles",
+                "quel cours", "liste des cours", "cours inscrits",
+                "cours sur *", "formation sur *", "apprendre *",
+                "comment accéder au cours *", "où est le cours *",
+                "je veux étudier *", "cours de *", "formation en *"
+            ],
+            "responses": [
+                "Je vais vous aider à trouver votre cours. Pouvez-vous me dire quel sujet vous intéresse?",
+                "Bien sûr! Quel cours recherchez-vous spécifiquement?",
+                "Je peux vous montrer vos cours. Quel sujet vous intéresse en particulier?",
+                "Je vais vous rediriger vers votre cours. Pouvez-vous me préciser lequel?"
+            ]
+        },
+        {
+            "tag": "specific_course",
+            "patterns": [
+                "javascript", "python", "java", "web", "react", "angular",
+                "node.js", "php", "html", "css", "mongodb", "sql",
+                "développement web", "programmation", "base de données",
+                "intelligence artificielle", "machine learning", "data science"
+            ],
+            "responses": [
+                "J'ai trouvé un cours sur ce sujet. Je vous y emmène tout de suite!",
+                "Super! Je vous redirige vers ce cours.",
+                "Excellent choix! Je vous connecte à ce cours maintenant.",
+                "Je vous ouvre l'accès au cours tout de suite."
+            ],
+            "requires_course_redirect": true
+        },
+        {
+            "tag": "my_courses",
+            "patterns": [
+                "mes cours inscrits", "cours auxquels je suis inscrit",
+                "voir mes inscriptions", "mes formations", "mes apprentissages",
+                "montrer mes cours"
+            ],
+            "responses": [
+                "Voici la liste de vos cours inscrits:",
+                "J'affiche vos cours actuels:",
+                "Voici vos cours en cours:"
+            ],
+            "requires_course_list": true
+        },
+        {
+            "tag": "salutation",
+            "patterns": [
+                "Bonjour",
+                "Salut",
+                "Hey",
+                "Hello",
+                "Coucou",
+                "Bonsoir"
+            ],
+            "responses": [
+                "Bonjour! Comment puis-je vous aider avec nos cours?",
+                "Salut! Que puis-je faire pour vous aujourd'hui?",
+                "Bonjour! En quoi puis-je vous être utile pour votre apprentissage?"
+            ],
+            "context": []
+        },
+        {
+            "tag": "au_revoir",
+            "patterns": [
+                "Au revoir",
+                "A plus tard",
+                "A bientôt",
+                "Bye",
+                "Bonne journée",
+                "Bonne soirée"
+            ],
+            "responses": [
+                "Au revoir! N'hésitez pas à revenir si vous avez d'autres questions.",
+                "À bientôt! Bon apprentissage!",
+                "Au revoir et bonne continuation dans vos études!"
+            ],
+            "context": []
+        },
+        {
+            "tag": "merci",
+            "patterns": [
+                "merci", "je vous remercie", "c'est gentil", "merci beaucoup",
+                "super, merci", "merci bien", "merci beaucoup pour votre aide"
+            ],
+            "responses": [
+                "De rien! C'est un plaisir de vous aider!",
+                "Je vous en prie! N'hésitez pas si vous avez d'autres questions.",
+                "Avec plaisir! Je suis là pour vous aider.",
+                "C'est normal! N'hésitez pas à revenir vers moi si besoin.",
+                "De rien! C'est toujours un plaisir d'aider.",
+                "Je vous en prie! Bonne continuation dans votre apprentissage.",
+                "Avec plaisir! Bon courage pour la suite.",
+                "De rien! N'hésitez pas si vous avez besoin d'aide.",
+                "Je vous en prie! Bonne journée.",
+                "Avec plaisir! À bientôt!"
+            ]
+        },
+        {
+            "tag": "cours",
+            "patterns": [
+                "Quels cours proposez-vous?",
+                "Montrez-moi les cours disponibles",
+                "Liste des cours",
+                "Formations disponibles",
+                "Quelles matières enseignez-vous?"
+            ],
+            "responses": [
+                "Nous proposons des cours sur le développement web, la data science, l'IA et plus encore. Consultez notre catalogue pour plus de détails.",
+                "Notre plateforme offre une variété de cours techniques, de la programmation à l'IA. Vous pouvez filtrer par catégorie sur notre page de cours."
+            ],
+            "context": []
+        },
+        {
+            "tag": "duree_cours",
+            "patterns": [
+                "Combien de temps durent les cours?",
+                "Durée moyenne d'un cours?",
+                "Temps nécessaire pour terminer une formation?"
+            ],
+            "responses": [
+                "La durée dépend du cours choisi. Certains cours sont courts (quelques heures), d'autres peuvent durer plusieurs semaines.",
+                "Chaque cours a une durée estimée. Vous trouverez cette information sur la page du cours concerné."
+            ],
+            "context": []
+        },
+        {
+            "tag": "prix",
+            "patterns": [
+                "Combien coûtent vos cours?",
+                "Prix des formations",
+                "Tarifs",
+                "Est-ce gratuit?",
+                "Y a-t-il des réductions?"
+            ],
+            "responses": [
+                "Nos prix varient selon les cours. Certains modules sont gratuits, d'autres sont payants. Consultez chaque cours pour plus de détails.",
+                "Nous avons des cours gratuits et des formations premium. Les prix sont indiqués sur chaque page de cours."
+            ],
+            "context": []
+        },
+        {
+            "tag": "certificat",
+            "patterns": [
+                "Obtenez-vous un certificat?",
+                "Y a-t-il une certification?",
+                "Les cours sont-ils certifiés?",
+                "Diplôme",
+                "Puis-je obtenir un certificat après le cours?"
+            ],
+            "responses": [
+                "Oui, vous recevrez un certificat après avoir terminé avec succès chaque cours.",
+                "Nos cours incluent une certification que vous pouvez partager sur votre CV ou LinkedIn."
+            ],
+            "context": []
+        },
+        {
+            "tag": "support",
+            "patterns": [
+                "Comment contacter le support?",
+                "J'ai un problème avec mon compte",
+                "Besoin d'aide technique",
+                "Qui peut m'aider?"
+            ],
+            "responses": [
+                "Vous pouvez contacter notre support via la page 'Contactez-nous' ou en envoyant un email à support@campx.com.",
+                "Notre équipe est disponible 24h/24 pour vous aider. Utilisez le chat en direct ou écrivez-nous par email."
+            ],
+            "context": []
+        },
+        {
+            "tag": "remboursement",
+            "patterns": [
+                "Politique de remboursement",
+                "Puis-je être remboursé?",
+                "Annuler mon achat",
+                "Garantie satisfait ou remboursé"
+            ],
+            "responses": [
+                "Nous offrons une garantie satisfait ou remboursé de 30 jours. Si un cours ne répond pas à vos attentes, vous pouvez demander un remboursement complet.",
+                "Notre politique permet un remboursement dans les 30 jours suivant l'achat si vous n'êtes pas satisfait du cours."
+            ],
+            "context": []
+        },
+        {
+            "tag": "tuteur",
+            "patterns": [
+                "Y a-t-il des tuteurs?",
+                "Puis-je avoir un mentor?",
+                "Aide avec un professeur",
+                "Cours avec professeur"
+            ],
+            "responses": [
+                "Oui! Certains de nos cours offrent un accompagnement par des tuteurs. Vérifiez la description du cours pour voir si cette option est incluse.",
+                "Nous proposons un mentorat pour certaines formations avancées. Vous pouvez aussi poser vos questions sur notre forum communautaire."
+            ],
+            "context": []
+        },
+        {
+            "tag": "emploi",
+            "patterns": [
+                "Vos cours garantissent-ils un emploi?",
+                "Peut-on trouver un job après vos formations?",
+                "Aidez-vous pour la recherche d'emploi?"
+            ],
+            "responses": [
+                "Nous ne garantissons pas un emploi, mais nos formations vous donnent les compétences recherchées par les employeurs.",
+                "Certains cours incluent un accompagnement pour la recherche d'emploi et la préparation aux entretiens."
+            ],
+            "context": []
+        },
+        {
+            "tag": "avis",
+            "patterns": [
+                "Puis-je voir les avis sur un cours?",
+                "Comment savoir si un cours est bien?",
+                "Les étudiants sont-ils satisfaits?",
+                "Y a-t-il des témoignages?"
+            ],
+            "responses": [
+                "Oui, chaque cours affiche les avis des étudiants. Consultez la section 'Avis' sur la page du cours.",
+                "Nos formations sont notées par les étudiants. Vous pouvez lire leurs commentaires avant de vous inscrire."
+            ],
+            "context": []
+        },
+        {
+            "tag": "actualisation",
+            "patterns": [
+                "Vos cours sont-ils à jour?",
+                "Mettez-vous à jour les contenus?",
+                "Les formations suivent-elles les tendances actuelles?"
+            ],
+            "responses": [
+                "Oui! Nous mettons régulièrement à jour nos cours pour inclure les dernières technologies et bonnes pratiques.",
+                "Nos formateurs mettent à jour les cours selon l'évolution du marché et des outils utilisés."
+            ],
+            "context": []
+        },
+        {
+            "tag": "langue",
+            "patterns": [
+                "Les cours sont-ils en français?",
+                "Puis-je suivre les cours en anglais?",
+                "Dans quelle langue sont vos formations?"
+            ],
+            "responses": [
+                "Nos cours sont principalement en français, mais certains sont disponibles en anglais avec des sous-titres.",
+                "Chaque cours indique sa langue d'enseignement sur sa page de présentation."
+            ],
+            "context": []
+        }
+    ]
+}

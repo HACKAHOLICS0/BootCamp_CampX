@@ -1,0 +1,356 @@
+.face-recognition-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+  background: transparent;
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.video-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background-color: transparent;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.video-container video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: transparent;
+  transform: scaleX(-1);
+}
+
+.face-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100% !important;
+  height: 100% !important;
+  transform: scaleX(-1);
+  pointer-events: none;
+  z-index: 2;
+  background: transparent !important;
+}
+
+.scan-status {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.8);
+  color: #00ff00;
+  padding: 15px;
+  text-align: center;
+  z-index: 3;
+  font-family: 'Courier New', monospace;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-top: 1px solid rgba(0, 255, 255, 0.3);
+  animation: glowBorder 2s infinite;
+}
+
+.match-percentage {
+  font-size: 2em;
+  font-weight: bold;
+  color: #00ff00;
+  margin: 10px 0;
+  text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+  animation: pulse 1.5s infinite;
+}
+
+.status-container {
+  width: 100%;
+  max-width: 720px;
+  margin: 20px auto;
+}
+
+.status-container .alert {
+  margin-bottom: 0;
+  text-align: center;
+  font-size: 1.1rem;
+  padding: 15px 20px;
+  border-radius: 8px;
+  background: rgba(0, 255, 255, 0.1);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  color: #00ffff;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.loading-container p {
+  margin-top: 20px;
+  color: #00ffff;
+  font-family: 'Courier New', monospace;
+  font-size: 1.1em;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  animation: pulse 2s infinite;
+}
+
+.loading-container .spinner-border {
+  width: 4rem;
+  height: 4rem;
+  border-width: 0.25em;
+  color: #00ffff;
+  animation: spin 1s linear infinite, glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes glow {
+  0% {
+    box-shadow: 0 0 5px #00ffff;
+  }
+  50% {
+    box-shadow: 0 0 20px #00ffff;
+  }
+  100% {
+    box-shadow: 0 0 5px #00ffff;
+  }
+}
+
+/* Animations */
+@keyframes glowBorder {
+  0% {
+    border-color: rgba(0, 255, 255, 0.3);
+    box-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
+  }
+  50% {
+    border-color: rgba(0, 255, 255, 0.8);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+  }
+  100% {
+    border-color: rgba(0, 255, 255, 0.3);
+    box-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
+  }
+}
+
+@keyframes scanLine {
+  0% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100%);
+    opacity: 0.5;
+  }
+}
+
+/* Modal customization */
+
+
+.modal-body {
+  color: #00ffff;
+  text-align: center;
+  padding: 30px;
+}
+
+.modal-footer {
+  border-top: 1px solid rgba(0, 255, 255, 0.1);
+}
+
+.btn-success {
+  background-color: #00ff00;
+  border-color: #00ff00;
+  color: #000;
+}
+
+.btn-danger {
+  background-color: #ff0000;
+  border-color: #ff0000;
+  color: #fff;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .face-recognition-container {
+    padding: 10px;
+  }
+
+  .video-container {
+    width: 100%;
+    height: 60vh;
+    max-height: 70vh;
+  }
+
+  .status-container {
+    max-width: 100%;
+  }
+
+  .scan-status {
+    font-size: 0.9em;
+  }
+
+  .match-percentage {
+    font-size: 1.2em;
+  }
+}
+
+/* FBI-style scanning effect */
+.scanning-line {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(
+    to right,
+    rgba(0, 255, 0, 0) 0%,
+    rgba(0, 255, 0, 0.8) 50%,
+    rgba(0, 255, 0, 0) 100%
+  );
+  animation: scanLine 2s linear infinite;
+  z-index: 3;
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+}
+
+/* Corner markers */
+.corner-marker {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #00ff00;
+  opacity: 0.8;
+}
+
+.corner-marker.top-left {
+  top: 10px;
+  left: 10px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.corner-marker.top-right {
+  top: 10px;
+  right: 10px;
+  border-left: none;
+  border-bottom: none;
+}
+
+.corner-marker.bottom-left {
+  bottom: 10px;
+  left: 10px;
+  border-right: none;
+  border-top: none;
+}
+
+.corner-marker.bottom-right {
+  bottom: 10px;
+  right: 10px;
+  border-left: none;
+  border-top: none;
+}
+
+/* Glowing effect for detection box */
+.detection-box {
+  position: absolute;
+  border: 2px solid rgba(0, 255, 255, 0.8);
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+  animation: glowBox 2s infinite;
+}
+
+@keyframes glowBox {
+  0% {
+    box-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+  }
+}
+
+/* Status text animation */
+.scan-status {
+  animation: textGlow 2s infinite;
+}
+
+@keyframes textGlow {
+  0% {
+    text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+  }
+  50% {
+    text-shadow: 0 0 15px rgba(0, 255, 0, 0.8);
+  }
+  100% {
+    text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+  }
+}
+
+/* Popup de vérification */
+.verification-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.9);
+  padding: 20px;
+  border-radius: 10px;
+  border: 2px solid #00ff00;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+  z-index: 1000;
+  animation: popupAppear 0.3s ease-out;
+}
+
+@keyframes popupAppear {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -60%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
