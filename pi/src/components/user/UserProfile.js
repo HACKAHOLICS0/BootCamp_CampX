@@ -514,10 +514,8 @@ export default function UserProfile() {
                             )}
 
                             {activeTab === 'certificates' && (
-                                <div className="card w-100">
-                                    <div className="card-body">
-                                        <CertificateList />
-                                    </div>
+                                <div className="card w-100 certificate-tab-container">
+                                    <CertificateList />
                                 </div>
                             )}
                         </div>

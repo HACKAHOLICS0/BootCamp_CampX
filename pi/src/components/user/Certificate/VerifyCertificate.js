@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Container, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FaSearch, FaCheck, FaTimes, FaAward } from 'react-icons/fa';
+import { FaSearch, FaCheck, FaTimes } from 'react-icons/fa';
 import './VerifyCertificate.css';
 import config from '../../../config';
 
@@ -47,7 +47,7 @@ const VerifyCertificate = () => {
     <Container className="verify-certificate-container mt-5">
       <Card className="verify-card">
         <Card.Header className="text-center">
-          <h2><FaAward className="me-2" /> Vérification de Certificat</h2>
+          <h2><span className="camp-x-verify">CAMP X</span> Vérification de Certificat</h2>
         </Card.Header>
         <Card.Body>
           <p className="text-center mb-4">
@@ -65,9 +65,9 @@ const VerifyCertificate = () => {
                   onChange={(e) => setNumber(e.target.value)}
                   required
                 />
-                <Button 
-                  type="submit" 
-                  variant="primary" 
+                <Button
+                  type="submit"
+                  variant="primary"
                   className="ms-2"
                   disabled={loading}
                 >

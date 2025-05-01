@@ -33,8 +33,28 @@
   margin-bottom: 2rem;
 }
 
-.certificate-logo img {
-  max-width: 120px;
+.certificate-camp-x {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 20px;
+}
+
+.camp-x-text {
+  font-family: 'Arial Black', 'Helvetica Bold', sans-serif;
+  font-weight: 900;
+  font-size: 2.5rem;
+  color: #5FCF80;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #4CAF50 0%, #5FCF80 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 3px solid #5FCF80;
+  padding: 5px 15px;
+  border-radius: 8px;
 }
 
 .certificate-title {
@@ -130,28 +150,33 @@
     flex-direction: column;
     text-align: center;
   }
-  
-  .certificate-logo {
-    margin-bottom: 1rem;
+
+  .certificate-camp-x {
+    margin-bottom: 1.5rem;
   }
-  
+
+  .camp-x-text {
+    font-size: 2rem;
+    padding: 5px 10px;
+  }
+
   .certificate-name {
     font-size: 2rem;
   }
-  
+
   .certificate-course {
     font-size: 1.2rem;
   }
-  
+
   .certificate-footer {
     flex-direction: column;
     text-align: center;
   }
-  
+
   .certificate-date {
     margin-bottom: 1.5rem;
   }
-  
+
   .signature-line {
     margin: 1rem auto;
   }

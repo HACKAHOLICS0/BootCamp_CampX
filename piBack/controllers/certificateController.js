@@ -192,15 +192,19 @@ exports.generateCertificatePDF = async (req, res) => {
            .lineWidth(3)
            .stroke('#1E88E5');
 
+        // Ajouter le nom CAMP X en haut
+        doc.font('Helvetica-Bold')
+           .fontSize(36)
+           .fillColor('#5FCF80')
+           .text('CAMP X', { align: 'center' })
+           .moveDown(0.5);
+
         // Ajouter un titre
         doc.font('Helvetica-Bold')
            .fontSize(30)
            .fillColor('#1E88E5')
            .text('CERTIFICAT DE RÉUSSITE', { align: 'center', lineGap: 20 })
            .moveDown(0.5);
-
-        // Ajouter le logo (si disponible)
-        // doc.image('path/to/logo.png', { width: 150, align: 'center' });
 
         // Ajouter le texte principal
         doc.font('Helvetica')

@@ -16,6 +16,21 @@
   padding: 1.5rem;
 }
 
+.camp-x-verify {
+  font-family: 'Arial Black', 'Helvetica Bold', sans-serif;
+  font-weight: 900;
+  font-size: 1.2rem;
+  color: #5FCF80;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  background: white;
+  padding: 3px 8px;
+  border-radius: 5px;
+  margin-right: 10px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
 .verification-result {
   padding: 1rem;
 }
@@ -100,15 +115,25 @@
   .certificate-info {
     grid-template-columns: 1fr;
   }
-  
+
   .verify-card .card-header h2 {
     font-size: 1.5rem;
   }
-  
+
+  .camp-x-verify {
+    font-size: 1rem;
+    padding: 2px 6px;
+    margin-right: 8px;
+    display: block;
+    margin-bottom: 8px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
   .result-status {
     padding: 1.5rem;
   }
-  
+
   .result-status h3 {
     font-size: 1.25rem;
   }
