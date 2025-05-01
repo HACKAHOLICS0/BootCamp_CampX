@@ -1,0 +1,15 @@
+{
+  "name": "campx-app",
+  "version": "1.0.0",
+  "description": "CampX Application",
+  "engines": {
+    "node": "18.x"
+  },
+  "scripts": {
+    "start": "cd piBack && npm start",
+    "heroku-postbuild": "cd pi && npm install && npm run build && cd ../piBack && npm install"
+  },
+  "dependencies": {
+    "campx-app": "file:"
+  }
+}
