@@ -7,7 +7,7 @@
   },
   "scripts": {
     "start": "cd piBack && npm start",
-    "heroku-postbuild": "cd pi && npm install --legacy-peer-deps && npm run build && cd ../piBack && npm install"
+    "heroku-postbuild": "cd pi && npm install --legacy-peer-deps --include=dev && npm run build && cd ../piBack && npm install"
   },
   "dependencies": {
     "campx-app": "file:"
