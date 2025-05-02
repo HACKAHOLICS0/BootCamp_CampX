@@ -1,0 +1,61 @@
+.event-details-card {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border: none;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.event-details-card .card-img-top {
+  max-height: 300px;
+  object-fit: cover;
+}
+
+.event-description {
+  margin-top: 15px;
+  line-height: 1.6;
+  color: #555;
+}
+
+.event-info p {
+  margin-bottom: 10px;
+}
+
+.event-actions {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.calendar-buttons {
+  margin-top: 15px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.qr-code-container {
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.qr-code-image {
+  max-width: 200px;
+  margin: 0 auto;
+}
+
+.share-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+@media (max-width: 768px) {
+  .calendar-buttons {
+    flex-direction: column;
+  }
+  
+  .calendar-buttons button {
+    margin-right: 0 !important;
+    margin-bottom: 10px;
+  }
+}

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
-import { 
-  Home, User, Package, BarChart2, Bell, Settings, BookOpen, Search, 
-  LogOut, Sun, Moon, Menu, Book, Layers, FolderTree, Video
+import {
+  Home, User, Package, BarChart2, Bell, Settings, BookOpen, Search,
+  LogOut, Sun, Moon, Menu, Book, Layers, FolderTree, Video, Calendar,CheckSquare
 } from 'lucide-react';
 import Cookies from 'js-cookie';
 import './AdminStyle.css';
@@ -26,6 +26,9 @@ const Sidebar = ({ isCollapsed, toggleSidebar }) => {
           <li><Link to="/admin/courses"><Book size={20} /> <span>Courses</span></Link></li>
           <li><Link to="/admin/videos"><Video size={20} /> <span>Videos</span></Link></li>
           <li><Link to="/admin/analytics"><BarChart2 size={20} /> <span>Analytics</span></Link></li>
+          <li><Link to="/admin/events"><Calendar size={20} /> <span>Events</span></Link></li>
+          <li><Link to="/admin/pending-events"><CheckSquare size={20} /> <span>Pending Events</span></Link></li>
+
           <li><Link to="/admin/notifications"><Bell size={20} /> <span>Notifications</span></Link></li>
           <li><Link to="/admin/settings"><Settings size={20} /> <span>Settings</span></Link></li>
         </ul>

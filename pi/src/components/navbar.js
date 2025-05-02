@@ -172,9 +172,13 @@ export default function Navbar() {
                 <Link to="/profile" className="nav-link text-dark hover-effect">
                   Profile
                 </Link>
-                <Link to="/market-insights" className="nav-link text-dark hover-effect">
+                {/* <Link to="/market-insights" className="nav-link text-dark hover-effect">
                   Market Insights
-                </Link>
+                </Link> */}
+              <Link to="/events" className="nav-link text-dark hover-effect">
+                Events
+              </Link>
+            
                 <Link to="/market-videos" className="nav-link text-dark hover-effect">
                   Vidéos recommandées
                 </Link>

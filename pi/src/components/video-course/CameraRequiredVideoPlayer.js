@@ -50,6 +50,7 @@ const CameraRequiredVideoPlayer = ({ videoUrl, videoTitle, onVideoReady, childre
   const WARNING_TIMEOUT = 5000; // Durée d'affichage de l'avertissement en ms
   const MAX_ALERTS = 2; // Nombre maximum d'alertes avant blocage
   const BLOCK_DURATION = 5 * 60 * 1000; // Durée de blocage en ms (5 minutes)
+  const ALERT_RESET_TIMEOUT = 60 * 1000; // Délai de réinitialisation des alertes (1 minute)
 
   // Vérifier si l'utilisateur est bloqué
   const checkBlockStatus = () => {
@@ -103,12 +104,17 @@ const CameraRequiredVideoPlayer = ({ videoUrl, videoTitle, onVideoReady, childre
     setBlockEndTime(endTime);
     setShowBlockDialog(true);
 
+    // Réinitialiser le compteur d'alertes
+    setAlertCount(0);
+
     // Sauvegarder les informations de blocage dans le localStorage
     localStorage.setItem('videoAccessBlock', JSON.stringify({
       endTime,
       videoId: videoUrl,
       reason: inattentionReason
     }));
+
+    console.log(`🚫 Accès à la vidéo bloqué pour ${BLOCK_DURATION/60000} minutes. Raison: ${inattentionReason}`);
 
     // Mettre à jour le temps restant
     const updateRemainingTime = () => {
@@ -120,6 +126,7 @@ const CameraRequiredVideoPlayer = ({ videoUrl, videoTitle, onVideoReady, childre
         setIsBlocked(false);
         setShowBlockDialog(false);
         localStorage.removeItem('videoAccessBlock');
+        console.log("✅ Blocage terminé, accès à la vidéo rétabli");
       } else {
         // Continuer à mettre à jour le temps restant
         setTimeout(updateRemainingTime, 1000);
@@ -183,10 +190,16 @@ const CameraRequiredVideoPlayer = ({ videoUrl, videoTitle, onVideoReady, childre
           try {
             console.log("🔍 Initialisation du détecteur de grimaces pendant le chargement...");
             grimaceDetectorRef.current = new GrimaceDetector({
-              eyeClosedThreshold: 0.25,
-              mouthOpenThreshold: 0.5,
-              attentionThreshold: 70,
-              debug: true
+              eyeClosedThreshold: 0.2,   // Seuil plus bas pour les yeux fermés (tolérer les clignements)
+              mouthOpenThreshold: 0.5,   // Seuil pour la bouche ouverte
+              attentionThreshold: 70,    // Seuil d'attention
+              consecutiveDetectionsRequired: 3, // Nombre de détections consécutives pour confirmer une inattention
+              weights: {
+                eyeOpenness: 0.4,        // Importance réduite de l'ouverture des yeux
+                mouthNormal: 0.2,        // Importance de la position normale de la bouche
+                faceSymmetry: 0.4        // Importance augmentée de la symétrie du visage
+              },
+              debug: true                // Activer les logs de débogage
             });
             console.log("✅ Détecteur de grimaces initialisé avec succès");
           } catch (grimaceError) {
@@ -358,9 +371,15 @@ const CameraRequiredVideoPlayer = ({ videoUrl, videoTitle, onVideoReady, childre
       try {
         console.log("🔍 Initialisation du détecteur de grimaces...");
         grimaceDetectorRef.current = new GrimaceDetector({
-          eyeClosedThreshold: 0.25,  // Seuil pour les yeux fermés
+          eyeClosedThreshold: 0.2,   // Seuil plus bas pour les yeux fermés (tolérer les clignements)
           mouthOpenThreshold: 0.5,   // Seuil pour la bouche ouverte
           attentionThreshold: 70,    // Seuil d'attention
+          consecutiveDetectionsRequired: 3, // Nombre de détections consécutives pour confirmer une inattention
+          weights: {
+            eyeOpenness: 0.4,        // Importance réduite de l'ouverture des yeux
+            mouthNormal: 0.2,        // Importance de la position normale de la bouche
+            faceSymmetry: 0.4        // Importance augmentée de la symétrie du visage
+          },
           debug: true                // Activer les logs de débogage
         });
         console.log("✅ Détecteur de grimaces initialisé");
@@ -488,10 +507,16 @@ const CameraRequiredVideoPlayer = ({ videoUrl, videoTitle, onVideoReady, childre
       if (!grimaceDetectorRef.current) {
         console.log("🔍 Initialisation tardive du détecteur de grimaces...");
         grimaceDetectorRef.current = new GrimaceDetector({
-          eyeClosedThreshold: 0.25,
-          mouthOpenThreshold: 0.5,
-          attentionThreshold: 70,
-          debug: true
+          eyeClosedThreshold: 0.2,   // Seuil plus bas pour les yeux fermés (tolérer les clignements)
+          mouthOpenThreshold: 0.5,   // Seuil pour la bouche ouverte
+          attentionThreshold: 70,    // Seuil d'attention
+          consecutiveDetectionsRequired: 3, // Nombre de détections consécutives pour confirmer une inattention
+          weights: {
+            eyeOpenness: 0.4,        // Importance réduite de l'ouverture des yeux
+            mouthNormal: 0.2,        // Importance de la position normale de la bouche
+            faceSymmetry: 0.4        // Importance augmentée de la symétrie du visage
+          },
+          debug: true                // Activer les logs de débogage
         });
         console.log("✅ Détecteur de grimaces initialisé (tardif)");
       }
@@ -612,10 +637,8 @@ const CameraRequiredVideoPlayer = ({ videoUrl, videoTitle, onVideoReady, childre
 
             // Mettre à jour la raison de l'inattention si nécessaire
             if (grimaceResults.isGrimacing) {
-              let reason = "Grimace détectée";
-              if (grimaceResults.eyesClosed) reason += " - Yeux fermés";
-              if (grimaceResults.mouthOpen) reason += " - Bouche ouverte";
-              setInattentionReason(reason);
+              // Utiliser la raison spécifique fournie par le détecteur
+              setInattentionReason(grimaceResults.inattentionReason || "Inattention détectée");
 
               // Afficher l'avertissement
               setShowWarning(true);
@@ -625,13 +648,23 @@ const CameraRequiredVideoPlayer = ({ videoUrl, videoTitle, onVideoReady, childre
                 videoRef.current.pause();
               }
 
-              // Incrémenter le compteur d'alertes
+              // Incrémenter le compteur d'alertes SEULEMENT si c'est une nouvelle alerte
               if (!showWarning) {
                 setAlertCount(prev => {
                   const newCount = prev + 1;
+                  console.log(`⚠️ Alerte d'inattention #${newCount}/${MAX_ALERTS}: ${grimaceResults.inattentionReason}`);
+
                   // Si le nombre maximum d'alertes est atteint, bloquer l'accès
                   if (newCount >= MAX_ALERTS) {
+                    console.log(`🚫 Nombre maximum d'alertes atteint (${MAX_ALERTS}). Blocage de l'accès pour 5 minutes.`);
                     blockVideoAccess();
+                  } else {
+                    // Programmer la réinitialisation du compteur d'alertes après un délai
+                    console.log(`⏱️ Programmation de la réinitialisation des alertes dans ${ALERT_RESET_TIMEOUT/1000} secondes`);
+                    setTimeout(() => {
+                      console.log("🔄 Réinitialisation du compteur d'alertes");
+                      setAlertCount(0);
+                    }, ALERT_RESET_TIMEOUT);
                   }
                   return newCount;
                 });

@@ -2,15 +2,17 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken'); // <-- Import de jsonwebtoken
 const authController = require('../controllers/authController');
-const upload = require('../config/multerConfig'); // Middleware pour gérer l'upload d'images
+const multerConfig = require('../config/multerConfig'); // Middleware pour gérer l'upload d'images
+const upload = multerConfig; // Pour la compatibilité
+const handleMulterErrors = multerConfig.handleMulterErrors; // Middleware de gestion des erreurs
 const passport = require("passport");
 
 // Vérification de l'email
 router.get('/check/:email', authController.checkEmailExists);
 
 // Inscription (avec upload d'image)
-router.post('/signup', upload.single('image'), authController.signup);
-router.post('/validate-image', upload.single('image'), authController.validateImage);
+router.post('/signup', upload.single('image'), handleMulterErrors, authController.signup);
+router.post('/validate-image', upload.single('image'), handleMulterErrors, authController.validateImage);
 
 router.post('/verify-email/:token', authController.verifyEmail);
 router.get('/profile/:id', authController.getCurrentUser);
@@ -53,7 +55,7 @@ router.get(
     res.redirect(`http://localhost:3000/google/${token}`);
   }
 );
-router.put("/:id", upload.single('image'), authController.editUser);
+router.put("/:id", upload.single('image'), handleMulterErrors, authController.editUser);
 router.get("/:id", authController.getUserById);
 
 router.get('/github/callback', passport.authenticate('github', { failureRedirect: '/signin' }), (req, res) => {

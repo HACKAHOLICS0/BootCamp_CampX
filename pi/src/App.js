@@ -44,6 +44,15 @@ import { FaceRecognition } from './components/user/Quiz/FaceRecognition';
 import ChatbotPopup from './components/chatbot/ChatbotPopup';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import CodeEditorInterface from './components/CodeEditorInterface';
+import "bootstrap-icons/font/bootstrap-icons.css";
+import EventList from './components/events/EventList';
+import EventForm from './components/events/EventForm';
+import EventDetails from './components/events/EventDetails';
+import EventStats from './components/events/EventStats';
+import Events from './components/Admin/Events';
+import PendingEvents from './components/Admin/PendingEvents';
+
 
 
 function App() {
@@ -96,6 +105,14 @@ function App() {
           <Route path="/categories/:categoryId/modules/:moduleId/courses/:courseId/face-recognition" element={<FaceRecognition />} />
           <Route path="/categories/:categoryId/modules/:moduleId/courses/:courseId/quiz/:quizId" element={<QuizView />} />
           <Route path="/categories/:categoryId/modules/:moduleId/courses/:courseId/quiz/:quizId/result" element={<QuizResultView />} />
+ {/* Code Editor Route */}
+ <Route path="/code-editor" element={<CodeEditorInterface />} />
+  {/* Event Routes */}
+  <Route path="/events" element={<EventList />} />
+          <Route path="/events/create" element={<EventForm />} />
+          <Route path="/events/:id" element={<EventDetails />} />
+          <Route path="/events/:id/edit" element={<EventForm />} />
+          <Route path="/events/stats" element={<EventStats />} />
 
           {/* Quiz Routes */}
           <Route path="/quiz/:quizId" element={<QuizView />} />
@@ -116,6 +133,8 @@ function App() {
               <Route path="settings" element={<Settings />} />
               <Route path="quizs" element={<Quiz />} />
               <Route path="categories" element={<Categories />} />
+              <Route path="events" element={<Events />} />
+              <Route path="pending-events" element={<PendingEvents />} />
               <Route path="modules" element={<Modules />} />
               <Route path="courses" element={<Courses />} />
               <Route path="videos" element={<Videos />} />

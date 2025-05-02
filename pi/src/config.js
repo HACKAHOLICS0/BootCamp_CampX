@@ -1,6 +1,7 @@
 // API URLs and other configuration
 const config = {
     API_URL: 'http://localhost:5000',  // Updated port to match backend server port
+    apiBaseUrl: 'http://localhost:5000/api',  // Added for components that use this property
     endpoints: {
         courses: '/api/courses',
         quizzes: '/api/quiz',
