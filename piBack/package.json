@@ -4,9 +4,12 @@
   "main": "index.js",
   "scripts": {
     "cron": "node cron.js",
-    "front": "cd ../pi && npm start",
+    "front": "cd ../pi && set PORT=3000 && npm start",
+    "front:linux": "cd ../pi && PORT=3000 npm start",
     "back": "nodemon app",
+    "start": "node app.js",
     "dev": "concurrently \"npm run front\" \"npm run back\"",
+    "dev:linux": "concurrently \"npm run front:linux\" \"npm run back\"",
     "clean-db": "node cleanDatabase.js"
   },
   "keywords": [],

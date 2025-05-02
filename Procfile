@@ -1,1 +1,1 @@
-web: npm start
+web: cd piBack && node app.js

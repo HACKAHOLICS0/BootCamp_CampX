@@ -1,0 +1,11 @@
+numpy
+pandas
+scikit-learn
+tensorflow
+nltk
+flask
+flask-cors
+beautifulsoup4
+requests
+pillow
+opencv-python-headless
