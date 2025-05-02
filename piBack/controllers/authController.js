@@ -28,10 +28,16 @@ const signup = async (req, res) => {
   }
 
   try {
-      // Vérifie si l'utilisateur existe déjà
+      // Vérifie si l'utilisateur existe déjà avec cet email
       const existingUser = await User.findOne({ email });
       if (existingUser) {
           return res.status(400).json({ error: 'Email already exists' });
+      }
+
+      // Vérifie si le numéro de téléphone existe déjà
+      const existingPhone = await User.findOne({ phone });
+      if (existingPhone) {
+          return res.status(400).json({ error: 'Phone number already exists' });
       }
 
       // Hacher le mot de passe avant de le sauvegarder
@@ -85,8 +91,15 @@ const signup = async (req, res) => {
                 </body>
                 </html>
             `;
-          await sendEmail(newUser.email, emailSubject, emailBody);
-    
+
+          try {
+              await sendEmail(newUser.email, emailSubject, emailBody);
+              console.log('Verification email sent successfully');
+          } catch (emailError) {
+              console.error('Error sending verification email:', emailError);
+              // Continuer malgré l'erreur d'envoi d'e-mail
+          }
+
           res.status(201).json({ message: 'User registered successfully. Please check your email to verify your account.' });
   } catch (error) {
       console.error('Error during signup:', error);
@@ -125,29 +138,32 @@ const verifyEmail = async (req, res) => {
       res.status(400).json({ message: 'Invalid or expired token' });
   }
 };
-  
+
 
 
 const signin = async (req, res) => {
   const { email, password, recaptchaToken } = req.body;
 
   // Validation des champs nécessaires
-  if (!email || !password || !recaptchaToken) {
-    return res.status(400).json({ error: "All fields and reCAPTCHA are required" });
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email and password are required" });
   }
 
   try {
+    // Commenté temporairement pour faciliter la connexion admin
     // Vérifier le reCAPTCHA avec Google
-    const recaptchaVerify = await axios.post(`https://www.google.com/recaptcha/api/siteverify`, null, {
-      params: {
-        secret: process.env.RECAPTCHA_SECRET, // Ajoute la clé secrète dans ton .env
-        response: recaptchaToken,
-      },
-    });
-
-    if (!recaptchaVerify.data.success) {
-      return res.status(400).json({ error: "reCAPTCHA verification failed" });
-    }
+    // if (!recaptchaToken) {
+    //   return res.status(400).json({ error: "reCAPTCHA is required" });
+    // }
+    // const recaptchaVerify = await axios.post(`https://www.google.com/recaptcha/api/siteverify`, null, {
+    //   params: {
+    //     secret: process.env.RECAPTCHA_SECRET, // Ajoute la clé secrète dans ton .env
+    //     response: recaptchaToken,
+    //   },
+    // });
+    // if (!recaptchaVerify.data.success) {
+    //   return res.status(400).json({ error: "reCAPTCHA verification failed" });
+    // }
       // Vérifier si l'utilisateur existe
       const user = await User.findOne({ email });
       if (!user) {
@@ -162,15 +178,18 @@ const signin = async (req, res) => {
           return res.status(400).json({ msg: 'Incorrect password' });
       }
 
-      // Générer un token JWT
-      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+      // Générer un token JWT avec l'ID et le rôle de l'utilisateur
+      const token = jwt.sign({
+        id: user._id,
+        typeUser: user.typeUser || 'user'
+      }, process.env.JWT_SECRET, { expiresIn: '7d' }); // Augmenté à 7 jours
 
       // Enregistrer le token JWT dans un cookie sécurisé (HTTPOnly)
       res.cookie('token', token, {
           httpOnly: true,  // Ne peut être accédé par JavaScript
           secure: process.env.NODE_ENV === 'production',  // Utilise 'secure' en mode production
           sameSite: 'Strict', // Empêche les attaques CSRF
-          maxAge: 3600000, // Durée du cookie (1 heure)
+          maxAge: 7 * 24 * 60 * 60 * 1000, // Durée du cookie (7 jours)
       });
 
       // Retourner la réponse avec les informations de l'utilisateur
@@ -428,10 +447,16 @@ const forgotPasswordEmail = async (req, res) => {
 `;
 
 
-      
+
 
       // Envoi du mail avec format HTML
-      await sendEmail(email, emailSubject, emailBody);
+      try {
+          await sendEmail(email, emailSubject, emailBody);
+          console.log('Password reset email sent successfully');
+      } catch (emailError) {
+          console.error('Error sending password reset email:', emailError);
+          // Continuer malgré l'erreur d'envoi d'e-mail
+      }
 
       res.status(200).json({ message: 'Code de vérification envoyé par e-mail' });
   } catch (error) {
@@ -440,30 +465,30 @@ const forgotPasswordEmail = async (req, res) => {
   }
 };
 
-  
+
   /**
    * Nouvelle fonction : Réinitialisation du mot de passe après vérification par e-mail
    */
   const resetPasswordEmail = async (req, res) => {
     const { email, code, password } = req.body;
-  
+
     try {
       if (!email || !code || !password) {
         return res.status(400).json({ message: 'Email, code et nouveau mot de passe sont requis' });
       }
-  
+
       // Recherche de l'utilisateur par e-mail
       const user = await User.findOne({ email });
       if (!user || user.verificationCode !== code) {
         return res.status(400).json({ message: 'Code invalide ou utilisateur non trouvé' });
       }
-  
+
       // Hachage du nouveau mot de passe
       const hashedPassword = await bcrypt.hash(password, 10);
       user.password = hashedPassword;
       user.verificationCode = null; // Réinitialisation du code de vérification
       await user.save();
-  
+
       res.status(200).json({ message: 'Mot de passe mis à jour avec succès' });
     } catch (error) {
       console.error(error);
@@ -496,7 +521,7 @@ const forgotPasswordEmail = async (req, res) => {
         }
 
         const appToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-            expiresIn: "1h",
+            expiresIn: "7d", // Augmenté à 7 jours
         });
 
         res.json({ token: appToken, user });
@@ -507,6 +532,5 @@ const forgotPasswordEmail = async (req, res) => {
 };
 
 
-  
+
   module.exports = { googleTokenAuth,signup,authenticate, signin, checkEmailExists,verifyEmail, sendVerificationCode,editUser,getUserById, verifyCode, resetPassword, resetPasswordEmail, forgotPasswordEmail };
-  

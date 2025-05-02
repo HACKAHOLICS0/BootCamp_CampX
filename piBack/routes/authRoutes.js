@@ -51,6 +51,7 @@ router.get(
     });
 
     // Redirection vers le frontend en incluant le token dans l'URL
+    // Utiliser le port 3000 pour le frontend
     res.redirect(`http://localhost:3000/google/${token}`);
   }
 );

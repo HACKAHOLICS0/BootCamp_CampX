@@ -40,8 +40,28 @@ const eventSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['upcoming', 'ongoing', 'completed', 'cancelled'],
+        enum: ['upcoming', 'ongoing', 'completed', 'cancelled', 'pending'],
         default: 'upcoming'
+    },
+    isApproved: {
+        type: Boolean,
+        default: false
+    },
+    approvedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    approvedAt: {
+        type: Date
+    },
+    rejectionReason: {
+        type: String
+    },
+    qrCodeUrl: {
+        type: String
+    },
+    eventUrl: {
+        type: String
     },
     createdAt: {
         type: Date,
@@ -53,4 +73,4 @@ const eventSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('Event', eventSchema); 
+module.exports = mongoose.model('Event', eventSchema);

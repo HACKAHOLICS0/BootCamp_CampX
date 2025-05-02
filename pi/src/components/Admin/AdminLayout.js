@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
-import { 
-  Home, User, Package, BarChart2, Bell, Settings, BookOpen, Search, 
-  LogOut, Sun, Moon, Menu, Book, Layers, FolderTree, Video, Activity
+import {
+  Home, User, Package, BarChart2, Bell, Settings, BookOpen, Search,
+  LogOut, Sun, Moon, Menu, Book, Layers, FolderTree, Video, Activity,
+  Calendar, CheckSquare
 } from 'lucide-react';
 import Cookies from 'js-cookie';
 import './AdminStyle.css';
@@ -24,6 +25,8 @@ const Sidebar = ({ isCollapsed, toggleSidebar }) => {
           <li><Link to="/admin/categories"><FolderTree size={20} /> <span>Categories</span></Link></li>
           <li><Link to="/admin/modules"><Layers size={20} /> <span>Modules</span></Link></li>
           <li><Link to="/admin/courses"><Book size={20} /> <span>Courses</span></Link></li>
+          <li><Link to="/admin/events"><Calendar size={20} /> <span>Events</span></Link></li>
+          <li><Link to="/admin/pending-events"><CheckSquare size={20} /> <span>Pending Events</span></Link></li>
           <li><Link to="/admin/videoquiz-stats"><Video size={20} /> <span>Quiz Vidéos</span></Link></li>
           <li><Link to="/admin/analytics"><BarChart2 size={20} /> <span>Analytics</span></Link></li>
           <li><Link to="/admin/notifications"><Bell size={20} /> <span>Notifications</span></Link></li>
@@ -83,7 +86,18 @@ const AdminLayout = () => {
   };
 
   const handleLogout = () => {
+    // Nettoyer les cookies
     Cookies.remove("user");
+    Cookies.remove("token");
+
+    // Nettoyer localStorage
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+
+    // Déclencher l'événement pour informer les autres composants
+    window.dispatchEvent(new Event("userUpdated"));
+
+    // Rediriger vers la page de connexion
     navigate("/signin");
   };
 

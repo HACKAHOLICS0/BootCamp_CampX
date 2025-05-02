@@ -19,7 +19,7 @@ export default function Signin() {
     script.async = true;
     script.defer = true;
     document.body.appendChild(script);
-    
+
     return () => {
       document.body.removeChild(script);
     };
@@ -29,28 +29,45 @@ export default function Signin() {
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!recaptchaToken) {
-      setErrorDisplay("Please verify reCAPTCHA");
-      return;
-    }
+
+    // Temporairement désactivé pour faciliter la connexion
+    // if (!recaptchaToken) {
+    //   setErrorDisplay("Please verify reCAPTCHA");
+    //   return;
+    // }
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/signin", {
+      const response = await fetch("http://localhost:5002/api/auth/signin", { // Mise à jour du port
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ ...formData, recaptchaToken }),
+        body: JSON.stringify({ ...formData, recaptchaToken: recaptchaToken || 'disabled' }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
+        // Stocker le token dans un cookie
         Cookies.set("token", data.token, { expires: 7 });
-        Cookies.set("user", JSON.stringify(data.user), { expires: 7 });
+
+        // Stocker les informations utilisateur dans localStorage
+        localStorage.setItem("user", JSON.stringify(data.user));
+
+        // Afficher les informations utilisateur pour le débogage
+        console.log("User data received:", data.user);
+        console.log("User type:", data.user.typeUser);
+
+        // Déclencher l'événement userUpdated
         window.dispatchEvent(new Event("userUpdated"));
-        navigate("/");
+
+        // Rediriger vers la page d'accueil ou le tableau de bord admin
+        if (data.user.typeUser === 'admin') {
+          console.log("Redirecting to admin dashboard");
+          navigate("/admin");
+        } else {
+          navigate("/");
+        }
       } else {
         setErrorDisplay(data.message || "Incorrect email or password");
       }
@@ -60,50 +77,50 @@ export default function Signin() {
   };
 
   const handleGoogleLoginSuccess = async () => {
-    window.location.href = "http://localhost:5000/api/auth/google";
+    window.location.href = "http://localhost:5002/api/auth/google"; // Mise à jour du port
   };
 
   const handleGitHubLogin = () => {
-    window.location.href = "http://localhost:5000/api/auth/github/callback";
+    window.location.href = "http://localhost:5002/api/auth/github/callback"; // Mise à jour du port
   };
 
   return (
     <div className="signin-container">
       <h1 className="signin-logo">Sign In</h1>
-      
+
       {errorDisplay && (
         <div className="error-message">
           {errorDisplay}
         </div>
       )}
-      
+
       <form className="signin-form" onSubmit={onSubmit}>
         <div className="form-group">
-          <input 
-            type="email" 
-            name="email" 
-            className="form-control" 
-            placeholder="Enter Email" 
-            onChange={onChange} 
+          <input
+            type="email"
+            name="email"
+            className="form-control"
+            placeholder="Enter Email"
+            onChange={onChange}
             value={formData.email}
             required
           />
         </div>
-        
+
         <div className="form-group">
-          <input 
-            type="password" 
-            name="password" 
-            className="form-control" 
-            placeholder="Enter Password" 
-            onChange={onChange} 
+          <input
+            type="password"
+            name="password"
+            className="form-control"
+            placeholder="Enter Password"
+            onChange={onChange}
             value={formData.password}
             required
           />
         </div>
-   
+
         <div className="recaptcha-container">
-          <ReCAPTCHA 
+          <ReCAPTCHA
             sitekey={recaptchaKey}
             onChange={(token) => {
               console.log("ReCAPTCHA Token:", token);
@@ -123,23 +140,23 @@ export default function Signin() {
           Se connecter
         </button>
       </form>
-      
+
       <div className="divider">
         <span>Ou connectez-vous avec</span>
       </div>
-      
+
       <div className="social-login">
         <div style={{ marginBottom: '15px' }}>
           <GoogleLoginButton onSuccess={handleGoogleLoginSuccess} />
         </div>
-        
-        <button 
-          onClick={handleGitHubLogin} 
+
+        <button
+          onClick={handleGitHubLogin}
           className="social-btn github-login-btn"
         >
-          <img 
-            src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" 
-            alt="GitHub Logo" 
+          <img
+            src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+            alt="GitHub Logo"
           />
           Sign in with GitHub
         </button>

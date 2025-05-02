@@ -6,7 +6,8 @@
     "cron": "node cron.js",
     "front": "cd ../pi && npm start",
     "back": "nodemon app",
-    "dev": "concurrently \"npm run front\" \"npm run back\""
+    "dev": "concurrently \"npm run front\" \"npm run back\"",
+    "seed-events": "node scripts/seedEvents.js"
   },
   "keywords": [],
   "author": "",
@@ -25,6 +26,7 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-session": "^1.18.1",
+    "ical-generator": "^8.1.1",
     "jsonwebtoken": "^9.0.2",
     "jwt-decode": "^4.0.0",
     "mongoose": "^8.12.1",
@@ -39,10 +41,11 @@
     "piback": "file:",
     "puppeteer": "^24.3.0",
     "python-shell": "^5.0.0",
+    "qrcode": "^1.5.4",
+    "react-toastify": "^11.0.5",
     "socket.io": "^4.8.1",
     "stripe": "^17.7.0",
     "twilio": "^5.4.5"
   },
   "description": ""
 }
-  

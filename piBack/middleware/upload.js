@@ -1,10 +1,28 @@
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
+
+// Créer le dossier de destination s'il n'existe pas
+const uploadDir = path.join(__dirname, '../uploads/events');
+console.log('Upload directory path:', uploadDir);
+
+try {
+    if (!fs.existsSync(uploadDir)) {
+        console.log('Creating upload directory...');
+        fs.mkdirSync(uploadDir, { recursive: true });
+        console.log('Upload directory created successfully');
+    } else {
+        console.log('Upload directory already exists');
+    }
+} catch (error) {
+    console.error('Error creating upload directory:', error);
+}
 
 // Configure storage
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'uploads/events');
+        // Utiliser le chemin absolu pour éviter les problèmes de chemin relatif
+        cb(null, uploadDir);
     },
     filename: function (req, file, cb) {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -30,4 +48,4 @@ const upload = multer({
     }
 });
 
-module.exports = upload; 
+module.exports = upload;

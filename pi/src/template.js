@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';  // Bootstrap from npm
 import 'font-awesome/css/font-awesome.min.css';  // Font Awesome from npm
 // Now import the CSS files that we've placed in src/assets/css
 import './assets/css/imagehover.min.css';
 import './assets/css/style.css';
+import EventRecommendations from './components/events/EventRecommendations';
 
 const Template = () => {
   return (
@@ -387,6 +388,15 @@ const Template = () => {
                 </div>
               </section>
               {/*/ Courses*/}
+
+              {/* Event Recommendations */}
+              <section id="event-recommendations" className="section-padding">
+                <div className="container">
+                  <EventRecommendations limit={3} />
+                </div>
+              </section>
+              {/*/ Event Recommendations */}
+
               {/*Pricing*/}
               <section id="pricing" className="section-padding">
                 <div className="container">
@@ -481,8 +491,8 @@ const Template = () => {
               </section>
               {/*/ Contact*/}
             </div>
-       
-    
+
+
 
 
 

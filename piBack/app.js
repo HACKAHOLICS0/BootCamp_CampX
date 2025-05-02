@@ -6,7 +6,7 @@ const session = require("express-session"); // Importation de express-session
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const interestPointModel = require("./Model/Interestpoint")
-const adminRoutes = require("./routes/AdminRoutes"); 
+const adminRoutes = require("./routes/AdminRoutes");
 const moduleRoutes = require("./routes/moduleRoutes");
 const http = require("http");
 const { Server } = require("socket.io");
@@ -54,8 +54,8 @@ app.use(cors({
 // Attacher io à l'application pour qu'il soit accessible dans les routes
 app.use(session({
   secret: process.env.SESSION_SECRET, // Vous pouvez mettre cette valeur dans votre fichier .env
-  resave: false, 
-  saveUninitialized: true, 
+  resave: false,
+  saveUninitialized: true,
   cookie: { secure: false } // Mettre 'true' si vous utilisez HTTPS
 }));
 
@@ -65,7 +65,9 @@ app.use(passport.initialize());
 app.use(express.json()); // Activer le parsing JSON
 
 
+// Servir les fichiers statiques
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/public", express.static(path.join(__dirname, "public")));
 
 // MongoDB Connection
 require("./config/dbConfig");
@@ -82,7 +84,7 @@ mongoose
   .catch((err) => {
     console.error("Erreur lors de la connexion à MongoDB:", err);
   });
-  
+
 // Routes d'authentification
 app.use("/api/videos", videoRoutes);
 app.use("/api/auth", authRoutes);
@@ -96,6 +98,10 @@ app.use('/api/videoquiz', videoQuizRoutes);
 app.use('/api/chat', chatRoutes); // Ajout des routes du chatbot
 app.use('/api/events', eventRoutes);
 
+// Routes pour le moteur de recommandation
+const recommendationRoutes = require('./routes/recommendationRoutes');
+app.use('/api/recommendations', recommendationRoutes);
+
 // Socket.IO events
 io.on('connection', (socket) => {
   console.log('Un utilisateur s\'est connecté');
@@ -106,7 +112,7 @@ io.on('connection', (socket) => {
     try {
       const { token, userId, displayName } = data;
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      
+
       currentUser = { ...decoded, userId, displayName };
       socket.userId = userId;
       socket.displayName = displayName;
@@ -122,7 +128,7 @@ io.on('connection', (socket) => {
     try {
       const { roomId, userId, displayName } = data;
       console.log('Join room data:', data);
-      
+
       if (!roomId || !userId || !displayName) {
         console.error('Données manquantes:', data);
         return;
@@ -130,7 +136,7 @@ io.on('connection', (socket) => {
 
       // Vérifier si la room existe, sinon la créer
       let chatRoom = await ChatRoom.findOne({ name: roomId });
-      
+
       try {
         if (!chatRoom) {
           chatRoom = new ChatRoom({
@@ -156,10 +162,10 @@ io.on('connection', (socket) => {
           if (chatRoom) {
             chatRoom.addParticipant(userId, displayName);
             await chatRoom.save();
-            
+
             socket.join(roomId);
             console.log(`Utilisateur ${displayName} (${userId}) a rejoint la room existante: ${roomId}`);
-            
+
             // Envoyer l'historique des messages
             socket.emit('message_history', chatRoom.messages || []);
           }
@@ -178,7 +184,7 @@ io.on('connection', (socket) => {
     try {
       const { roomId, userId, message } = data;
       console.log('Message reçu:', data);
-      
+
       if (!userId || !roomId || !socket.displayName || !message) {
         console.error('Données manquantes:', data);
         return;
@@ -213,7 +219,7 @@ io.on('connection', (socket) => {
 
 app.get('/api/points', async (req, res) => {
   try {
-      const interestPointModel = require('./Model/Interestpoint'); 
+      const interestPointModel = require('./Model/Interestpoint');
       const points = await interestPointModel.find();
       res.status(200).json(points);
   } catch (err) {
@@ -231,7 +237,7 @@ app.all("*", (req, res) => {
 });
 
 // Start Server
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 5002; // Utiliser le port 5002
 server.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });

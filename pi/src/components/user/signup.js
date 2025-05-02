@@ -110,29 +110,34 @@ export default function Signup() {
             // Vérifie si l'email existe déjà
             const emailCheckResponse = await fetch(`http://localhost:5000/api/auth/check/${formData.email}`);
             const emailExists = await emailCheckResponse.json();
-    
+
             if (emailExists.exists) {
                 setErrorDisplay("Email already exists");
                 return;
             }
-    
+
             const formDataToSend = new FormData();
             for (const key in formData) {
                 formDataToSend.append(key, formData[key]);
             }
-    
+
             const signupResponse = await fetch("http://localhost:5000/api/auth/signup", {
                 method: "POST",
                 body: formDataToSend, // Utilisez FormData ici
             });
-    
+
             if (!signupResponse.ok) {
                 const errorData = await signupResponse.json();
-                throw new Error(errorData.message || "Failed to sign up");
+                if (errorData.error === "Phone number already exists") {
+                    setErrorDisplay("Phone number already exists. Please use a different phone number.");
+                } else {
+                    throw new Error(errorData.error || "Failed to sign up");
+                }
+                return;
             }
-    
+
             history("/signin");
-    
+
         } catch (err) {
             console.error("Error during signup:", err);
             setErrorDisplay(err.message || "An error occurred. Please try again.");

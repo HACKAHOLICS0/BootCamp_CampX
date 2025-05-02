@@ -1,26 +1,34 @@
 const fs = require('fs');
 const path = require('path');
 
+/**
+ * Traite un fichier déjà téléchargé par multer
+ * @param {Object} file - Objet fichier de multer
+ * @returns {String} - Chemin relatif du fichier pour la base de données
+ */
 const uploadImage = async (file) => {
     try {
-        // Create uploads directory if it doesn't exist
-        const uploadDir = path.join(__dirname, '../uploads/events');
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
+        console.log('Processing uploaded file:', file);
+
+        // Le fichier est déjà enregistré par multer, nous avons juste besoin de retourner le chemin
+        if (!file || !file.path) {
+            console.error('Invalid file object:', file);
+            throw new Error('Invalid file object');
         }
 
-        // Generate unique filename
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const filename = file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname);
-        const filepath = path.join(uploadDir, filename);
+        // Vérifier si le fichier existe
+        if (!fs.existsSync(file.path)) {
+            console.error('File does not exist at path:', file.path);
+            throw new Error('File does not exist at the specified path');
+        }
 
-        // Save file
-        await fs.promises.writeFile(filepath, file.buffer);
+        // Convertir le chemin Windows en format URL (remplacer les backslashes par des forward slashes)
+        const relativePath = '/' + file.path.replace(/\\/g, '/');
+        console.log('Generated relative path:', relativePath);
 
-        // Return the relative path for the database
-        return `/uploads/events/${filename}`;
+        return relativePath;
     } catch (error) {
-        console.error('Error uploading image:', error);
+        console.error('Error processing image:', error);
         throw error;
     }
 };

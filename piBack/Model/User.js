@@ -24,6 +24,8 @@ var UserSchema = new Schema({
     },
     phone: {
         type: Number,
+        unique: true,  // Ensure phone number is unique
+        sparse: true,  // Allow documents without a phone number
     },
     password: {
         type: String,
@@ -63,10 +65,10 @@ var UserSchema = new Schema({
     typeUser: {
         type: String,
     },
-    isVerified: { 
-        type: Boolean, 
+    isVerified: {
+        type: Boolean,
         default: false  // <-- Add this field
-    },  
+    },
     emailVerificationToken: {
         type: String
     },
@@ -78,7 +80,7 @@ var UserSchema = new Schema({
             courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' },
             progress: { type: Number, default: 0 }, // En pourcentage
             timeSpent: { type: Number, default: 0 }, // Temps passé en minutes
-            quizzesCompleted: { type: Number, default: 0 } 
+            quizzesCompleted: { type: Number, default: 0 }
         }
     ]
 });

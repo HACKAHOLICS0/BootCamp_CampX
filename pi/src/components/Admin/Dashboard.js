@@ -1,6 +1,7 @@
 import React from 'react';
-import { Users, Book, FolderTree, Layers } from 'lucide-react';
+import { Users, Book, FolderTree, Layers, Calendar } from 'lucide-react';
 import './styles/AdminPointsStyle.css';
+import EventNotification from './EventNotification';
 
 const DashboardCard = ({ title, value, icon: Icon, color }) => (
   <div className="dashboard-card" style={{ borderColor: color }}>
@@ -20,13 +21,17 @@ const Dashboard = () => {
     users: 150,
     categories: 12,
     modules: 25,
-    courses: 48
+    courses: 48,
+    events: 15
   };
 
   return (
     <div className="content-section">
       <h2>Dashboard</h2>
-      
+
+      {/* Notification pour les événements en attente */}
+      <EventNotification />
+
       <div className="dashboard-grid">
         <DashboardCard
           title="Utilisateurs"
@@ -51,6 +56,12 @@ const Dashboard = () => {
           value={stats.courses}
           icon={Book}
           color="#E91E63"
+        />
+        <DashboardCard
+          title="Événements"
+          value={stats.events}
+          icon={Calendar}
+          color="#9C27B0"
         />
       </div>
 

@@ -1,5 +1,9 @@
 const config = {
-    apiBaseUrl: 'http://localhost:5000/api'
+    apiBaseUrl: process.env.REACT_APP_API_URL || 'http://localhost:5002/api',
+    recaptchaSiteKey: process.env.REACT_APP_RECAPTCHA_SITE_KEY || '6LfHQJIpAAAAAFRXz0nNU-XBauXYpJBnSzQQEPQP'
 };
 
-export default config; 
+// Afficher la configuration pour le débogage
+console.log('API Base URL:', config.apiBaseUrl);
+
+export default config;

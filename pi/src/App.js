@@ -1,6 +1,8 @@
 import React from 'react';
 import { Routes, Route, useLocation, matchPath } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Footer from './components/Footer';
 import Navbar from './components/navbar';
 import Template from './template';
@@ -37,11 +39,9 @@ import ProtectedAdminRoute from './components/ProtectedAdminRoute';
 import Chatbot from './components/chatbot/Chatbot';
 import ChatbotAdmin from './components/Admin/ChatbotAdmin';
 import ChatTest from './components/chatbot/ChatTest';
-import LearnerHelpCenter from "./components/helpcenter/LearnerHelpCenter";
-import AccountNotifications from "./components/helpcenter/AccountNotifications";
-import PaymentsSubscriptions from "./components/helpcenter/PaymentsSubscriptions";
-import Enrollment from './components/helpcenter/Enrollment';
-import Community from './components/helpcenter/Community'
+import Events from './components/Admin/Events';
+import PendingEvents from './components/Admin/PendingEvents';
+
 import "bootstrap-icons/font/bootstrap-icons.css";
 import EventList from './components/events/EventList';
 import EventForm from './components/events/EventForm';
@@ -78,6 +78,9 @@ function App() {
   return (
     <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
       <div className="App">
+        {/* Composant ToastContainer pour les notifications */}
+        <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
+
         {/* Afficher Navbar uniquement si ce n'est pas une route admin */}
         {!isAdminRoute && <Navbar />}
 
@@ -93,11 +96,6 @@ function App() {
           <Route path="/google/:token" element={<GoogleRedirectHandler />} />
           <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
           <Route path="/upload-video" element={<UploadVideo />} />
-          <Route path="/learner-help-center" element={<LearnerHelpCenter />} />
-          <Route path="/account-notifications" element={<AccountNotifications />} />
-          <Route path="/payments-subscriptions" element={<PaymentsSubscriptions />} />
-          <Route path="/community" element={<Community />} />
-          <Route path="/enrollment" element={<Enrollment />} />
           <Route path="/categories" element={<CategoryList />} />
           <Route path="/categories/:categoryId/modules" element={<ModuleList />} />
           <Route path="/modules/:moduleId/courses" element={<CourseList />} />
@@ -109,7 +107,7 @@ function App() {
 
           {/* Code Editor Route */}
           <Route path="/code-editor" element={<CodeEditorInterface />} />
-          
+
           {/* Event Routes */}
           <Route path="/events" element={<EventList />} />
           <Route path="/events/create" element={<EventForm />} />
@@ -132,6 +130,8 @@ function App() {
               <Route path="categories" element={<Categories />} />
               <Route path="modules" element={<Modules />} />
               <Route path="courses" element={<Courses />} />
+              <Route path="events" element={<Events />} />
+              <Route path="pending-events" element={<PendingEvents />} />
               <Route path="videoquiz-stats" element={<VideoQuizStats />} />
               <Route path="chatbot" element={<ChatbotAdmin />} />
             </Route>

@@ -35,11 +35,24 @@ const [pointToDelete, setPointToDelete] = useState(null);
     const [selectedPoints, setSelectedPoints] = useState([]);
 
     useEffect(() => {
-        const storedUser = Cookies.get("user");
+        // Vérifier d'abord dans localStorage
+        const localStorageUser = localStorage.getItem("user");
+
+        // Puis vérifier dans les cookies comme fallback
+        const cookieUser = Cookies.get("user");
+
+        // Utiliser localStorage en priorité
+        const storedUser = localStorageUser || cookieUser;
+
         if (storedUser) {
-            const parsedUser = JSON.parse(storedUser);
-            console.log("user avec cookie ",parsedUser);
-            setUser(parsedUser);
+            try {
+                const parsedUser = JSON.parse(storedUser);
+                console.log("User data in profile:", parsedUser);
+                console.log("User type in profile:", parsedUser.typeUser);
+                setUser(parsedUser);
+            } catch (error) {
+                console.error("Error parsing user data:", error);
+            }
         }
     }, []);
 
@@ -62,11 +75,11 @@ const [pointToDelete, setPointToDelete] = useState(null);
                 const response = await fetch(`${backendURL}/api/interest-points`);
                 const data = await response.json();
                 console.log("Fetched interest points:", data); // Vérifie le format des données
-    
+
                 // Assurez-vous que les données récupérées sont correctement filtrées
                 if (Array.isArray(data)) {
                     setInterestPoints(data);
-    
+
                     if (user && user.interestPoints) {
                         const filteredPoints = data.filter(point => user.interestPoints.includes(point.value));
                         setSelectedPoints(filteredPoints.map(point => point.value));
@@ -78,12 +91,12 @@ const [pointToDelete, setPointToDelete] = useState(null);
                 console.error("Erreur lors de la récupération des points d'intérêt :", error);
             }
         };
-    
+
         if (user) {
             fetchInterestPoints();
         }
     }, [user]);
-    
+
 
     const handleEditUser = () => {
         setIsModalOpen(true);
@@ -94,10 +107,10 @@ const [pointToDelete, setPointToDelete] = useState(null);
             console.log("No user or user ID found.");
             return;
         }
-    
+
         const userId = user._id || user.id; // Extract and ensure we have a valid ID
         console.log("User ID passed as parameter:", userId); // Ajout du log pour afficher l'ID
-    
+
         try {
             const response = await fetch(`${backendURL}/api/auth/${userId}`, {
                 method: "PUT",
@@ -106,11 +119,11 @@ const [pointToDelete, setPointToDelete] = useState(null);
                 },
                 body: JSON.stringify(editableUser),
             });
-    
+
             if (!response.ok) {
                 throw new Error("Failed to update user data");
             }
-    
+
             const updatedUser = await response.json();
             setUser(updatedUser);
             Cookies.set("user", JSON.stringify(updatedUser), { expires: 7 });
@@ -121,7 +134,7 @@ const [pointToDelete, setPointToDelete] = useState(null);
                 email: updatedUser.email || "",
                 phone: updatedUser.phone || ""
             });
-    
+
             setIsModalOpen(false);
         } catch (error) {
             console.error("Error updating user:", error);
@@ -151,20 +164,20 @@ const [pointToDelete, setPointToDelete] = useState(null);
 
     const handleSaveSelection = async () => {
         const storedUser = Cookies.get("user");
-    
+
         if (!storedUser) {
             console.log("No stored user found in localStorage.");
             return;
         }
-    
+
         const parsedUser = JSON.parse(storedUser);
         const userId = parsedUser._id || parsedUser.id;
-    
+
         console.log("User ID passed as parameter:", userId);
         console.log("Selected points before saving:", selectedPoints);
-    
+
         const updatedSelectedPoints = [...new Set([...user.refinterestpoints, ...selectedPoints])];
-    
+
         try {
             const response = await fetch(`${backendURL}/api/user/${userId}/interest-points`, {
                 method: "PUT",
@@ -173,14 +186,14 @@ const [pointToDelete, setPointToDelete] = useState(null);
                 },
                 body: JSON.stringify({ selectedPoints: updatedSelectedPoints }),
             });
-    
+
             if (!response.ok) {
                 throw new Error("Échec de l'enregistrement des points d'intérêt");
             }
-    
+
             const updatedUser = await response.json();
             console.log("Updated user from backend:", updatedUser);
-    
+
             setUser(updatedUser);
             Cookies.set("user", JSON.stringify(updatedUser), { expires: 7 });
             setIsInterestPointModalOpen(false);
@@ -188,10 +201,10 @@ const [pointToDelete, setPointToDelete] = useState(null);
             console.error("Erreur lors de l'enregistrement des points d'intérêt :", error);
         }
     };
-    
+
     useEffect(() => {
         if (user && user.interestPoints) {
-            setSelectedPoints(user.interestPoints); 
+            setSelectedPoints(user.interestPoints);
         }
     }, [user]);
 
@@ -202,9 +215,9 @@ const [pointToDelete, setPointToDelete] = useState(null);
         email: "",
         phone: ""
     });
-    
+
     const [isFormValid, setIsFormValid] = useState(false);
-    
+
     const validateField = (field) => {
         const newErrors = { ...errors };
         if (editableUser[field] === "") {
@@ -212,23 +225,23 @@ const [pointToDelete, setPointToDelete] = useState(null);
         } else {
             newErrors[field] = "";
         }
-    
+
         if (field === "email" && editableUser[field] && !/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(editableUser[field])) {
             newErrors[field] = "Invalid email format.";
         }
-    
+
         if (field === "phone" && editableUser[field] && !/^\+?[1-9]\d{1,14}$/.test(editableUser[field])) {
             newErrors[field] = "Invalid phone number format.";
         }
-    
+
         if (field === "birthDate" && editableUser[field] && new Date(editableUser[field]) > new Date()) {
             newErrors[field] = "Birth date cannot be in the future.";
         }
-    
+
         setErrors(newErrors);
         checkFormValidity(newErrors);
     };
-    
+
     const checkFormValidity = (newErrors) => {
         setIsFormValid(!Object.values(newErrors).some(error => error !== '') && Object.values(editableUser).every(value => value !== ''));
     };
@@ -237,24 +250,24 @@ const [pointToDelete, setPointToDelete] = useState(null);
         setPointToDelete(point);  // Assure-toi d'utiliser `point.value`
         setIsDeleteModalOpen(true);
     };
-    
-    
+
+
     const closeDeleteModal = () => {
         setIsDeleteModalOpen(false);
         setPointToDelete(null);
     };
     const deleteInterestPoint = async () => {
         console.log("Point to delete:", pointToDelete);  // Vérifie ce que contient pointToDelete
-        
+
         const storedUser = Cookies.get("user");
         if (!storedUser) {
             console.log("No stored user found in localStorage.");
             return;
         }
-    
+
         const parsedUser = JSON.parse(storedUser);
         const userId = parsedUser._id || parsedUser.id;
-    
+
         try {
             const response = await fetch(`${backendURL}/api/user/${userId}/interest-point`, {
                 method: 'DELETE',
@@ -263,35 +276,35 @@ const [pointToDelete, setPointToDelete] = useState(null);
                 },
                 body: JSON.stringify({ point: pointToDelete })
             });
-    
+
             if (!response.ok) {
                 throw new Error("Failed to delete interest point");
             }
-    
+
             // Mettre à jour les points d'intérêt de l'utilisateur
             const updatedUserInterestPoints = user.refinterestpoints.filter(point => point !== pointToDelete);
-            
+
             // Mettez à jour les données de l'utilisateur pour refléter les points supprimés
-            const updatedUser = { 
-                ...user, 
-                refinterestpoints: updatedUserInterestPoints 
+            const updatedUser = {
+                ...user,
+                refinterestpoints: updatedUserInterestPoints
             };
-    
+
             setUser(updatedUser);
             Cookies.set("user", JSON.stringify(updatedUser), { expires: 7 });
-    
+
             // Mettre à jour l'état local des points d'intérêt
             setInterestPoints(updatedUserInterestPoints);  // Seuls les points de l'utilisateur
-    
+
             // Fermer le modal après suppression
             closeDeleteModal();
-    
+
         } catch (error) {
             console.error("Erreur lors de la suppression du point d'intérêt :", error);
         }
     };
-    
-    
+
+
 
     if (!user) {
         return (
@@ -311,6 +324,13 @@ const [pointToDelete, setPointToDelete] = useState(null);
                                 <img src={getImageUrl(user)} className="rounded-circle" width="200" alt="User Avatar" />
                                 <div className="mt-3">
                                         <h4>{user.name || "User"}</h4>
+                                        {(user.typeUser === 'admin' || user.role === 'admin') && (
+                                            <div className="mt-2">
+                                                <a href="/admin" className="btn btn-primary">
+                                                    Admin Dashboard
+                                                </a>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -333,7 +353,7 @@ const [pointToDelete, setPointToDelete] = useState(null);
                                      <div className="text-end mt-3">
             <button className="edit-button" onClick={handleEditUser}>
                 <i className="fa fa-edit"></i> {/* Icône d'édition */}
-              
+
             </button>
         </div>
                                 </div>
@@ -421,9 +441,9 @@ const [pointToDelete, setPointToDelete] = useState(null);
             <h4>Select Points of Interest</h4>
             <div className="custom-interest-points-grid">
                 {interestPoints.map((point, index) => (
-                    <div 
-                        key={index} 
-                        className={`custom-card custom-point-card ${selectedPoints.includes(point.value) ? 'custom-selected' : ''}`} 
+                    <div
+                        key={index}
+                        className={`custom-card custom-point-card ${selectedPoints.includes(point.value) ? 'custom-selected' : ''}`}
                         onClick={() => handlePointSelection(point)}
                     >
                         <div className="custom-card-body custom-card-body-point">

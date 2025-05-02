@@ -15,7 +15,7 @@ export default function GoogleLoginButton() {
     <div style={containerStyle} className="google-btn-container">
       <GoogleLogin
         onSuccess={(credentialResponse) => {
-          fetch("http://localhost:5000/api/auth/google/token", {
+          fetch("http://localhost:5002/api/auth/google/token", { // Mise à jour du port
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ token: credentialResponse.credential }),
@@ -24,16 +24,16 @@ export default function GoogleLoginButton() {
         .then((data) => {
             if (data.token) {
                 Cookies.set("token", data.token, { expires: 7 });
-        
+
                 // Ajouter `picture` à l'objet utilisateur stocké en local
                 const userData = { ...data.user, picture: data.user.picture || credentialResponse.clientId };
                 Cookies.set("user", JSON.stringify(userData), { expires: 7 });
-        
+
                 window.dispatchEvent(new Event("userUpdated"));
                 window.location.href = "/";
             }
         });
-        
+
         }}
         onError={() => {
           console.log("Google Login Failed");
