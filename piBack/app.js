@@ -26,7 +26,7 @@ require("dotenv").config({ path: "./config/.env" });
 require("./utils/passport"); // Local auth
 require("./utils/passport1") // Pass the app to githubAuth.js
 
-const videoRoutes = require("./routes/videoRoutes");
+const videoRoutes = require("./routes/VideoRoutes.js");
 
 const bodyParser = require("body-parser");
 const path = require("path");
@@ -40,9 +40,33 @@ const paymentRoutes = require('./routes/paymentRoutes'); // Add payment routes
 
 const app = express();
 const server = http.createServer(app);
+
+// Créer les dossiers nécessaires s'ils n'existent pas
+const uploadsDir = path.join(__dirname, 'uploads');
+const videosDir = path.join(uploadsDir, 'videos');
+const publicDir = path.join(__dirname, 'public');
+
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log('Dossier uploads créé avec succès');
+}
+if (!fs.existsSync(videosDir)) {
+  fs.mkdirSync(videosDir, { recursive: true });
+  console.log('Dossier uploads/videos créé avec succès');
+}
+if (!fs.existsSync(publicDir)) {
+  fs.mkdirSync(publicDir, { recursive: true });
+  console.log('Dossier public créé avec succès');
+}
+
+// Configuration CORS dynamique en fonction de l'environnement
+const corsOrigin = process.env.NODE_ENV === 'production'
+  ? process.env.CORS_ORIGIN || process.env.CLIENT_URL || 'https://campx-421bd90bea43.herokuapp.com'
+  : "http://localhost:3000";
+
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: corsOrigin, // Utiliser la même origine que pour l'application
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
     credentials: true,
     allowedHeaders: [
@@ -59,8 +83,11 @@ const io = new Server(server, {
 // Configuration de l'API Hugging Face
 const HUGGINGFACE_API_URL = "https://api-inference.huggingface.co/models";
 const MODEL_NAME = "mistralai/Mistral-7B-Instruct-v0.2";
+
+console.log(`CORS Origin configuré sur: ${corsOrigin}`);
+
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: corsOrigin,
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"],
   allowedHeaders: [
@@ -73,6 +100,9 @@ app.use(cors({
   ],
   exposedHeaders: ["Content-Range", "X-Content-Range"]
 }));
+
+// Activer les requêtes préflight pour toutes les routes
+app.options('*', cors());
 // Attacher io à l'application pour qu'il soit accessible dans les routes
 app.use(session({
   secret: process.env.SESSION_SECRET, // Vous pouvez mettre cette valeur dans votre fichier .env
@@ -87,16 +117,52 @@ app.use(passport.initialize());
 app.use(express.json()); // Activer le parsing JSON
 app.use(express.urlencoded({ extended: true }));
 
+// Middleware de journalisation pour déboguer les requêtes
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
 
+  // Journaliser les en-têtes de la requête
+  console.log('Headers:', JSON.stringify(req.headers));
+
+  // Journaliser le corps de la requête pour les méthodes POST, PUT, PATCH
+  if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+    console.log('Body:', JSON.stringify(req.body));
+  }
+
+  // Capturer la réponse
+  const originalSend = res.send;
+  res.send = function(body) {
+    console.log(`[${new Date().toISOString()}] Response status: ${res.statusCode}`);
+    return originalSend.call(this, body);
+  };
+
+  next();
+});
+
+
+// Servir les fichiers statiques du dossier uploads
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Servir les fichiers statiques du dossier public
+app.use("/public", express.static(path.join(__dirname, "public")));
 
 // Configuration pour servir les fichiers statiques avec CORS
 app.use('/uploads', (req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+  res.header('Access-Control-Allow-Origin', corsOrigin); // Utiliser la même origine que pour l'application
   res.header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Cache-Control, Content-Type');
+  res.header('Access-Control-Allow-Headers', 'Cache-Control, Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
   next();
 }, express.static(path.join(__dirname, 'uploads')));
+
+// Configuration CORS pour les fichiers statiques du dossier public
+app.use('/public', (req, res, next) => {
+  res.header('Access-Control-Allow-Origin', corsOrigin); // Utiliser la même origine que pour l'application
+  res.header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Cache-Control, Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  next();
+}, express.static(path.join(__dirname, 'public')));
 
 // Connexion MongoDB
 const startServer = async () => {
@@ -117,33 +183,61 @@ const startServer = async () => {
 
 startServer();
 
-// Routes d'authentification
-app.use("/api/videos", videoRoutes);
+// Configuration des routes de l'API
 app.use("/api/auth", authRoutes);
-app.use("/api/categories", categoryRoutes);
-app.use("/api/modules", moduleRoutes);
-app.use("/api/courses",cors({
-  origin: "http://localhost:3000",
+app.use("/api/videos", videoRoutes);
+
+// Configuration spéciale pour les routes de catégories avec CORS
+app.use("/api/categories", cors({
+  origin: corsOrigin,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin", "Cache-Control"],
+  credentials: true,
+}), categoryRoutes);
+app.options('/api/categories/:id', cors());
+
+// Configuration spéciale pour les routes de modules avec CORS
+app.use("/api/modules", cors({
+  origin: corsOrigin,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin", "Cache-Control"],
+  credentials: true,
+}), moduleRoutes);
+app.options('/api/modules/:id', cors());
+
+// Configuration spéciale pour les routes de quiz avec CORS
+app.use("/api/quizzes", cors({
+  origin: corsOrigin,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin", "Cache-Control"],
+  credentials: true,
+}), quizRoutes);
+app.options('/api/quizzes/:id', cors());
+
+app.use('/api/quiz', cors({
+  origin: corsOrigin,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin", "Cache-Control"],
+  credentials: true,
+}), quizRoutes);
+app.options('/api/quiz/:id', cors());
+app.use("/api", interestPointRoutes);
+app.use("/api/admin", adminRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/market-insights', marketInsightsRoutes);
+app.use('/api/questions', questionRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api', transcriptionRoutes);
+app.use('/api/certificates', certificateRoutes);
+
+// Configuration spéciale pour les routes de cours avec CORS
+app.use("/api/courses", cors({
+  origin: corsOrigin,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin", "Cache-Control"],
   credentials: true,
 }), courseRoutes);
 app.options('/api/courses/:id', cors());
-
-app.use("/api/quizzes", quizRoutes);
-app.use("/api/videos", videoRoutes);
-app.use("/api", interestPointRoutes);
-app.use("/api/admin", adminRoutes);
-app.use('/api/quiz', quizRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/modules', moduleRoutes);
-app.use('/api/courses', courseRoutes);
-app.use('/api/chat', chatRoutes); // Ajout des routes du chatbot
-app.use('/api/market-insights', marketInsightsRoutes);
-app.use('/api/questions', questionRoutes);
-app.use('/api/payments', paymentRoutes); // Mount payment routes
-app.use('/api', transcriptionRoutes); // Routes pour la transcription audio
-app.use('/api/certificates', certificateRoutes); // Routes pour les certificats
 
 
 // Socket.IO events
@@ -399,29 +493,26 @@ app.post('/api/generate-question', async (req, res) => {
       videoSubject = 'C++';
     }
 
-    // Analyser le contenu de la vidéo autour du timestamp
-    let videoAnalysis;
-    try {
-      videoAnalysis = await videoAnalysisService.analyzeVideoContent(videoUrl, timestamp);
-    } catch (error) {
-      console.error('Erreur lors de l\'analyse du contenu vidéo:', error);
-      // En cas d'erreur d'analyse, utiliser un contenu par défaut
-      videoAnalysis = {
-        content: "Contenu de la vidéo à analyser...",
-        difficulty: 'intermediate',
-        context: "Contexte de la section en cours"
-      };
-    }
+    // En mode production, retourner une question par défaut
+    const videoAnalysis = {
+      content: "Contenu de la vidéo à analyser...",
+      difficulty: 'intermediate',
+      context: "Contexte de la section en cours"
+    };
 
-    // Générer une question basée sur le contenu analysé
-    const question = await videoAnalysisService.createQuestionFromText(videoAnalysis.content);
-
-    if (!question) {
-      return res.status(500).json({
-        error: 'Impossible de générer une question valide',
-        details: 'Le contenu de la vidéo ne permet pas de générer une question pertinente'
-      });
-    }
+    // Créer une question par défaut
+    const question = {
+      question: "Quelle est la principale caractéristique de la programmation orientée objet?",
+      options: [
+        "L'encapsulation",
+        "La récursivité",
+        "La programmation fonctionnelle",
+        "La programmation procédurale"
+      ],
+      correctAnswer: 0,
+      type: "multiple-choice",
+      explanation: "L'encapsulation est l'une des caractéristiques fondamentales de la programmation orientée objet, permettant de regrouper les données et les méthodes qui les manipulent."
+    };
 
     // Ajouter des métadonnées à la question
     question.metadata = {
@@ -482,8 +573,37 @@ app.get('/test-video', (req, res) => {
 });
 
 
+// Route de santé pour vérifier si le serveur est en cours d'exécution
+app.get('/api/health', (req, res) => {
+  console.log('Requête reçue sur /api/health');
+  res.status(200).json({
+    status: 'ok',
+    message: 'Server is running',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// Route de santé sans préfixe /api pour les tests directs
+app.get('/health', (req, res) => {
+  console.log('Requête reçue sur /health');
+  res.status(200).json({
+    status: 'ok',
+    message: 'Server is running',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// Route pour servir la page de test de connectivité
+app.get('/test-connectivity', (req, res) => {
+  console.log('Requête reçue sur /test-connectivity');
+  res.sendFile(path.join(__dirname, 'public', 'test-connectivity.html'));
+});
+
 // Gestion des routes non définies
 app.all("*", (req, res) => {
   res.status(404).json({ message: "Route not found" });
 });
+
 
