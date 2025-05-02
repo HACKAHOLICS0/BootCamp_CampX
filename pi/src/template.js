@@ -387,6 +387,26 @@ const Template = () => {
                 </div>
               </section>
               {/*/ Courses*/}
+
+              {/* YouTube Recommendations */}
+              <section id="youtube-recommendations" className="section-padding">
+                <div className="container">
+                  <div className="row">
+                    <div className="header-section text-center">
+                      <h2>Vidéos recommandées pour vous</h2>
+                      <p>Découvrez des vidéos YouTube sélectionnées en fonction de vos centres d'intérêt</p>
+                      <hr className="bottom-line" />
+                    </div>
+                  </div>
+                  <div className="row">
+                    <div className="col-md-12">
+                      {/* Intégration du composant YoutubeRecommendations */}
+                      {React.createElement(require('./components/YoutubeRecommendations').default, { limit: 6 })}
+                    </div>
+                  </div>
+                </div>
+              </section>
+              {/* /YouTube Recommendations */}
               {/*Pricing*/}
               <section id="pricing" className="section-padding">
                 <div className="container">
@@ -481,8 +501,8 @@ const Template = () => {
               </section>
               {/*/ Contact*/}
             </div>
-       
-    
+
+
 
 
 

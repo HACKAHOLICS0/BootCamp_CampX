@@ -10,7 +10,8 @@ class GrimaceDetector {
     // Configuration par défaut
     this.config = {
       // Seuil pour considérer les yeux comme fermés (ratio hauteur/largeur)
-      eyeClosedThreshold: 0.3,
+      // Valeur plus basse pour tolérer les clignements naturels
+      eyeClosedThreshold: 0.2,
 
       // Seuil pour considérer la bouche comme trop ouverte (ratio hauteur/largeur)
       mouthOpenThreshold: 0.6,
@@ -23,14 +24,23 @@ class GrimaceDetector {
 
       // Poids des différentes composantes dans le calcul de l'attention
       weights: {
-        eyeOpenness: 0.6,    // Importance de l'ouverture des yeux
+        eyeOpenness: 0.4,    // Importance réduite de l'ouverture des yeux
         mouthNormal: 0.2,    // Importance de la position normale de la bouche
-        faceSymmetry: 0.2    // Importance de la symétrie du visage
+        faceSymmetry: 0.4    // Importance augmentée de la symétrie du visage (pour détecter si l'étudiant regarde ailleurs)
       },
+
+      // Nombre de détections consécutives nécessaires pour confirmer une inattention
+      // Cela évite les faux positifs dus aux clignements naturels
+      consecutiveDetectionsRequired: 3,
 
       // Activer les logs de débogage
       debug: true
     };
+
+    // Compteur pour les détections consécutives
+    this.consecutiveEyesClosedCount = 0;
+    this.consecutiveMouthOpenCount = 0;
+    this.consecutiveAsymmetryCount = 0;
 
     // Fusionner avec les options fournies
     this.config = { ...this.config, ...options };
@@ -206,15 +216,56 @@ class GrimaceDetector {
         (faceSymmetryScore * this.config.weights.faceSymmetry)
       );
 
-      // 5. Déterminer si l'utilisateur fait une grimace
-      const isGrimacing = eyesClosed || mouthOpen || (mouthAsymmetry > this.config.mouthAsymmetryThreshold);
+      // Mettre à jour les compteurs de détections consécutives
+      if (eyesClosed) {
+        this.consecutiveEyesClosedCount++;
+      } else {
+        this.consecutiveEyesClosedCount = 0;
+      }
+
+      if (mouthOpen) {
+        this.consecutiveMouthOpenCount++;
+      } else {
+        this.consecutiveMouthOpenCount = 0;
+      }
+
+      if (faceAsymmetry > this.config.mouthAsymmetryThreshold) {
+        this.consecutiveAsymmetryCount++;
+      } else {
+        this.consecutiveAsymmetryCount = 0;
+      }
+
+      // 5. Déterminer si l'utilisateur fait une grimace en tenant compte des détections consécutives
+      const persistentEyesClosed = this.consecutiveEyesClosedCount >= this.config.consecutiveDetectionsRequired;
+      const persistentMouthOpen = this.consecutiveMouthOpenCount >= this.config.consecutiveDetectionsRequired;
+      const persistentAsymmetry = this.consecutiveAsymmetryCount >= this.config.consecutiveDetectionsRequired;
+
+      // Vérifier si l'utilisateur regarde ailleurs (forte asymétrie du visage)
+      const lookingAway = faceAsymmetry > 0.4; // Seuil élevé pour détecter quand l'utilisateur regarde ailleurs
+
+      // Déterminer si l'utilisateur fait une grimace
+      const isGrimacing = persistentEyesClosed || persistentMouthOpen || persistentAsymmetry || lookingAway;
+
+      // Déterminer la raison spécifique de l'inattention
+      let inattentionReason = "";
+      if (lookingAway) {
+        inattentionReason = "Regard détourné de l'écran";
+      } else if (persistentEyesClosed) {
+        inattentionReason = "Yeux fermés trop longtemps";
+      } else if (persistentMouthOpen) {
+        inattentionReason = "Expression faciale inappropriée";
+      } else if (persistentAsymmetry) {
+        inattentionReason = "Grimace détectée";
+      }
 
       // Préparer les résultats détaillés
       const results = {
         isGrimacing,
         attentionScore,
-        eyesClosed,
-        mouthOpen,
+        eyesClosed: persistentEyesClosed,
+        mouthOpen: persistentMouthOpen,
+        lookingAway,
+        inattentionReason,
         details: {
           eyeOpenPercentage,
           eyeRatio,
@@ -223,7 +274,10 @@ class GrimaceDetector {
           mouthRatio,
           mouthAsymmetry,
           faceAsymmetry,
-          faceSymmetryScore
+          faceSymmetryScore,
+          consecutiveEyesClosed: this.consecutiveEyesClosedCount,
+          consecutiveMouthOpen: this.consecutiveMouthOpenCount,
+          consecutiveAsymmetry: this.consecutiveAsymmetryCount
         }
       };
 
@@ -233,9 +287,11 @@ class GrimaceDetector {
       if (this.config.debug) {
         console.log("🔍 Analyse des grimaces:",
           `Attention: ${attentionScore}%`,
-          `Yeux fermés: ${eyesClosed}`,
-          `Bouche ouverte: ${mouthOpen}`,
-          `Grimace: ${isGrimacing}`
+          `Yeux fermés persistants: ${persistentEyesClosed} (${this.consecutiveEyesClosedCount}/${this.config.consecutiveDetectionsRequired})`,
+          `Bouche ouverte persistante: ${persistentMouthOpen} (${this.consecutiveMouthOpenCount}/${this.config.consecutiveDetectionsRequired})`,
+          `Regard détourné: ${lookingAway}`,
+          `Grimace: ${isGrimacing}`,
+          `Raison: ${inattentionReason || "Aucune"}`
         );
       }
 

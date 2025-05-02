@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Form, Button, Spinner, Alert, Card } from 'react-bootstrap';
-import RecommendedVideos from './RecommendedVideos';
+import YouTubeRecommendedVideos from './YouTubeRecommendedVideos';
 import { FaSearch, FaVideo, FaYoutube, FaGraduationCap, FaLaptopCode, FaChalkboardTeacher } from 'react-icons/fa';
 import { SiCoursera, SiUdemy, SiKhanacademy } from 'react-icons/si';
 
 const MarketVideosPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [category, setCategory] = useState('javascript');
+  const [category, setCategory] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('all');
@@ -172,8 +172,14 @@ const MarketVideosPage = () => {
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h2 className="mb-0">Vidéos recommandées</h2>
           <div className="d-flex align-items-center">
-            <span className="me-2">Catégorie:</span>
-            <span className="badge bg-primary text-capitalize">{category}</span>
+            {category ? (
+              <>
+                <span className="me-2">Catégorie:</span>
+                <span className="badge bg-primary text-capitalize">{category}</span>
+              </>
+            ) : (
+              <span className="badge bg-success">Basées sur vos points d'intérêt</span>
+            )}
           </div>
         </div>
 
@@ -187,7 +193,7 @@ const MarketVideosPage = () => {
           <Alert variant="danger">{error}</Alert>
         ) : (
           <div className="market-videos-container">
-            <RecommendedVideos category={category} limit={12} />
+            <YouTubeRecommendedVideos category={category} limit={12} />
           </div>
         )}
       </div>

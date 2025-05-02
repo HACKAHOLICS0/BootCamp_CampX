@@ -1,0 +1,161 @@
+Arguments: ['C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\scripts\\face_validator_cli.py', 'C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\uploads\\1746203620617-t__l__chargement.jpg']
+Répertoire courant: C:\Users\admin\Desktop\pifull - Copie (2)\piBack
+Chemin de l'image: C:\Users\admin\Desktop\pifull - Copie (2)\piBack\uploads\1746203620617-t__l__chargement.jpg
+Taille du fichier: 5790 octets
+Le fichier est accessible en lecture: True
+Envoi de la réponse JSON: {"isValid": true, "message": "Image valid\u00e9e avec succ\u00e8s"}
+Arguments: ['C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\scripts\\face_validator_cli.py', 'C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\uploads\\1746203632900-Capture_d___cran_2025_04_03_132215.png']
+Répertoire courant: C:\Users\admin\Desktop\pifull - Copie (2)\piBack
+Chemin de l'image: C:\Users\admin\Desktop\pifull - Copie (2)\piBack\uploads\1746203632900-Capture_d___cran_2025_04_03_132215.png
+Taille du fichier: 190798 octets
+Le fichier est accessible en lecture: True
+Envoi de la réponse JSON: {"isValid": false, "message": "Aucun visage d\u00e9tect\u00e9. Veuillez t\u00e9l\u00e9charger une image contenant clairement votre visage."}
+Arguments: ['C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\scripts\\face_validator_cli.py', 'C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\uploads\\1746203640773-t__l__chargement.jpg']
+Répertoire courant: C:\Users\admin\Desktop\pifull - Copie (2)\piBack
+Chemin de l'image: C:\Users\admin\Desktop\pifull - Copie (2)\piBack\uploads\1746203640773-t__l__chargement.jpg
+Taille du fichier: 5790 octets
+Le fichier est accessible en lecture: True
+Envoi de la réponse JSON: {"isValid": true, "message": "Image valid\u00e9e avec succ\u00e8s"}
+Arguments: ['C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\scripts\\face_validator_cli.py', 'C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\uploads\\1746203686346-Capture_d___cran_2025_04_03_132215.png']
+Répertoire courant: C:\Users\admin\Desktop\pifull - Copie (2)\piBack
+Chemin de l'image: C:\Users\admin\Desktop\pifull - Copie (2)\piBack\uploads\1746203686346-Capture_d___cran_2025_04_03_132215.png
+Taille du fichier: 190798 octets
+Le fichier est accessible en lecture: True
+Envoi de la réponse JSON: {"isValid": false, "message": "Aucun visage d\u00e9tect\u00e9. Veuillez t\u00e9l\u00e9charger une image contenant clairement votre visage."}
+Arguments: ['C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\scripts\\face_validator_cli.py', 'C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\uploads\\1746203694223-t__l__chargement.jpg']
+Répertoire courant: C:\Users\admin\Desktop\pifull - Copie (2)\piBack
+Chemin de l'image: C:\Users\admin\Desktop\pifull - Copie (2)\piBack\uploads\1746203694223-t__l__chargement.jpg
+Taille du fichier: 5790 octets
+Le fichier est accessible en lecture: True
+Envoi de la réponse JSON: {"isValid": true, "message": "Image valid\u00e9e avec succ\u00e8s"}
+Arguments: ['C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\scripts\\face_validator_cli.py', 'C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\uploads\\1746203981782-t__l__chargement.jpg']
+Répertoire courant: C:\Users\admin\Desktop\pifull - Copie (2)\piBack
+Chemin de l'image: C:\Users\admin\Desktop\pifull - Copie (2)\piBack\uploads\1746203981782-t__l__chargement.jpg
+Taille du fichier: 5790 octets
+Le fichier est accessible en lecture: True
+Envoi de la réponse JSON: {"isValid": true, "message": "Image valid\u00e9e avec succ\u00e8s"}
+Arguments: ['C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\scripts\\face_validator_cli.py', 'C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\uploads\\1746204177127-t__l__chargement.jpg']
+Répertoire courant: C:\Users\admin\Desktop\pifull - Copie (2)\piBack
+Chemin de l'image: C:\Users\admin\Desktop\pifull - Copie (2)\piBack\uploads\1746204177127-t__l__chargement.jpg
+Taille du fichier: 5790 octets
+Le fichier est accessible en lecture: True
+Tentative de lecture de l'image: C:\Users\admin\Desktop\pifull - Copie (2)\piBack\uploads\1746204177127-t__l__chargement.jpg
+Taille du fichier: 5790 octets
+Image lue avec PIL: (200, 251)
+Dimensions de l'image: (251, 200, 3)
+Tentative avec params {'scaleFactor': 1.1, 'minNeighbors': 5, 'minSize': (30, 30)}: 1 visages détectés
+Envoi de la réponse JSON: {"isValid": true, "message": "Image valid\u00e9e avec succ\u00e8s"}
+Arguments: ['C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\scripts\\face_validator_cli.py', 'C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\uploads\\1746204183833-Capture_d___cran_2025_04_03_132215.png']
+Répertoire courant: C:\Users\admin\Desktop\pifull - Copie (2)\piBack
+Chemin de l'image: C:\Users\admin\Desktop\pifull - Copie (2)\piBack\uploads\1746204183833-Capture_d___cran_2025_04_03_132215.png
+Taille du fichier: 190798 octets
+Le fichier est accessible en lecture: True
+Tentative de lecture de l'image: C:\Users\admin\Desktop\pifull - Copie (2)\piBack\uploads\1746204183833-Capture_d___cran_2025_04_03_132215.png
+Taille du fichier: 190798 octets
+Image lue avec PIL: (1908, 1074)
+Dimensions de l'image: (1074, 1908, 3)
+Tentative avec params {'scaleFactor': 1.1, 'minNeighbors': 5, 'minSize': (30, 30)}: 0 visages détectés
+Tentative avec params {'scaleFactor': 1.2, 'minNeighbors': 3, 'minSize': (20, 20)}: 0 visages détectés
+Tentative avec params {'scaleFactor': 1.3, 'minNeighbors': 2, 'minSize': (10, 10)}: 0 visages détectés
+Envoi de la réponse JSON: {"isValid": false, "message": "Aucun visage d\u00e9tect\u00e9. Veuillez t\u00e9l\u00e9charger une image contenant clairement votre visage."}
+Arguments: ['C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\scripts\\face_validator_cli.py', 'C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\uploads\\1746204196438-Capture_d___cran_2025_05_01_145449.png']
+Répertoire courant: C:\Users\admin\Desktop\pifull - Copie (2)\piBack
+Chemin de l'image: C:\Users\admin\Desktop\pifull - Copie (2)\piBack\uploads\1746204196438-Capture_d___cran_2025_05_01_145449.png
+Taille du fichier: 71387 octets
+Le fichier est accessible en lecture: True
+Tentative de lecture de l'image: C:\Users\admin\Desktop\pifull - Copie (2)\piBack\uploads\1746204196438-Capture_d___cran_2025_05_01_145449.png
+Taille du fichier: 71387 octets
+Image lue avec PIL: (265, 268)
+Dimensions de l'image: (268, 265, 3)
+Tentative avec params {'scaleFactor': 1.1, 'minNeighbors': 5, 'minSize': (30, 30)}: 1 visages détectés
+Envoi de la réponse JSON: {"isValid": true, "message": "Image valid\u00e9e avec succ\u00e8s"}
+Arguments: ['C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\scripts\\face_validator_cli.py', 'C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\uploads\\1746204258312-Capture_d___cran_2025_05_01_145449.png']
+Répertoire courant: C:\Users\admin\Desktop\pifull - Copie (2)\piBack
+Chemin de l'image: C:\Users\admin\Desktop\pifull - Copie (2)\piBack\uploads\1746204258312-Capture_d___cran_2025_05_01_145449.png
+Taille du fichier: 71387 octets
+Le fichier est accessible en lecture: True
+Tentative de lecture de l'image: C:\Users\admin\Desktop\pifull - Copie (2)\piBack\uploads\1746204258312-Capture_d___cran_2025_05_01_145449.png
+Taille du fichier: 71387 octets
+Image lue avec PIL: (265, 268)
+Dimensions de l'image: (268, 265, 3)
+Tentative avec params {'scaleFactor': 1.1, 'minNeighbors': 5, 'minSize': (30, 30)}: 1 visages détectés
+Envoi de la réponse JSON: {"isValid": true, "message": "Image valid\u00e9e avec succ\u00e8s"}
+Arguments: ['C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\scripts\\face_validator_cli.py', 'C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\uploads\\1746204274458-Capture_d___cran_2025_04_03_161717.png']
+Répertoire courant: C:\Users\admin\Desktop\pifull - Copie (2)\piBack
+Chemin de l'image: C:\Users\admin\Desktop\pifull - Copie (2)\piBack\uploads\1746204274458-Capture_d___cran_2025_04_03_161717.png
+Taille du fichier: 317839 octets
+Le fichier est accessible en lecture: True
+Tentative de lecture de l'image: C:\Users\admin\Desktop\pifull - Copie (2)\piBack\uploads\1746204274458-Capture_d___cran_2025_04_03_161717.png
+Taille du fichier: 317839 octets
+Image lue avec PIL: (1918, 1079)
+Dimensions de l'image: (1079, 1918, 3)
+Tentative avec params {'scaleFactor': 1.1, 'minNeighbors': 5, 'minSize': (30, 30)}: 0 visages détectés
+Tentative avec params {'scaleFactor': 1.2, 'minNeighbors': 3, 'minSize': (20, 20)}: 0 visages détectés
+Tentative avec params {'scaleFactor': 1.3, 'minNeighbors': 2, 'minSize': (10, 10)}: 0 visages détectés
+Envoi de la réponse JSON: {"isValid": false, "message": "Aucun visage d\u00e9tect\u00e9. Veuillez t\u00e9l\u00e9charger une image contenant clairement votre visage."}
+Arguments: ['C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\scripts\\face_validator_cli.py', 'C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\uploads\\1746204285907-Capture_d___cran_2025_05_01_145637.png']
+Répertoire courant: C:\Users\admin\Desktop\pifull - Copie (2)\piBack
+Chemin de l'image: C:\Users\admin\Desktop\pifull - Copie (2)\piBack\uploads\1746204285907-Capture_d___cran_2025_05_01_145637.png
+Taille du fichier: 302433 octets
+Le fichier est accessible en lecture: True
+Tentative de lecture de l'image: C:\Users\admin\Desktop\pifull - Copie (2)\piBack\uploads\1746204285907-Capture_d___cran_2025_05_01_145637.png
+Taille du fichier: 302433 octets
+Image lue avec PIL: (399, 520)
+Dimensions de l'image: (520, 399, 3)
+Tentative avec params {'scaleFactor': 1.1, 'minNeighbors': 5, 'minSize': (30, 30)}: 1 visages détectés
+Envoi de la réponse JSON: {"isValid": true, "message": "Image valid\u00e9e avec succ\u00e8s"}
+Arguments: ['C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\scripts\\face_validator_cli.py', 'C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\uploads\\1746204358287-Capture_d___cran_2025_05_01_145637.png']
+Répertoire courant: C:\Users\admin\Desktop\pifull - Copie (2)\piBack
+Chemin de l'image: C:\Users\admin\Desktop\pifull - Copie (2)\piBack\uploads\1746204358287-Capture_d___cran_2025_05_01_145637.png
+Taille du fichier: 302433 octets
+Le fichier est accessible en lecture: True
+Tentative de lecture de l'image: C:\Users\admin\Desktop\pifull - Copie (2)\piBack\uploads\1746204358287-Capture_d___cran_2025_05_01_145637.png
+Taille du fichier: 302433 octets
+Image lue avec PIL: (399, 520)
+Dimensions de l'image: (520, 399, 3)
+Tentative avec params {'scaleFactor': 1.1, 'minNeighbors': 5, 'minSize': (30, 30)}: 1 visages détectés
+Envoi de la réponse JSON: {"isValid": true, "message": "Image valid\u00e9e avec succ\u00e8s"}
+Arguments: ['C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\scripts\\face_validator_cli.py', 'C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\uploads\\1746204697632-Capture_d___cran_2025_05_01_145637.png']
+Répertoire courant: C:\Users\admin\Desktop\pifull - Copie (2)\piBack
+Chemin de l'image: C:\Users\admin\Desktop\pifull - Copie (2)\piBack\uploads\1746204697632-Capture_d___cran_2025_05_01_145637.png
+Taille du fichier: 302433 octets
+Le fichier est accessible en lecture: True
+Tentative de lecture de l'image: C:\Users\admin\Desktop\pifull - Copie (2)\piBack\uploads\1746204697632-Capture_d___cran_2025_05_01_145637.png
+Taille du fichier: 302433 octets
+Image lue avec PIL: (399, 520)
+Dimensions de l'image: (520, 399, 3)
+Tentative avec params {'scaleFactor': 1.1, 'minNeighbors': 5, 'minSize': (30, 30)}: 1 visages détectés
+Envoi de la réponse JSON: {"isValid": true, "message": "Image valid\u00e9e avec succ\u00e8s"}
+Arguments: ['C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\scripts\\face_validator_cli.py', 'C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\uploads\\1746204728250-Capture_d___cran_2025_05_01_145637.png']
+Répertoire courant: C:\Users\admin\Desktop\pifull - Copie (2)\piBack
+Chemin de l'image: C:\Users\admin\Desktop\pifull - Copie (2)\piBack\uploads\1746204728250-Capture_d___cran_2025_05_01_145637.png
+Taille du fichier: 302433 octets
+Le fichier est accessible en lecture: True
+Tentative de lecture de l'image: C:\Users\admin\Desktop\pifull - Copie (2)\piBack\uploads\1746204728250-Capture_d___cran_2025_05_01_145637.png
+Taille du fichier: 302433 octets
+Image lue avec PIL: (399, 520)
+Dimensions de l'image: (520, 399, 3)
+Tentative avec params {'scaleFactor': 1.1, 'minNeighbors': 5, 'minSize': (30, 30)}: 1 visages détectés
+Envoi de la réponse JSON: {"isValid": true, "message": "Image valid\u00e9e avec succ\u00e8s"}
+Arguments: ['C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\scripts\\face_validator_cli.py', 'C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\uploads\\1746205427481-Capture_d___cran_2025_05_01_145637.png']
+Répertoire courant: C:\Users\admin\Desktop\pifull - Copie (2)\piBack
+Chemin de l'image: C:\Users\admin\Desktop\pifull - Copie (2)\piBack\uploads\1746205427481-Capture_d___cran_2025_05_01_145637.png
+Taille du fichier: 302433 octets
+Le fichier est accessible en lecture: True
+Tentative de lecture de l'image: C:\Users\admin\Desktop\pifull - Copie (2)\piBack\uploads\1746205427481-Capture_d___cran_2025_05_01_145637.png
+Taille du fichier: 302433 octets
+Image lue avec PIL: (399, 520)
+Dimensions de l'image: (520, 399, 3)
+Tentative avec params {'scaleFactor': 1.1, 'minNeighbors': 5, 'minSize': (30, 30)}: 1 visages détectés
+Envoi de la réponse JSON: {"isValid": true, "message": "Image valid\u00e9e avec succ\u00e8s"}
+Arguments: ['C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\scripts\\face_validator_cli.py', 'C:\\Users\\admin\\Desktop\\pifull - Copie (2)\\piBack\\uploads\\1746205431297-Capture_d___cran_2025_05_01_145637.png']
+Répertoire courant: C:\Users\admin\Desktop\pifull - Copie (2)\piBack
+Chemin de l'image: C:\Users\admin\Desktop\pifull - Copie (2)\piBack\uploads\1746205431297-Capture_d___cran_2025_05_01_145637.png
+Taille du fichier: 302433 octets
+Le fichier est accessible en lecture: True
+Tentative de lecture de l'image: C:\Users\admin\Desktop\pifull - Copie (2)\piBack\uploads\1746205431297-Capture_d___cran_2025_05_01_145637.png
+Taille du fichier: 302433 octets
+Image lue avec PIL: (399, 520)
+Dimensions de l'image: (520, 399, 3)
+Tentative avec params {'scaleFactor': 1.1, 'minNeighbors': 5, 'minSize': (30, 30)}: 1 visages détectés
+Envoi de la réponse JSON: {"isValid": true, "message": "Image valid\u00e9e avec succ\u00e8s"}

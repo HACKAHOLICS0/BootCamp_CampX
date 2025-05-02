@@ -114,36 +114,113 @@ export default function Signup() {
     };
 
     const addUser = async () => {
+        setIsSubmitting(true);
         try {
             // Vérifie si l'email existe déjà
-            const emailCheckResponse = await fetch(`http://localhost:5000/api/auth/check/${formData.email}`);
-            const emailExists = await emailCheckResponse.json();
-    
-            if (emailExists.exists) {
-                setErrorDisplay("Email already exists");
+            try {
+                const emailCheckResponse = await fetch(`http://localhost:5000/api/auth/check/${formData.email}`);
+                if (!emailCheckResponse.ok) {
+                    throw new Error("Erreur lors de la vérification de l'email");
+                }
+                const emailExists = await emailCheckResponse.json();
+
+                if (emailExists.exists) {
+                    setErrorDisplay("Cet email est déjà utilisé");
+                    toast.error("Cet email est déjà utilisé", {
+                        position: "top-right",
+                        autoClose: 5000
+                    });
+                    return;
+                }
+            } catch (emailCheckError) {
+                console.error("Erreur lors de la vérification de l'email:", emailCheckError);
+                toast.error("Erreur lors de la vérification de l'email. Veuillez réessayer.", {
+                    position: "top-right",
+                    autoClose: 5000
+                });
+                throw emailCheckError;
+            }
+
+            // Vérifier que l'image est valide
+            if (!isImageValid) {
+                setErrorDisplay("Veuillez télécharger et valider une photo de profil");
+                toast.error("Veuillez télécharger et valider une photo de profil", {
+                    position: "top-right",
+                    autoClose: 5000
+                });
                 return;
             }
-    
+
+            // Préparer les données à envoyer
             const formDataToSend = new FormData();
             for (const key in formData) {
-                formDataToSend.append(key, formData[key]);
+                if (key !== 'confirmp') { // Ne pas envoyer la confirmation du mot de passe
+                    formDataToSend.append(key, formData[key]);
+                }
             }
-    
-            const signupResponse = await fetch("http://localhost:5000/api/auth/signup", {
-                method: "POST",
-                body: formDataToSend, // Utilisez FormData ici
-            });
-    
-            if (!signupResponse.ok) {
-                const errorData = await signupResponse.json();
-                throw new Error(errorData.message || "Failed to sign up");
+
+            try {
+                toast.info("Inscription en cours...", {
+                    position: "top-right",
+                    autoClose: 3000
+                });
+
+                const signupResponse = await fetch("http://localhost:5000/api/auth/signup", {
+                    method: "POST",
+                    body: formDataToSend,
+                });
+
+                // Récupérer d'abord les données de la réponse
+                const responseText = await signupResponse.text();
+                let responseData;
+
+                try {
+                    // Essayer de parser le JSON
+                    responseData = JSON.parse(responseText);
+                } catch (jsonError) {
+                    console.error("Erreur lors du parsing JSON:", jsonError, "Texte reçu:", responseText);
+                    throw new Error("Réponse invalide du serveur. Veuillez réessayer.");
+                }
+
+                // Vérifier si la réponse est un succès
+                if (!signupResponse.ok) {
+                    throw new Error(responseData.error || responseData.message || "Échec de l'inscription");
+                }
+
+                // Afficher le message de succès
+                const successMessage = responseData.message || "Inscription réussie ! Veuillez vérifier votre email.";
+                console.log("Inscription réussie:", successMessage);
+
+                // Afficher le message de succès
+                toast.success(successMessage, {
+                    position: "top-right",
+                    autoClose: 5000,
+                    onClose: () => {
+                        // Redirection vers la page de connexion après la fermeture du toast
+                        history("/signin");
+                    }
+                });
+
+                // Redirection vers la page de connexion après un délai
+                setTimeout(() => {
+                    history("/signin");
+                }, 3000);
+            } catch (signupError) {
+                console.error("Erreur lors de l'inscription:", signupError);
+                const errorMessage = signupError.message || "Une erreur est survenue lors de l'inscription";
+                setErrorDisplay(errorMessage);
+                toast.error(errorMessage, {
+                    position: "top-right",
+                    autoClose: 5000
+                });
+                throw signupError;
             }
-    
-            history("/signin");
-    
         } catch (err) {
-            console.error("Error during signup:", err);
-            setErrorDisplay(err.message || "An error occurred. Please try again.");
+            console.error("Erreur générale lors de l'inscription:", err);
+            const errorMessage = err.message || "Une erreur inattendue est survenue. Veuillez réessayer.";
+            setErrorDisplay(errorMessage);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -153,31 +230,14 @@ export default function Signup() {
         formData.append('image', file);
 
         try {
-            const response = await axios.post('http://localhost:5000/api/auth/validate-image', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
-            
-            if (response.data.isValid) {
-                setIsImageValid(true);
-                toast.success('Image valide !', {
-                    position: "top-right",
-                    autoClose: false, // Le toast ne disparaît pas automatiquement
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    style: {
-                        backgroundColor: '#4CAF50',
-                        color: 'white'
-                    }
-                });
-            } else {
+            console.log("Validation d'image en cours...", file.name, file.size, file.type);
+
+            // Vérifier si le fichier est une image
+            if (!file.type.startsWith('image/')) {
                 setIsImageValid(false);
-                toast.error('Image invalide. Veuillez télécharger une image contenant votre visage.', {
+                toast.error('Le fichier doit être une image (jpg, png, etc.)', {
                     position: "top-right",
-                    autoClose: false, // Le toast ne disparaît pas automatiquement
+                    autoClose: 5000,
                     hideProgressBar: false,
                     closeOnClick: true,
                     pauseOnHover: true,
@@ -187,13 +247,116 @@ export default function Signup() {
                         color: 'white'
                     }
                 });
+                return { isValid: false, message: 'Le fichier doit être une image' };
             }
-            return response.data;
+
+            // Vérifier la taille de l'image (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                setIsImageValid(false);
+                toast.error('L\'image est trop grande (max 5MB)', {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    style: {
+                        backgroundColor: '#f44336',
+                        color: 'white'
+                    }
+                });
+                return { isValid: false, message: 'L\'image est trop grande' };
+            }
+
+            try {
+                const response = await axios.post('http://localhost:5000/api/auth/validate-image', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    },
+                    timeout: 30000 // 30 secondes de timeout
+                });
+
+                console.log("Réponse de validation:", response.data);
+
+                if (response.data && response.data.isValid) {
+                    setIsImageValid(true);
+                    toast.success('Image valide !', {
+                        position: "top-right",
+                        autoClose: 3000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        style: {
+                            backgroundColor: '#4CAF50',
+                            color: 'white'
+                        }
+                    });
+                    return response.data;
+                } else {
+                    const message = response.data?.message || 'Image invalide pour une raison inconnue';
+                    setIsImageValid(false);
+                    toast.error(`Image invalide: ${message}`, {
+                        position: "top-right",
+                        autoClose: 5000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        style: {
+                            backgroundColor: '#f44336',
+                            color: 'white'
+                        }
+                    });
+                    return { isValid: false, message };
+                }
+            } catch (axiosError) {
+                console.error("Erreur axios lors de la validation:", axiosError);
+
+                // Gérer les différents types d'erreurs Axios
+                if (axiosError.response) {
+                    // Le serveur a répondu avec un code d'erreur
+                    console.error("Erreur de réponse:", axiosError.response.data);
+                    const message = axiosError.response.data?.message || axiosError.response.data?.error || 'Erreur de validation côté serveur';
+                    toast.error(message, {
+                        position: "top-right",
+                        autoClose: 5000
+                    });
+                    return { isValid: false, message };
+                } else if (axiosError.request) {
+                    // La requête a été faite mais pas de réponse
+                    console.error("Pas de réponse du serveur:", axiosError.request);
+                    toast.error('Le serveur ne répond pas. Veuillez réessayer plus tard.', {
+                        position: "top-right",
+                        autoClose: 5000
+                    });
+                    return { isValid: false, message: 'Le serveur ne répond pas' };
+                } else if (axiosError.code === 'ECONNABORTED') {
+                    // Timeout
+                    toast.error('La validation prend trop de temps. Veuillez réessayer.', {
+                        position: "top-right",
+                        autoClose: 5000
+                    });
+                    return { isValid: false, message: 'Timeout lors de la validation' };
+                } else {
+                    // Erreur lors de la configuration de la requête
+                    console.error("Erreur de configuration:", axiosError.message);
+                    toast.error('Erreur lors de la validation. Veuillez réessayer.', {
+                        position: "top-right",
+                        autoClose: 5000
+                    });
+                    return { isValid: false, message: axiosError.message };
+                }
+            }
         } catch (error) {
+            console.error("Erreur générale de validation d'image:", error);
             setIsImageValid(false);
-            toast.error('Erreur lors de la validation de l\'image', {
+
+            // Message d'erreur plus détaillé
+            const errorMessage = 'Erreur inattendue lors de la validation de l\'image';
+            toast.error(errorMessage, {
                 position: "top-right",
-                autoClose: false, // Le toast ne disparaît pas automatiquement
+                autoClose: 5000,
                 hideProgressBar: false,
                 closeOnClick: true,
                 pauseOnHover: true,
@@ -203,7 +366,7 @@ export default function Signup() {
                     color: 'white'
                 }
             });
-            return { isValid: false, message: error.response?.data?.error || 'Erreur lors de la validation de l\'image' };
+            return { isValid: false, message: errorMessage };
         } finally {
             setIsValidating(false);
         }
@@ -220,7 +383,7 @@ export default function Signup() {
             reader.readAsDataURL(file);
 
             // Valider l'image
-            const validation = await validateImage(file);
+            await validateImage(file);
             setFormData(prev => ({ ...prev, image: file }));
         }
     };
@@ -343,16 +506,16 @@ export default function Signup() {
                     />
                     {imagePreview && (
                         <div className="image-preview mt-3">
-                            <img 
-                                src={imagePreview} 
-                                alt="Preview" 
-                                style={{ 
-                                    maxWidth: '200px', 
+                            <img
+                                src={imagePreview}
+                                alt="Preview"
+                                style={{
+                                    maxWidth: '200px',
                                     maxHeight: '200px',
                                     objectFit: 'cover',
                                     borderRadius: '8px',
                                     border: '2px solid #ddd'
-                                }} 
+                                }}
                             />
                         </div>
                     )}

@@ -13,12 +13,14 @@ import {
   Rating,
   CircularProgress,
   Alert,
-  IconButton
+  IconButton,
+  Divider
 } from '@mui/material';
 import { Link } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import YouTubeIcon from '@mui/icons-material/YouTube';
 
 const RecommendedVideos = ({ category, limit = 6 }) => {
   const [videos, setVideos] = useState([]);
@@ -44,51 +46,54 @@ const RecommendedVideos = ({ category, limit = 6 }) => {
     const fetchRecommendedVideos = async () => {
       try {
         setLoading(true);
+        setError(null);
 
-        // Si une catégorie est spécifiée, l'utiliser comme terme de recherche
-        const searchTerm = category || 'programming';
+        // Créer une instance axios avec le token d'authentification
+        const axiosInstance = axios.create({
+          baseURL: 'http://localhost:5000/api',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${Cookies.get('token')}`
+          }
+        });
 
-        // Récupérer les dernières données de Market Insights pour cette catégorie
-        const response = await axiosInstance.get(`/market-insights/search/${encodeURIComponent(searchTerm)}`);
+        let response;
+
+        // Si une catégorie est spécifiée, récupérer les vidéos YouTube pour cette catégorie
+        if (category) {
+          response = await axiosInstance.get(`/youtube/category/${encodeURIComponent(category)}?limit=${limit}`);
+        } else {
+          // Sinon, récupérer les recommandations basées sur les points d'intérêt de l'utilisateur
+          response = await axiosInstance.get(`/youtube/recommendations?limit=${limit}`);
+        }
 
         if (response.data.success) {
-          // Extraire les cours des résultats
-          const marketCourses = response.data.data.courses || [];
+          // Utiliser directement les vidéos YouTube retournées par l'API
+          const youtubeVideos = response.data.videos || [];
 
-          // Transformer les cours en vidéos (en extrayant les URL de vidéos)
-          const extractedVideos = [];
+          // Transformer les vidéos pour l'affichage
+          const formattedVideos = youtubeVideos.map(video => ({
+            title: video.title,
+            platform: 'YouTube',
+            thumbnailUrl: video.thumbnail,
+            videoUrl: video.videoUrl,
+            isDirectVideo: true,
+            channel: video.channel,
+            duration: video.duration,
+            level: 'Tous niveaux'
+          }));
 
-          // Pour chaque cours, créer une entrée de vidéo
-          marketCourses.forEach(course => {
-            // Vérifier si l'URL contient "lecture" (comme dans l'exemple Coursera)
-            const isVideoLecture = course.url && (course.url.includes('lecture') || course.url.includes('video') || course.url.includes('watch'));
+          setVideos(formattedVideos);
 
-            // Créer un objet vidéo
-            const videoObj = {
-              title: course.title,
-              platform: course.platform,
-              thumbnailUrl: getDefaultImageForPlatform(course.platform),
-              videoUrl: course.url,
-              isDirectVideo: isVideoLecture,
-              price: formatPrice(course.price),
-              rating: course.rating,
-              instructor: course.instructor || 'Instructeur non spécifié',
-              duration: course.duration || '10-15 min',
-              level: course.level || 'Tous niveaux'
-            };
-
-            extractedVideos.push(videoObj);
-          });
-
-          // Limiter le nombre de vidéos à afficher
-          const limitedVideos = extractedVideos.slice(0, limit);
-
-          setVideos(limitedVideos);
+          // Afficher les points d'intérêt utilisés pour les recommandations (si disponibles)
+          if (response.data.interestPoints && response.data.interestPoints.length > 0) {
+            console.log('Recommandations basées sur vos points d\'intérêt:', response.data.interestPoints.join(', '));
+          }
         } else {
-          setError('Impossible de récupérer les vidéos recommandées');
+          setError('Aucune vidéo YouTube trouvée');
         }
       } catch (error) {
-        console.error('Erreur lors de la récupération des vidéos recommandées:', error);
+        console.error('Erreur lors de la récupération des vidéos YouTube recommandées:', error);
         setError('Erreur lors de la récupération des vidéos recommandées');
       } finally {
         setLoading(false);

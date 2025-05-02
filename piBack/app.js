@@ -19,6 +19,8 @@ const ChatRoom = require("./Model/ChatRoom");
 const marketInsightsRoutes = require('./routes/marketInsights');
 const transcriptionRoutes = require('./routes/transcriptionRoutes');
 const connectDB = require("./config/dbConfig");
+const eventRoutes = require('./routes/eventRoutes');
+const youtubeRecommendationRoutes = require('./routes/youtubeRecommendationRoutes');
 
 require("dotenv").config({ path: "./config/.env" });
 
@@ -142,7 +144,18 @@ app.use('/api/market-insights', marketInsightsRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/payments', paymentRoutes); // Mount payment routes
 app.use('/api', transcriptionRoutes); // Routes pour la transcription audio
+app.use('/api/events', eventRoutes);
 
+// Routes pour le moteur de recommandation
+const recommendationRoutes = require('./routes/recommendationRoutes');
+app.use('/api/recommendations', recommendationRoutes);
+
+// Routes pour les recommandations YouTube
+app.use('/api/youtube', youtubeRecommendationRoutes);
+
+// Routes pour le proxy vidéo
+const videoProxyRoutes = require('./routes/videoProxy');
+app.use('/api/video-proxy', videoProxyRoutes);
 
 // Socket.IO events
 io.on('connection', (socket) => {

@@ -18,7 +18,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
-import RecommendedVideos from '../courses/RecommendedVideos';
+import YouTubeRecommendedVideos from '../courses/YouTubeRecommendedVideos';
 import VideoUnavailable from './VideoUnavailable';
 import axios from 'axios';
 import Cookies from 'js-cookie';
@@ -414,7 +414,7 @@ const ExternalVideoPlayer = () => {
             <Typography variant="h5" gutterBottom>
               Vidéos similaires
             </Typography>
-            <RecommendedVideos category={videoInfo.category} limit={3} />
+            <YouTubeRecommendedVideos category={videoInfo.category} limit={3} />
           </Box>
         </Box>
       )}
