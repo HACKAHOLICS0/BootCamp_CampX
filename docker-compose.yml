@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  campx-app:
+    build:
+      context: .
+      dockerfile: pi/Dockerfile
+    container_name: campx-app
+    # Utiliser des ports spécifiques
+    ports:
+      - "5000:5000"  # Port du backend
+      - "3000:3000"  # Port du frontend
+    # Utiliser le réseau par défaut pour une meilleure communication entre les services
+    networks:
+      - campx-network
+    environment:
+      - NODE_ENV=development  # Mode développement par défaut
+      - PORT=5000  # Port pour le backend
+      - REACT_APP_PORT=3000  # Port pour le frontend
+      - REACT_APP_API_URL=http://localhost:5000/api
+      - JWT_SECRET=your_jwt_secret_here  # Clé secrète pour JWT
+      - SESSION_SECRET=your_session_secret_here  # Clé secrète pour les sessions
+      - CORS_ORIGIN=*  # Autoriser toutes les origines pour CORS
+      - DISABLE_ESLINT_PLUGIN=true
+      - SKIP_PREFLIGHT_CHECK=true
+      - CLIENT_URL=http://localhost:3000  # URL du client pour les liens dans les emails
+      - MONGODB_URI=${MONGODB_URI:-mongodb+srv://ikramsegni:ikram123@cluster0.y9u2j.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0}  # URI de connexion MongoDB Atlas
+      - PYTHON_PATH=/usr/bin/python3  # Chemin vers Python système
+      - PYTHONUNBUFFERED=1  # Désactiver la mise en mémoire tampon de Python
+      - PYTHONPATH=/app/piBack/python_packages:/app/piBack  # Chemins Python
+      - NLTK_DATA=/app/piBack/python_packages/nltk_data  # Données NLTK
+    volumes:
+      - ./.env:/app/.env  # Monter le fichier .env racine
+      - ./piBack/config/.env:/app/piBack/config/.env  # Monter le fichier .env du backend
+      - ./piBack/uploads:/app/piBack/uploads  # Monter le dossier uploads
+      - ./piBack/data:/app/piBack/data  # Monter le dossier data
+      - ./piBack/logs:/app/piBack/logs  # Monter le dossier logs
+      - ./pi/public/models:/app/pi/public/models  # Monter le dossier models
+      - ./piBack/scripts:/app/piBack/scripts  # Monter le dossier scripts
+      # Exclure les node_modules pour éviter les conflits
+      - /app/pi/node_modules
+      - /app/piBack/node_modules
+    restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    command: >
+      bash -c "bash /app/start.sh"
+
+networks:
+  campx-network:
+    driver: bridge

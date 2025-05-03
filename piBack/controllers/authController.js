@@ -40,78 +40,125 @@ const getCurrentUser = async (req, res) => {
 };
 
 const signup = async (req, res) => {
-  const { name, lastName, birthDate, phone, email, password } = req.body; // 'lastName' ici
-  const imagePath = req.file ? req.file.path : null; // Récupère le chemin de l'image téléchargée
-
-  // Validation des champs nécessaires
-  if (!name || !lastName || !birthDate || !phone || !email || !password) {  // 'lastName' ici
-      return res.status(400).json({ error: 'All fields are required' });
-  }
-
   try {
-      // Vérifie si l'utilisateur existe déjà
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-          return res.status(400).json({ error: 'Email already exists' });
-      }
+    console.log("Données d'inscription reçues:", req.body);
+    const { name, lastName, birthDate, phone, email, password } = req.body;
+    const imagePath = req.file ? req.file.path : null;
 
-      // Hacher le mot de passe avant de le sauvegarder
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const verificationToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    // Validation des champs nécessaires
+    if (!name || !lastName || !email || !password) {
+      console.log("Champs manquants:", { name: !!name, lastName: !!lastName, email: !!email, password: !!password });
+      return res.status(400).json({ error: 'Name, lastName, email and password are required' });
+    }
 
-      // Créer un nouvel utilisateur
-      const newUser = new User({
-          name,
-          lastName, // 'lastName' ici
-          birthDate,
-          phone,
-          email,
-          typeUser: "user", // Ajouter le type d'utilisateur
-          password: hashedPassword, // Mot de passe haché
-          image: imagePath, // Ajouter l'image
-          emailVerificationToken: verificationToken, // ✅ Stocke le token
+    // Vérifie si l'utilisateur existe déjà
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      console.log("Email déjà utilisé:", email);
+      return res.status(400).json({ error: 'Email already exists' });
+    }
 
-      });
+    // Hacher le mot de passe avant de le sauvegarder
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-      await newUser.save();
-          // Envoyer l'email de vérification
-          const verificationLink = `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
-          const emailSubject = 'Verify Your Email';
-          const emailBody = `
-                <html>
-                <head>
-                    <style>
-                        body { font-family: Arial, sans-serif; }
-                        .container { padding: 20px; }
-                        .button {
-                            background-color: #007bff;
-                            color: white;
-                            padding: 10px 15px;
-                            text-decoration: none;
-                            display: inline-block;
-                            border-radius: 5px;
-                            margin-top: 10px;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="container">
-                        <p>Hello ${newUser.name},</p>
-                        <p>Thank you for registering. Please click the button below to verify your email address:</p>
-                        <p><a href="${verificationLink}" class="button">Verify Email</a></p>
-                        <p>If you did not request this, please ignore this email.</p>
-                        <p>Best regards,</p>
-                        <p>Your Team</p>
-                    </div>
-                </body>
-                </html>
-            `;
-          await sendEmail(newUser.email, emailSubject, emailBody);
-    
-          res.status(201).json({ message: 'User registered successfully. Please check your email to verify your account.' });
+    // Générer un token de vérification
+    const jwtSecret = process.env.JWT_SECRET || 'fallbacksecret';
+    console.log("Génération du token avec secret:", jwtSecret ? "Secret défini" : "Secret non défini");
+    const verificationToken = jwt.sign({ email }, jwtSecret, { expiresIn: '24h' });
+
+    // Convertir le numéro de téléphone en chaîne de caractères si nécessaire
+    const phoneString = phone ? phone.toString() : '';
+
+    // Créer un nouvel utilisateur
+    const newUser = new User({
+      name,
+      lastName,
+      birthDate: birthDate || new Date(), // Valeur par défaut si non fournie
+      phone: phoneString,
+      email,
+      typeUser: "user",
+      password: hashedPassword,
+      image: imagePath,
+      emailVerificationToken: verificationToken,
+      authProvider: 'local', // Spécifier le fournisseur d'authentification
+      isVerified: false // S'assurer que l'utilisateur n'est pas vérifié par défaut
+    });
+
+    console.log("Tentative de sauvegarde de l'utilisateur:", {
+      name: newUser.name,
+      email: newUser.email,
+      phone: newUser.phone,
+      hasToken: !!newUser.emailVerificationToken
+    });
+
+    // Sauvegarder l'utilisateur dans la base de données
+    const savedUser = await newUser.save();
+    console.log("Utilisateur sauvegardé avec succès, ID:", savedUser._id);
+
+    // Déterminer l'URL du client
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+    const verificationLink = `${clientUrl}/verify-email/${verificationToken}`;
+
+    // Préparer l'email de vérification
+    const emailSubject = 'Verify Your Email - CAMP X';
+    const emailBody = `
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; }
+          .container { padding: 20px; }
+          .button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            display: inline-block;
+            border-radius: 5px;
+            margin-top: 10px;
+          }
+          .header {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">CAMP X</div>
+          <p>Hello ${newUser.name},</p>
+          <p>Thank you for registering. Please click the button below to verify your email address:</p>
+          <p><a href="${verificationLink}" class="button">Verify Email</a></p>
+          <p>If you did not request this, please ignore this email.</p>
+          <p>Best regards,</p>
+          <p>CAMP X Team</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    try {
+      // Envoyer l'email de vérification
+      await sendEmail(newUser.email, emailSubject, emailBody);
+      console.log("Email de vérification envoyé à:", newUser.email);
+    } catch (emailError) {
+      console.error("Erreur lors de l'envoi de l'email:", emailError);
+      // Continuer même si l'envoi de l'email échoue
+    }
+
+    // Répondre avec succès
+    res.status(201).json({
+      message: 'User registered successfully. Please check your email to verify your account.',
+      userId: savedUser._id
+    });
   } catch (error) {
-      console.error('Error during signup:', error);
-      res.status(500).json({ error: 'Internal server error' });
+    console.error('Error during signup:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 };
 
@@ -147,24 +194,46 @@ const verifyEmail = async (req, res) => {
   }
 };
 const validateImage = async (req, res) => {
+  console.log("Validation d'image demandée");
+
   if (!req.file) {
-      return res.status(400).json({ error: 'Aucune image fournie' });
+    console.log("Erreur: Aucune image fournie");
+    return res.status(400).json({ error: 'Aucune image fournie' });
   }
 
+  console.log("Image reçue:", req.file.path);
+
   try {
-      const faceValidation = await validateFace(req.file.path);
-      res.json(faceValidation);
+    // Vérifier si le fichier existe
+    const fs = require('fs');
+    if (!fs.existsSync(req.file.path)) {
+      console.log("Erreur: Le fichier n'existe pas:", req.file.path);
+      return res.status(400).json({ error: "Le fichier d'image n'existe pas" });
+    }
+
+    console.log("Appel de la fonction validateFace avec le chemin:", req.file.path);
+    const faceValidation = await validateFace(req.file.path);
+    console.log("Résultat de la validation:", faceValidation);
+    res.json(faceValidation);
   } catch (error) {
-      res.status(500).json({ error: error.message });
+    console.error("Erreur lors de la validation de l'image:", error);
+    res.status(500).json({
+      error: error.message,
+      details: "Erreur lors de la validation de l'image. Veuillez réessayer avec une autre image."
+    });
   }
 };
-  
+
 const validateFace = async (imagePath) => {
   return new Promise((resolve, reject) => {
-      const pythonProcess = spawn('python', [
-          path.join(__dirname, '../scripts/face_validator_cli.py'),
-          imagePath
-      ]);
+      // Utiliser python3 sur Linux/Mac et python sur Windows
+      const pythonCommand = process.platform === 'win32' ? 'python' : 'python3';
+      console.log(`Utilisation de la commande Python: ${pythonCommand}`);
+
+      const scriptPath = path.join(__dirname, '../scripts/face_validator_cli.py');
+      console.log(`Chemin du script: ${scriptPath}`);
+
+      const pythonProcess = spawn(pythonCommand, [scriptPath, imagePath]);
 
       let result = '';
       let error = '';
@@ -189,7 +258,7 @@ const validateFace = async (imagePath) => {
                       reject(new Error('Réponse vide du script Python'));
                       return;
                   }
-                  
+
                   const response = JSON.parse(cleanResult);
                   resolve(response);
               } catch (e) {
@@ -203,24 +272,40 @@ const validateFace = async (imagePath) => {
 
 
 const signin = async (req, res) => {
-  const { email, password, recaptchaToken } = req.body;
-
-  // Validation des champs nécessaires
-  if (!email || !password || !recaptchaToken) {
-    return res.status(400).json({ error: "All fields and reCAPTCHA are required" });
-  }
-
   try {
-    // Vérifier le reCAPTCHA avec Google
-    const recaptchaVerify = await axios.post(`https://www.google.com/recaptcha/api/siteverify`, null, {
-      params: {
-        secret: process.env.RECAPTCHA_SECRET, // Ajoute la clé secrète dans ton .env
-        response: recaptchaToken,
-      },
-    });
+    console.log("Tentative de connexion reçue:", req.body);
+    const { email, password, recaptchaToken } = req.body;
 
-    if (!recaptchaVerify.data.success) {
-      return res.status(400).json({ error: "reCAPTCHA verification failed" });
+    // Validation des champs nécessaires
+    if (!email || !password) {
+      console.log("Champs manquants:", { email: !!email, password: !!password });
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+
+    // Vérification du reCAPTCHA uniquement si le token est fourni et si on n'est pas en développement
+    if (recaptchaToken && process.env.NODE_ENV === 'production') {
+      try {
+        console.log("Vérification du reCAPTCHA...");
+        const recaptchaVerify = await axios.post(`https://www.google.com/recaptcha/api/siteverify`, null, {
+          params: {
+            secret: process.env.RECAPTCHA_SECRET || '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe', // Clé de test si non définie
+            response: recaptchaToken,
+          },
+        });
+
+        if (!recaptchaVerify.data.success) {
+          console.log("Échec de la vérification reCAPTCHA");
+          return res.status(400).json({ error: "reCAPTCHA verification failed" });
+        }
+      } catch (recaptchaError) {
+        console.error("Erreur lors de la vérification reCAPTCHA:", recaptchaError);
+        // En développement, on continue même si la vérification échoue
+        if (process.env.NODE_ENV === 'production') {
+          return res.status(400).json({ error: "reCAPTCHA verification error" });
+        }
+      }
+    } else {
+      console.log("Vérification reCAPTCHA ignorée en développement");
     }
       // Vérifier si l'utilisateur existe
       const user = await User.findOne({ email });
@@ -270,8 +355,12 @@ const signin = async (req, res) => {
           },
       });
   } catch (err) {
-      console.error(err);
-      res.status(500).json({ msg: 'Server error' });
+      console.error("Erreur lors de la connexion:", err);
+      res.status(500).json({
+        msg: 'Server error',
+        details: err.message,
+        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+      });
   }
 };
 
@@ -502,7 +591,7 @@ const forgotPasswordEmail = async (req, res) => {
 `;
 
 
-      
+
 
       // Envoi du mail avec format HTML
       await sendEmail(email, emailSubject, emailBody);
@@ -514,30 +603,30 @@ const forgotPasswordEmail = async (req, res) => {
   }
 };
 
-  
+
   /**
    * Nouvelle fonction : Réinitialisation du mot de passe après vérification par e-mail
    */
   const resetPasswordEmail = async (req, res) => {
     const { email, code, password } = req.body;
-  
+
     try {
       if (!email || !code || !password) {
         return res.status(400).json({ message: 'Email, code et nouveau mot de passe sont requis' });
       }
-  
+
       // Recherche de l'utilisateur par e-mail
       const user = await User.findOne({ email });
       if (!user || user.verificationCode !== code) {
         return res.status(400).json({ message: 'Code invalide ou utilisateur non trouvé' });
       }
-  
+
       // Hachage du nouveau mot de passe
       const hashedPassword = await bcrypt.hash(password, 10);
       user.password = hashedPassword;
       user.verificationCode = null; // Réinitialisation du code de vérification
       await user.save();
-  
+
       res.status(200).json({ message: 'Mot de passe mis à jour avec succès' });
     } catch (error) {
       console.error(error);
@@ -567,12 +656,12 @@ const forgotPasswordEmail = async (req, res) => {
         }
 
         const appToken = jwt.sign(
-            { 
-                id: user._id, 
-                googleId: user.googleId, 
-                authProvider: user.authProvider 
-            }, 
-            process.env.JWT_SECRET, 
+            {
+                id: user._id,
+                googleId: user.googleId,
+                authProvider: user.authProvider
+            },
+            process.env.JWT_SECRET,
             { expiresIn: "1h" }
         );
 
@@ -584,6 +673,5 @@ const forgotPasswordEmail = async (req, res) => {
 };
 
 
-  
+
   module.exports = { validateImage,validateFace,googleTokenAuth,signup,authenticate, signin, checkEmailExists,getCurrentUser,verifyEmail, sendVerificationCode,editUser,getUserById, verifyCode, resetPassword, resetPasswordEmail, forgotPasswordEmail };
-  

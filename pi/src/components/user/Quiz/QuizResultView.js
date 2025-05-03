@@ -1,6 +1,8 @@
 import React from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Container, Card, Button, Badge } from 'react-bootstrap';
+import axios from 'axios';
+import config from '../../../config';
 import './QuizResultView.css';
 
 const QuizResultView = () => {
@@ -8,6 +10,47 @@ const QuizResultView = () => {
   const navigate = useNavigate();
   const { categoryId, moduleId, courseId, quizId } = useParams();
   const result = location.state?.result;
+
+  // Fonction pour télécharger le certificat
+  const downloadCertificate = (certificateId, certificateNumber) => {
+    try {
+      // Afficher un message de chargement
+      console.log("Préparation du téléchargement du certificat...");
+
+      // Récupérer le token depuis le localStorage
+      const token = localStorage.getItem('token');
+      console.log("Token utilisé:", token ? "Présent" : "Absent");
+
+      if (!token) {
+        alert("Vous devez être connecté pour télécharger votre certificat.");
+        return;
+      }
+
+      // Créer une iframe cachée pour télécharger le fichier
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+
+      // Définir l'URL avec le token dans les paramètres de requête
+      const url = `${config.API_URL}/api/certificates/${certificateId}/pdf?token=${token}`;
+
+      // Charger l'URL dans l'iframe
+      iframe.src = url;
+
+      // Supprimer l'iframe après le chargement
+      iframe.onload = () => {
+        console.log("Téléchargement initié");
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+        }, 2000);
+      };
+
+      console.log("Téléchargement en cours...");
+    } catch (error) {
+      console.error("Erreur lors du téléchargement du certificat:", error);
+      alert("Une erreur est survenue lors du téléchargement du certificat. Veuillez réessayer.");
+    }
+  };
 
   const handleReturn = () => {
     if (categoryId && moduleId && courseId) {
@@ -146,13 +189,58 @@ const QuizResultView = () => {
               <div className="alert alert-success">
                 <h5><i className="fas fa-award me-2"></i> Certificat Obtenu!</h5>
                 <p>{result.certificate.message}</p>
-                <Button
-                  variant="outline-success"
-                  href={`/certificates/${result.certificate.id}`}
-                  className="mt-2"
-                >
-                  Voir mon certificat
-                </Button>
+                <div className="d-flex justify-content-center mt-3">
+                  <Button
+                    variant="success"
+                    onClick={() => downloadCertificate(result.certificate.id, result.certificate.number)}
+                    className="me-2"
+                  >
+                    <i className="fas fa-download me-2"></i> Télécharger le certificat
+                  </Button>
+                  <Button
+                    variant="outline-success"
+                    href={`/profile/certificates`}
+                    className="ms-2"
+                  >
+                    <i className="fas fa-certificate me-2"></i> Voir mes certificats
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Afficher un message d'erreur si la génération du certificat a échoué */}
+          {result.certificateError && (
+            <div className="certificate-error-section mt-4">
+              <div className="alert alert-warning">
+                <h5><i className="fas fa-exclamation-triangle me-2"></i> Information</h5>
+                <p>{result.certificateError}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Afficher des informations de débogage pour les quiz finaux */}
+          {result.isFinalQuiz && !result.certificate && (
+            <div className="debug-section mt-4">
+              <div className="alert alert-info">
+                <h5><i className="fas fa-info-circle me-2"></i> Informations de débogage</h5>
+                <p>Ce quiz est marqué comme un quiz final.</p>
+                <p>Score: {result.score}/{result.totalPoints} ({result.percentage}%)</p>
+                <p>Fraude détectée: {result.fraudDetection && result.fraudDetection.isSuspicious ? 'Oui' : 'Non'}</p>
+                {result.fraudDetection && result.fraudDetection.reasons && result.fraudDetection.reasons.length > 0 && (
+                  <p>Raisons: {result.fraudDetection.reasons.join(', ')}</p>
+                )}
+                <div className="mt-3">
+                  <Button
+                    variant="outline-primary"
+                    onClick={() => {
+                      // Afficher toutes les données de résultat dans la console
+                      console.log("Données complètes du résultat:", result);
+                    }}
+                  >
+                    <i className="fas fa-bug me-2"></i> Afficher les données complètes dans la console
+                  </Button>
+                </div>
               </div>
             </div>
           )}

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
     <meta name="description" content="Web site created using create-react-app" />
-    
+
     <title>Mentor Education Bootstrap Theme</title>
     <meta name="description" content="Free Bootstrap Theme by BootstrapMade.com" />
     <meta name="keywords" content="free website templates, free bootstrap themes, free template, free bootstrap, free website template" />
@@ -31,5 +31,20 @@
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
+
+    <!-- Service Worker pour le téléchargement automatique des modèles face-api.js -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/model-service-worker.js')
+            .then(registration => {
+              console.log('Service Worker enregistré avec succès:', registration.scope);
+            })
+            .catch(error => {
+              console.error('Erreur lors de l\'enregistrement du Service Worker:', error);
+            });
+        });
+      }
+    </script>
   </body>
 </html>

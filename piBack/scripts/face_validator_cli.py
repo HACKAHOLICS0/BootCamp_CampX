@@ -1,6 +1,10 @@
 import sys
 import json
-from face_validator import FaceValidator
+import os
+
+# Ajouter le répertoire parent au chemin de recherche Python
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from scripts.face_validator import FaceValidator
 
 def main():
     if len(sys.argv) != 2:
@@ -19,10 +23,10 @@ def main():
         "isValid": is_valid,
         "message": message
     }
-    
+
     # Utilisez print pour envoyer la réponse JSON à stdout
     print(json.dumps(response))
     sys.stdout.flush()  # Force l'envoi de la réponse
 
 if __name__ == "__main__":
-    main() 
+    main()

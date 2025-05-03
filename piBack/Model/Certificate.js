@@ -9,12 +9,12 @@ const CertificateSchema = new mongoose.Schema({
     course: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Course',
-        required: true
+        required: false
     },
     module: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Module',
-        required: true
+        required: false
     },
     quiz: {
         type: mongoose.Schema.Types.ObjectId,

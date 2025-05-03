@@ -1,7 +1,10 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
-const API_URL = 'http://localhost:5000/api';
+// Déterminer l'URL de l'API en fonction de l'environnement
+const API_URL = window.location.hostname === 'localhost'
+  ? 'http://localhost:5000/api'
+  : `http://${window.location.hostname}:5000/api`;
 
 // Create axios instance with default config
 const api = axios.create({

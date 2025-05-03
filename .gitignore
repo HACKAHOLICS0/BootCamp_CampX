@@ -33,3 +33,4 @@ yarn-error.log*
 # Fichiers de clés d'API
 **/google-credentials.json
 **/config/google-credentials.json
+

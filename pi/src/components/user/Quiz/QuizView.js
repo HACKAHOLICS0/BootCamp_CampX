@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Container, Button, Alert, Card, ProgressBar, Form, Spinner } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { FaceRecognition } from './FaceRecognition';
+import VideoSurveillance from './VideoSurveillance';
 import config from '../../../config';
 import Cookies from 'js-cookie';
 
@@ -20,6 +23,8 @@ const QuizView = () => {
   const [startTime, setStartTime] = useState(null);
   const [answerTimes, setAnswerTimes] = useState({});
   const [questionStartTime, setQuestionStartTime] = useState(null);
+  const [fraudDetected, setFraudDetected] = useState(false);
+  const [videoSurveillanceKey, setVideoSurveillanceKey] = useState(Date.now()); // Clé unique pour forcer le remontage
   const navigate = useNavigate();
 
   // Récupérer l'image utilisateur pour la vérification
@@ -177,18 +182,41 @@ const QuizView = () => {
       }
 
       console.log("Submitting quiz with data:", {
-        answers: selectedAnswers,
-        answerTimes,
-        timeSpent: totalTimeSpent
+        answers: selectedAnswers ? Object.keys(selectedAnswers).length : 0,
+        answerTimes: answerTimes ? Object.keys(answerTimes).length : 0,
+        timeSpent: totalTimeSpent,
+        fraudDetected: fraudDetected,
+        isFinalQuiz: quiz.isFinalQuiz
       });
 
-      const response = await axios.post(`${config.API_URL}/api/quiz/submit/${quizId}`, {
-        answers: selectedAnswers,
-        answerTimes,
-        timeSpent: totalTimeSpent
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // Fonction pour soumettre le quiz
+      const submitQuiz = async () => {
+        try {
+          const response = await axios.post(`${config.API_URL}/api/quiz/submit/${quizId}`, {
+            answers: selectedAnswers,
+            answerTimes,
+            timeSpent: totalTimeSpent,
+            fraudDetected: !!fraudDetected,
+            isFinalQuiz: !!quiz.isFinalQuiz  // Explicitly include the isFinalQuiz flag
+          }, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+
+          return response;
+        } catch (error) {
+          console.error("Error submitting quiz:", error);
+          if (error.response && error.response.status === 401) {
+            // Problème d'authentification
+            setError("Votre session a expiré. Veuillez vous reconnecter.");
+            setTimeout(() => {
+              navigate('/signin');
+            }, 3000);
+          }
+          throw error;
+        }
+      };
+
+      const response = await submitQuiz();
 
       console.log("Quiz submission response:", response.data);
 
@@ -203,7 +231,7 @@ const QuizView = () => {
       }
     } catch (err) {
       console.error("Quiz submission error:", err);
-      setError(err.response?.data?.error || "Échec de la soumission du quiz.");
+      setError(err.response?.data?.error || "Échec de la soumission du quiz. Veuillez vérifier votre connexion et réessayer.");
       setSubmitting(false);
     }
   };
@@ -228,6 +256,26 @@ const QuizView = () => {
       </Container>
     );
   }
+
+  // Gérer la détection de fraude
+  const handleFraudDetection = (fraudEvent) => {
+    try {
+      console.log("Fraude détectée:", fraudEvent);
+      setFraudDetected(true);
+
+      // Afficher une alerte pour informer l'utilisateur
+      toast.error(`Fraude détectée: ${fraudEvent.details}`, {
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    } catch (error) {
+      console.error("Erreur lors de la gestion de la détection de fraude:", error);
+    }
+  };
 
   if (!verificationComplete) {
     return (
@@ -276,6 +324,19 @@ const QuizView = () => {
 
   return (
     <Container>
+      {/* Toast container pour les notifications */}
+      <ToastContainer />
+
+      {/* Composant de surveillance vidéo pour les quiz finaux */}
+      {quiz.isFinalQuiz && (
+        <div className="video-surveillance-container mb-4">
+          <VideoSurveillance
+            key={videoSurveillanceKey}
+            onFraudDetected={handleFraudDetection}
+          />
+        </div>
+      )}
+
       <Card className="mt-4">
         <Card.Header>
           <div className="d-flex justify-content-between align-items-center">
