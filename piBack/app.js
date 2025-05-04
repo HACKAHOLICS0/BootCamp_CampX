@@ -11,6 +11,7 @@ const adminRoutes = require("./routes/AdminRoutes");
 const moduleRoutes = require("./routes/moduleRoutes");
 const http = require("http");
 const { Server } = require("socket.io");
+
 const quizRoutes=require('./routes/quizRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const courseRoutes = require('./routes/courseRoutes');
@@ -21,6 +22,7 @@ const transcriptionRoutes = require('./routes/transcriptionRoutes');
 const connectDB = require("./config/dbConfig");
 const eventRoutes = require('./routes/eventRoutes');
 const youtubeRecommendationRoutes = require('./routes/youtubeRecommendationRoutes');
+const certificateRoutes = require('./routes/certificateRoutes');
 
 require("dotenv").config({ path: "./config/.env" });
 
@@ -87,10 +89,41 @@ app.use(passport.initialize());
 
 app.use(express.json()); // Activer le parsing JSON
 app.use(express.urlencoded({ extended: true }));
+// Vérifier si les dossiers pour les fichiers statiques existent
+const uploadsDir = path.join(__dirname, "uploads");
+const publicDir = path.join(__dirname, "public");
+const qrCodesDir = path.join(__dirname, "public/qrcodes");
+const icsDir = path.join(__dirname, "public/ics");
 
+// Créer les dossiers s'ils n'existent pas
+if (!fs.existsSync(uploadsDir)) {
+  console.log('Création du dossier uploads...');
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+if (!fs.existsSync(publicDir)) {
+  console.log('Création du dossier public...');
+  fs.mkdirSync(publicDir, { recursive: true });
+}
+
+if (!fs.existsSync(qrCodesDir)) {
+  console.log('Création du dossier public/qrcodes...');
+  fs.mkdirSync(qrCodesDir, { recursive: true });
+}
+
+if (!fs.existsSync(icsDir)) {
+  console.log('Création du dossier public/ics...');
+  fs.mkdirSync(icsDir, { recursive: true });
+}
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
+// Servir les fichiers statiques du dossier public
+app.use("/public", express.static(path.join(__dirname, "public")));
+// Afficher les chemins des dossiers statiques pour le débogage
+console.log('Dossier uploads:', uploadsDir);
+console.log('Dossier public:', publicDir);
+console.log('Dossier QR codes:', qrCodesDir);
+console.log('Dossier ICS:', icsDir);
 // Configuration pour servir les fichiers statiques avec CORS
 app.use('/uploads', (req, res, next) => {
   res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
@@ -98,6 +131,13 @@ app.use('/uploads', (req, res, next) => {
   res.header('Access-Control-Allow-Headers', 'Cache-Control, Content-Type');
   next();
 }, express.static(path.join(__dirname, 'uploads')));
+// Configuration pour servir les fichiers du dossier public avec CORS
+app.use('/public', (req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+  res.header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Cache-Control, Content-Type');
+  next();
+}, express.static(path.join(__dirname, 'public')));
 
 // Connexion MongoDB
 const startServer = async () => {
@@ -145,6 +185,7 @@ app.use('/api/questions', questionRoutes);
 app.use('/api/payments', paymentRoutes); // Mount payment routes
 app.use('/api', transcriptionRoutes); // Routes pour la transcription audio
 app.use('/api/events', eventRoutes);
+app.use('/api/certificates', certificateRoutes);
 
 // Routes pour le moteur de recommandation
 const recommendationRoutes = require('./routes/recommendationRoutes');
@@ -490,6 +531,57 @@ app.get('/test-video', (req, res) => {
       </body>
     </html>
   `);
+});
+
+// Route de test pour les QR codes
+app.get('/test-qrcode', (req, res) => {
+  // Lister tous les fichiers QR code disponibles
+  const qrCodeDir = path.join(__dirname, 'public/qrcodes');
+  fs.readdir(qrCodeDir, (err, files) => {
+    if (err) {
+      return res.status(500).send(`Erreur lors de la lecture du dossier QR codes: ${err.message}`);
+    }
+
+    const qrCodeFiles = files.filter(file => file.endsWith('.png'));
+
+    let html = `
+      <html>
+        <head>
+          <title>Test QR Codes</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .qr-container { margin-bottom: 30px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+            img { max-width: 200px; }
+            h3 { margin-top: 0; }
+          </style>
+        </head>
+        <body>
+          <h1>Test des QR Codes</h1>
+          <p>Nombre de QR codes trouvés: ${qrCodeFiles.length}</p>
+    `;
+
+    if (qrCodeFiles.length === 0) {
+      html += '<p>Aucun QR code trouvé dans le dossier.</p>';
+    } else {
+      qrCodeFiles.forEach(file => {
+        const qrCodeUrl = `/public/qrcodes/${file}`;
+        html += `
+          <div class="qr-container">
+            <h3>Fichier: ${file}</h3>
+            <p>URL: ${qrCodeUrl}</p>
+            <img src="${qrCodeUrl}" alt="${file}" />
+          </div>
+        `;
+      });
+    }
+
+    html += `
+        </body>
+      </html>
+    `;
+
+    res.send(html);
+  });
 });
 
 

@@ -278,13 +278,27 @@ exports.registerForEvent = async (req, res) => {
         };
 
         // Générer un QR code pour l'événement
-        const qrCodeUrl = await eventUtils.generateQRCode(event, `${req.protocol}://${req.get('host')}`);
+        console.log('Génération du QR code pour l\'événement:', event._id);
+        console.log('URL de base:', `${req.protocol}://${req.get('host')}`);
+
+        let qrCodeUrl;
+        try {
+            qrCodeUrl = await eventUtils.generateQRCode(event, `${req.protocol}://${req.get('host')}`);
+            console.log('QR code généré avec succès:', qrCodeUrl);
+        } catch (qrError) {
+            console.error('Erreur lors de la génération du QR code:', qrError);
+            qrCodeUrl = null;
+        }
 
         // Retourner l'événement avec les liens de calendrier et le QR code
+        // Construire l'URL complète du QR code
+        const fullQrCodeUrl = qrCodeUrl ? `${req.protocol}://${req.get('host')}${qrCodeUrl}` : null;
+        console.log('Full QR code URL:', fullQrCodeUrl);
+
         res.json({
             event,
             calendarLinks,
-            qrCodeUrl: qrCodeUrl ? `${req.protocol}://${req.get('host')}${qrCodeUrl}` : null,
+            qrCodeUrl: fullQrCodeUrl,
             message: 'Successfully registered for the event. You can add this event to your calendar using the provided links.'
         });
     } catch (error) {
@@ -441,18 +455,6 @@ exports.rejectEvent = async (req, res) => {
 // Get pending events (admin only)
 exports.getPendingEvents = async (req, res) => {
     try {
-        // Vérifier si l'utilisateur est authentifié
-        if (!req.user) {
-            console.log('User not authenticated');
-            return res.status(401).json({ message: 'Authentication required' });
-        }
-
-        // Vérifier si l'utilisateur est un administrateur
-        if (req.user.typeUser !== 'admin') {
-            console.log('User is not an admin:', req.user.typeUser);
-            return res.status(403).json({ message: 'Admin privileges required' });
-        }
-
         console.log('Getting pending events for admin user:', req.user.name);
         console.log('Admin user ID:', req.user._id);
         console.log('Admin user type:', req.user.typeUser);

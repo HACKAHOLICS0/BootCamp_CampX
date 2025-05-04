@@ -49,7 +49,7 @@ const QuizResultSchema = new mongoose.Schema({
     },
     reasons: [{
       type: String,
-      enum: ['TOO_FAST', 'INCONSISTENT_TIME', 'UNREALISTIC_SCORE']
+      enum: ['TOO_FAST', 'INCONSISTENT_TIME', 'UNREALISTIC_SCORE', 'VIDEO_FRAUD']
     }]
   }
 }, {

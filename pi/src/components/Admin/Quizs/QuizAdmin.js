@@ -49,11 +49,11 @@ const QuizAdmin = () => {
                     'Content-Type': 'application/json'
                 }
             });
-            
+
             if (!response.ok) {
                 throw new Error('Failed to fetch quizzes');
             }
-            
+
             const data = await response.json();
             setQuizzes(data);
             setLoading(false);
@@ -73,11 +73,11 @@ const QuizAdmin = () => {
                     'Content-Type': 'application/json'
                 }
             });
-            
+
             if (!response.ok) {
                 throw new Error('Failed to fetch courses');
             }
-            
+
             const data = await response.json();
             setCourses(data);
         } catch (err) {
@@ -92,7 +92,7 @@ const QuizAdmin = () => {
                 const token = Cookies.get('token');
                 const response = await fetch(`${config.API_URL}/api/quiz/${Quizselected._id}`, {
                     method: 'PUT',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
                         'Authorization': `Bearer ${token}`
@@ -107,7 +107,7 @@ const QuizAdmin = () => {
                 if (!response.ok) {
                     throw new Error('Failed to update quiz title');
                 }
-                
+
                 await fetchQuizzes();
                 setEditQuiz(false);
             } catch (err) {
@@ -125,7 +125,7 @@ const QuizAdmin = () => {
                     const token = Cookies.get('token');
                     const response = await fetch(`${config.API_URL}/api/quiz/${Quizselected._id}`, {
                         method: 'PUT',
-                        headers: { 
+                        headers: {
                             'Content-Type': 'application/json',
                             'Accept': 'application/json',
                             'Authorization': `Bearer ${token}`
@@ -140,7 +140,7 @@ const QuizAdmin = () => {
                     if (!response.ok) {
                         throw new Error('Failed to update quiz timer');
                     }
-                    
+
                     const updatedQuizzes = quizzes.map(q =>
                         q._id === Quizselected._id ? { ...q, chrono: true, chronoVal: value } : q
                     );
@@ -161,15 +161,15 @@ const QuizAdmin = () => {
     const handleChange = async (event) => {
         const isChecked = event.target.checked;
         setChecked(isChecked);
-        
+
         if (Quizselected?._id) {
             try {
                 const token = Cookies.get('token');
                 const timerValue = isChecked ? (Quizselected.chronoVal || 30) : 0;
-                
+
                 const response = await fetch(`${config.API_URL}/api/quiz/${Quizselected._id}`, {
                     method: 'PUT',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
                         'Authorization': `Bearer ${token}`
@@ -184,7 +184,7 @@ const QuizAdmin = () => {
                 if (!response.ok) {
                     throw new Error('Failed to update quiz timer');
                 }
-                
+
                 const updatedQuizzes = quizzes.map(q =>
                     q._id === Quizselected._id ? { ...q, chrono: isChecked, chronoVal: timerValue } : q
                 );
@@ -203,7 +203,7 @@ const QuizAdmin = () => {
             const token = Cookies.get('token');
             const response = await fetch(`${config.API_URL}/api/quiz/${id}`, {
                 method: 'DELETE',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 }
@@ -213,7 +213,7 @@ const QuizAdmin = () => {
                 const errorData = await response.json();
                 throw new Error(errorData.error || 'Failed to delete quiz');
             }
-            
+
             setSuccess('Quiz deleted successfully');
             await fetchQuizzes();
             setTimeout(() => setSuccess(null), 3000);
@@ -248,7 +248,7 @@ const QuizAdmin = () => {
 
             const response = await fetch(`${config.API_URL}/api/quiz/${Quizselected._id}/question`, {
                 method: 'POST',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
                     'Authorization': `Bearer ${token}`
@@ -328,7 +328,7 @@ const QuizAdmin = () => {
                         <Collapse in={openAdd}>
                             <Card className="mb-3">
                                 <Card.Body>
-                                    <AddQuiz 
+                                    <AddQuiz
                                         onClose={() => setopenAdd(false)}
                                         onSuccess={() => {
                                             setSuccess('Quiz added successfully');
@@ -362,6 +362,7 @@ const QuizAdmin = () => {
                                     <th>#</th>
                                     <th>Title</th>
                                     <th>Timer</th>
+                                    <th>Type</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -410,6 +411,13 @@ const QuizAdmin = () => {
                                                 <div className="alert alert-danger mt-2">
                                                     Timer must be greater than 0
                                                 </div>
+                                            )}
+                                        </td>
+                                        <td>
+                                            {quiz.isFinalQuiz ? (
+                                                <Badge bg="success">Quiz Final</Badge>
+                                            ) : (
+                                                <Badge bg="primary">Quiz Standard</Badge>
                                             )}
                                         </td>
                                         <td>
@@ -486,9 +494,15 @@ const QuizAdmin = () => {
                         <div>
                             <div className="mb-3">
                                 <strong>Timer:</strong>{' '}
-                                {selectedQuizDetails.chrono && selectedQuizDetails.chronoVal > 0 
-                                    ? `${selectedQuizDetails.chronoVal} minutes` 
+                                {selectedQuizDetails.chrono && selectedQuizDetails.chronoVal > 0
+                                    ? `${selectedQuizDetails.chronoVal} minutes`
                                     : 'No timer'}
+                            </div>
+                            <div className="mb-3">
+                                <strong>Type:</strong>{' '}
+                                {selectedQuizDetails.isFinalQuiz
+                                    ? <Badge bg="success">Quiz Final</Badge>
+                                    : <Badge bg="primary">Quiz Standard</Badge>}
                             </div>
                             <div className="mb-3">
                                 <strong>Total Questions:</strong> {selectedQuizDetails.Questions?.length || 0}

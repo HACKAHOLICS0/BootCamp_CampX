@@ -1,0 +1,117 @@
+.video-surveillance {
+  width: 220px;
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  background-color: #000;
+}
+
+.video-container {
+  position: relative;
+}
+
+.surveillance-video {
+  width: 100%;
+  display: block;
+}
+
+.recording-indicator {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+}
+
+.recording-dot {
+  width: 8px;
+  height: 8px;
+  background-color: red;
+  border-radius: 50%;
+  margin-right: 5px;
+  animation: blink 1s infinite;
+}
+
+.fraud-badge, .warning-badge {
+  margin-left: 5px;
+}
+
+.warning-badge {
+  font-size: 10px;
+  padding: 3px 6px;
+}
+
+.detection-mode {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  font-size: 10px;
+}
+
+.detection-badge {
+  font-size: 10px;
+  padding: 3px 6px;
+  opacity: 0.7;
+}
+
+.detection-badge:hover {
+  opacity: 1;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.loading-text {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #6c757d;
+}
+
+.download-progress {
+  width: 100%;
+  margin-top: 15px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 10px;
+  background-color: #e9ecef;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background-color: #007bff;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  margin-top: 5px;
+  font-size: 12px;
+  color: #6c757d;
+  text-align: center;
+}
+
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}

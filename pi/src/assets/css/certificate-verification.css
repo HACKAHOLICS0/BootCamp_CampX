@@ -1,0 +1,140 @@
+/* Certificate Verification Styles */
+.certificate-verification-box {
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  padding: 30px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+}
+
+.certificate-verification-box .input-group {
+  margin-bottom: 20px;
+}
+
+.certificate-verification-box .form-control {
+  height: 45px;
+  border-radius: 4px 0 0 4px;
+  font-size: 16px;
+}
+
+.certificate-verification-box .btn-green {
+  height: 45px;
+  border-radius: 0 4px 4px 0;
+  font-size: 16px;
+  padding: 0 20px;
+}
+
+.certificate-result {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+  border: 1px solid #ddd;
+}
+
+.certificate-result.valid {
+  border-color: #4CAF50;
+}
+
+.certificate-result.invalid {
+  border-color: #F44336;
+}
+
+.result-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.result-header i {
+  font-size: 30px;
+  margin-right: 15px;
+}
+
+.result-header i.fa-check-circle {
+  color: #4CAF50;
+}
+
+.result-header i.fa-times-circle {
+  color: #F44336;
+}
+
+.result-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.certificate-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 15px;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  padding: 12px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.detail-item .label {
+  font-size: 14px;
+  color: #777;
+  margin-bottom: 5px;
+  display: block;
+  text-align: left;
+  padding: 0;
+  font-weight: normal;
+}
+
+.detail-item .value {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+.status-active {
+  color: #4CAF50;
+}
+
+.status-expired {
+  color: #FF9800;
+}
+
+.status-revoked {
+  color: #F44336;
+}
+
+.mt-3 {
+  margin-top: 15px;
+}
+
+.mt-4 {
+  margin-top: 20px;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .certificate-details {
+    grid-template-columns: 1fr;
+  }
+  
+  .certificate-verification-box {
+    padding: 20px;
+  }
+  
+  .result-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .result-header i {
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+}

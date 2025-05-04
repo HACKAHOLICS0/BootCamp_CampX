@@ -1,6 +1,9 @@
 import React from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Container, Card, Button, Badge } from 'react-bootstrap';
+import axios from 'axios';
+import Cookies from 'js-cookie';
+import config from '../../../config';
 import './QuizResultView.css';
 
 const QuizResultView = () => {
@@ -9,11 +12,75 @@ const QuizResultView = () => {
   const { categoryId, moduleId, courseId, quizId } = useParams();
   const result = location.state?.result;
 
+  // Fonction pour télécharger le certificat
+  const downloadCertificate = (certificateId, certificateNumber) => {
+    try {
+      // Afficher un message de chargement
+      console.log("Préparation du téléchargement du certificat...");
+
+      // Récupérer le token depuis les cookies ou le localStorage
+      const token = Cookies.get('token') || localStorage.getItem('token');
+      console.log("Token utilisé:", token ? "Présent" : "Absent");
+
+      if (!token) {
+        alert("Vous devez être connecté pour télécharger votre certificat.");
+        return;
+      }
+
+      // Utiliser axios pour télécharger le certificat avec le bon header d'authentification
+      axios({
+        url: `${config.API_URL}/api/certificates/${certificateId}/pdf`,
+        method: 'GET',
+        responseType: 'blob', // Important pour recevoir des données binaires
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      .then(response => {
+        // Créer un URL pour le blob
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+
+        // Créer un lien temporaire et cliquer dessus pour télécharger
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `certificat-${certificateNumber}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+
+        // Nettoyer
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(link);
+
+        console.log("Téléchargement réussi");
+      })
+      .catch(error => {
+        console.error("Erreur lors du téléchargement du certificat:", error);
+
+        if (error.response && error.response.status === 401) {
+          alert("Votre session a expiré. Veuillez vous reconnecter.");
+          // Rediriger vers la page de connexion
+          navigate('/signin');
+        } else {
+          alert("Une erreur est survenue lors du téléchargement du certificat. Veuillez réessayer.");
+        }
+      });
+
+      console.log("Téléchargement en cours...");
+    } catch (error) {
+      console.error("Erreur lors du téléchargement du certificat:", error);
+      alert("Une erreur est survenue lors du téléchargement du certificat. Veuillez réessayer.");
+    }
+  };
+
   const handleReturn = () => {
     if (categoryId && moduleId && courseId) {
-      navigate(`/categories/${categoryId}/modules/${moduleId}/courses/${courseId}`);
+      // Rediriger vers la page du cours avec l'onglet quiz actif
+      navigate(`/categories/${categoryId}/modules/${moduleId}/courses/${courseId}`, {
+        state: { activeTab: 'quiz' }
+      });
     } else {
-      navigate('/categories'); // Or wherever you want to redirect for standalone quizzes
+      // Pour les quiz autonomes, rediriger vers la liste des quiz ou une autre page appropriée
+      navigate('/categories');
     }
   };
 
@@ -22,14 +89,14 @@ const QuizResultView = () => {
       <Container className="mt-4">
         <Card>
           <Card.Body>
-            <Card.Title className="text-center">No Result Available</Card.Title>
-            <p className="text-center">Quiz result not found. Please try taking the quiz again.</p>
+            <Card.Title className="text-center">Aucun résultat disponible</Card.Title>
+            <p className="text-center">Résultat du quiz introuvable. Veuillez réessayer de passer le quiz.</p>
             <div className="text-center">
-              <Button 
+              <Button
                 variant="primary"
                 onClick={handleReturn}
               >
-                Return to {courseId ? 'Course' : 'Categories'}
+                Retour au {courseId ? 'cours' : 'catégories'}
               </Button>
             </div>
           </Card.Body>
@@ -47,20 +114,26 @@ const QuizResultView = () => {
   const getFeedback = (percentage) => {
     if (percentage >= 80) {
       return {
-        title: 'Excellent work! 🎉',
-        message: "You've demonstrated a strong understanding of the material.",
+        title: 'Excellent travail ! 🎉',
+        message: "Vous avez démontré une forte compréhension du contenu.",
         variant: 'success'
       };
     } else if (percentage >= 60) {
       return {
-        title: 'Good effort! 👍',
-        message: "You're on the right track, but there's room for improvement.",
+        title: 'Bon effort ! 👍',
+        message: "Vous êtes sur la bonne voie, mais il y a encore place à l'amélioration.",
+        variant: 'warning'
+      };
+    } else if (percentage >= 50) {
+      return {
+        title: 'Vous avez réussi ! ✅',
+        message: 'Vous avez obtenu le score minimum requis pour passer au quiz suivant.',
         variant: 'warning'
       };
     } else {
       return {
-        title: 'Keep practicing! 💪',
-        message: 'Review the course material and try again to improve your score.',
+        title: 'Continuez à vous entraîner ! 💪',
+        message: 'Révisez le contenu du cours et réessayez pour améliorer votre score.',
         variant: 'danger'
       };
     }
@@ -135,17 +208,79 @@ const QuizResultView = () => {
               <p>{feedback.message}</p>
             </div>
           </div>
+
+          {/* Afficher le message de certificat si disponible */}
+          {result.certificate && (
+            <div className="certificate-section mt-4">
+              <div className="alert alert-success">
+                <h5><i className="fas fa-award me-2"></i> Certificat Obtenu!</h5>
+                <p>{result.certificate.message}</p>
+                <div className="d-flex justify-content-center mt-3">
+                  <Button
+                    variant="success"
+                    onClick={() => downloadCertificate(result.certificate.id, result.certificate.number)}
+                    className="me-2"
+                  >
+                    <i className="fas fa-download me-2"></i> Télécharger le certificat
+                  </Button>
+                  <Button
+                    variant="outline-success"
+                    onClick={() => navigate('/profile', { state: { activeTab: 'certificates' } })}
+                    className="ms-2"
+                  >
+                    <i className="fas fa-certificate me-2"></i> Voir mes certificats
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Afficher un message d'erreur si la génération du certificat a échoué */}
+          {result.certificateError && (
+            <div className="certificate-error-section mt-4">
+              <div className="alert alert-warning">
+                <h5><i className="fas fa-exclamation-triangle me-2"></i> Information</h5>
+                <p>{result.certificateError}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Afficher des informations de débogage pour les quiz finaux */}
+          {result.isFinalQuiz && !result.certificate && (
+            <div className="debug-section mt-4">
+              <div className="alert alert-info">
+                <h5><i className="fas fa-info-circle me-2"></i> Informations de débogage</h5>
+                <p>Ce quiz est marqué comme un quiz final.</p>
+                <p>Score: {result.score}/{result.totalPoints} ({result.percentage}%)</p>
+                <p>Fraude détectée: {result.fraudDetection && result.fraudDetection.isSuspicious ? 'Oui' : 'Non'}</p>
+                {result.fraudDetection && result.fraudDetection.reasons && result.fraudDetection.reasons.length > 0 && (
+                  <p>Raisons: {result.fraudDetection.reasons.join(', ')}</p>
+                )}
+                <div className="mt-3">
+                  <Button
+                    variant="outline-primary"
+                    onClick={() => {
+                      // Afficher toutes les données de résultat dans la console
+                      console.log("Données complètes du résultat:", result);
+                    }}
+                  >
+                    <i className="fas fa-bug me-2"></i> Afficher les données complètes dans la console
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </Card.Body>
         <Card.Footer className="text-center">
-          <Button 
+          <Button
             variant="primary"
             onClick={handleReturn}
             className="me-2"
           >
-            Retour au {courseId ? 'cours' : 'catégories'}
+            Retour aux {courseId ? 'quiz du cours' : 'catégories'}
           </Button>
           {quizId && (
-            <Button 
+            <Button
               variant="outline-primary"
               onClick={() => window.location.reload()}
             >

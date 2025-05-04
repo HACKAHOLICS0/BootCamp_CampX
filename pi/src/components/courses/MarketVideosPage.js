@@ -18,10 +18,8 @@ const MarketVideosPage = () => {
 
   const platforms = [
     { id: 'all', name: 'Toutes les plateformes', icon: <FaVideo />, color: '#0d6efd' },
-    { id: 'coursera', name: 'Coursera', icon: <SiCoursera />, color: '#2A73CC' },
-    { id: 'udemy', name: 'Udemy', icon: <SiUdemy />, color: '#A435F0' },
+
     { id: 'youtube', name: 'YouTube', icon: <FaYoutube />, color: '#FF0000' },
-    { id: 'khan', name: 'Khan Academy', icon: <SiKhanacademy />, color: '#14BF96' }
   ];
 
   const handleSearch = (e) => {
@@ -70,10 +68,10 @@ const MarketVideosPage = () => {
 
       {/* Platforms Section */}
       <div className="mb-5">
-        <h2 className="mb-4">Plateformes d'apprentissage</h2>
-        <Row className="g-4">
+        <h2 className="mb-4 text-center">Plateformes d'apprentissage</h2>
+        <Row className="g-4 justify-content-center">
           {platforms.map((platform) => (
-            <Col key={platform.id} xs={6} md={4} lg={3} xl={2}>
+            <Col key={platform.id} xs={6} md={4} lg={3} xl={2} className="mx-auto" style={{ maxWidth: '250px' }}>
               <Card
                 className={`h-100 text-center shadow-sm ${activeTab === platform.id ? 'border-primary' : ''}`}
                 onClick={() => handlePlatformChange(platform.id)}
@@ -101,22 +99,6 @@ const MarketVideosPage = () => {
         </Row>
       </div>
 
-      {/* Categories Section */}
-      <div className="popular-categories mb-5">
-        <h2 className="mb-3">Catégories populaires</h2>
-        <div className="d-flex flex-wrap gap-2">
-          {popularCategories.map((cat, index) => (
-            <Button
-              key={index}
-              variant={category === cat ? "primary" : "outline-secondary"}
-              onClick={() => handleCategoryClick(cat)}
-              className="text-capitalize mb-2 shadow-sm"
-            >
-              {cat}
-            </Button>
-          ))}
-        </div>
-      </div>
 
       {/* Why Use Our Video Library Section */}
       <div className="mb-5 py-4 bg-light rounded">
