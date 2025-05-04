@@ -17,20 +17,20 @@ const Sidebar = ({ isCollapsed, toggleSidebar }) => {
       </div>
       <nav className="sidebar-nav">
         <ul>
-          <li><Link to="/admin"><Home size={20} /> <span>Dashboard</span></Link></li>
-          <li><Link to="/admin/users"><User size={20} /> <span>Users</span></Link></li>
-          <li><Link to="/admin/points"><Package size={20} /> <span>Points Of Interest</span></Link></li>
-          <li><Link to="/admin/quizs"><BookOpen size={20} /> <span>Quizs</span></Link></li>
-          <li><Link to="/admin/categories"><FolderTree size={20} /> <span>Categories</span></Link></li>
+          <li><Link to="/admin"><Home size={20} /> <span>Tableau de bord</span></Link></li>
+          <li><Link to="/admin/users"><User size={20} /> <span>Utilisateurs</span></Link></li>
+          <li><Link to="/admin/points"><Package size={20} /> <span>Points d'intérêt</span></Link></li>
+          <li><Link to="/admin/quizs"><BookOpen size={20} /> <span>Quiz</span></Link></li>
+          <li><Link to="/admin/categories"><FolderTree size={20} /> <span>Catégories</span></Link></li>
           <li><Link to="/admin/modules"><Layers size={20} /> <span>Modules</span></Link></li>
-          <li><Link to="/admin/courses"><Book size={20} /> <span>Courses</span></Link></li>
-          <li><Link to="/admin/videos"><Video size={20} /> <span>Videos</span></Link></li>
-          <li><Link to="/admin/analytics"><BarChart2 size={20} /> <span>Analytics</span></Link></li>
-          <li><Link to="/admin/events"><Calendar size={20} /> <span>Events</span></Link></li>
-          <li><Link to="/admin/pending-events"><CheckSquare size={20} /> <span>Pending Events</span></Link></li>
+          <li><Link to="/admin/courses"><Book size={20} /> <span>Cours</span></Link></li>
+          <li><Link to="/admin/videos"><Video size={20} /> <span>Vidéos</span></Link></li>
+          <li><Link to="/admin/analytics"><BarChart2 size={20} /> <span>Analytiques</span></Link></li>
+          <li><Link to="/admin/events"><Calendar size={20} /> <span>Événements</span></Link></li>
+          <li><Link to="/admin/pending-events"><CheckSquare size={20} /> <span>Événements en attente</span></Link></li>
 
           <li><Link to="/admin/notifications"><Bell size={20} /> <span>Notifications</span></Link></li>
-          <li><Link to="/admin/settings"><Settings size={20} /> <span>Settings</span></Link></li>
+          <li><Link to="/admin/settings"><Settings size={20} /> <span>Paramètres</span></Link></li>
         </ul>
       </nav>
     </div>

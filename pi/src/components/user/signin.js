@@ -19,7 +19,7 @@ export default function Signin() {
     script.async = true;
     script.defer = true;
     document.body.appendChild(script);
-    
+
     return () => {
       document.body.removeChild(script);
     };
@@ -29,9 +29,9 @@ export default function Signin() {
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!recaptchaToken) {
-      setErrorDisplay("Please verify reCAPTCHA");
+      setErrorDisplay("Veuillez vérifier le reCAPTCHA");
       return;
     }
 
@@ -50,12 +50,22 @@ export default function Signin() {
         Cookies.set("token", data.token, { expires: 7 });
         Cookies.set("user", JSON.stringify(data.user), { expires: 7 });
         window.dispatchEvent(new Event("userUpdated"));
-        navigate("/");
+
+        // Check user role and redirect accordingly
+        console.log("User data:", data.user);
+        if (data.user && (data.user.role === "ADMIN" || data.user.typeUser === "admin")) {
+          console.log("Admin user detected, redirecting to admin dashboard");
+          navigate("/admin");
+        } else {
+          console.log("Regular user detected, redirecting to home page");
+          navigate("/");
+        }
       } else {
-        setErrorDisplay(data.message || "Incorrect email or password");
+        setErrorDisplay(data.message || "Email ou mot de passe incorrect");
       }
     } catch (err) {
-      setErrorDisplay("An error occurred. Please try again.");
+      console.error("Login error:", err);
+      setErrorDisplay("Une erreur s'est produite. Veuillez réessayer.");
     }
   };
 
@@ -69,41 +79,41 @@ export default function Signin() {
 
   return (
     <div className="signin-container">
-      <h1 className="signin-logo">Sign In</h1>
-      
+      <h1 className="signin-logo">Connexion</h1>
+
       {errorDisplay && (
         <div className="error-message">
           {errorDisplay}
         </div>
       )}
-      
+
       <form className="signin-form" onSubmit={onSubmit}>
         <div className="form-group">
-          <input 
-            type="email" 
-            name="email" 
-            className="form-control" 
-            placeholder="Enter Email" 
-            onChange={onChange} 
+          <input
+            type="email"
+            name="email"
+            className="form-control"
+            placeholder="Entrez votre email"
+            onChange={onChange}
             value={formData.email}
             required
           />
         </div>
-        
+
         <div className="form-group">
-          <input 
-            type="password" 
-            name="password" 
-            className="form-control" 
-            placeholder="Enter Password" 
-            onChange={onChange} 
+          <input
+            type="password"
+            name="password"
+            className="form-control"
+            placeholder="Entrez votre mot de passe"
+            onChange={onChange}
             value={formData.password}
             required
           />
         </div>
-   
+
         <div className="recaptcha-container">
-          <ReCAPTCHA 
+          <ReCAPTCHA
             sitekey={recaptchaKey}
             onChange={(token) => {
               console.log("ReCAPTCHA Token:", token);
@@ -123,25 +133,25 @@ export default function Signin() {
           Se connecter
         </button>
       </form>
-      
+
       <div className="divider">
         <span>Ou connectez-vous avec</span>
       </div>
-      
+
       <div className="social-login">
         <div style={{ marginBottom: '15px' }}>
           <GoogleLoginButton onSuccess={handleGoogleLoginSuccess} />
         </div>
-        
-        <button 
-          onClick={handleGitHubLogin} 
+
+        <button
+          onClick={handleGitHubLogin}
           className="social-btn github-login-btn"
         >
-          <img 
-            src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" 
-            alt="GitHub Logo" 
+          <img
+            src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+            alt="Logo GitHub"
           />
-          Sign in with GitHub
+          Se connecter avec GitHub
         </button>
       </div>
     </div>

@@ -5,6 +5,7 @@ import { FaUsers, FaClock, FaBook, FaGraduationCap, FaStar, FaChartLine, FaShopp
 import Cookies from 'js-cookie';
 import PaymentForm from './PaymentForm';
 import './CourseStyle.css';
+import './CourseCardFix.css'; // Import the CSS fix
 
 const backendURL = "http://localhost:5000/api";
 

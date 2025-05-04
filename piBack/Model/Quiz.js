@@ -50,6 +50,10 @@ const QuizSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Course'
     },
+    isFinalQuiz: {
+        type: Boolean,
+        default: false
+    },
     Questions: [QuestionSchema],
     createdAt: {
         type: Date,

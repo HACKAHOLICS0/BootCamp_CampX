@@ -62,16 +62,16 @@ export default function Signup() {
 
         switch (fieldName) {
             case "name":
-                errors.name = value ? "" : "Name is required";
+                errors.name = value ? "" : "Le nom est requis";
                 break;
             case "lastName": // Fixed extra space
-                errors.lastName = value ? "" : "Last Name is required";
+                errors.lastName = value ? "" : "Le nom de famille est requis";
                 break;
             case "email":
-                errors.email = value ? "" : "Email is required";
+                errors.email = value ? "" : "L'email est requis";
                 break;
             case "phone":
-                errors.phone = onlyNumbers.test(value) ? "" : "Only numbers are allowed";
+                errors.phone = onlyNumbers.test(value) ? "" : "Seuls les chiffres sont autorisés";
                 break;
             case "password":
                 errors.password =
@@ -80,13 +80,13 @@ export default function Signup() {
                     isContainsNumber.test(value) &&
                     isValidLength.test(value)
                         ? ""
-                        : "Password must contain between 8 and 16 characters, including at least 1 uppercase, 1 lowercase, and 1 number.";
+                        : "Le mot de passe doit contenir entre 8 et 16 caractères, avec au moins 1 majuscule, 1 minuscule et 1 chiffre.";
                 break;
             case "confirmp":
-                errors.confirmp = value === formData.password ? "" : "Passwords do not match";
+                errors.confirmp = value === formData.password ? "" : "Les mots de passe ne correspondent pas";
                 break;
             case "image":
-                errors.image = value ? "" : "Image is required";
+                errors.image = value ? "" : "L'image est requise";
                 break;
             default:
                 break;
@@ -394,7 +394,7 @@ export default function Signup() {
     return (
         <div className="my-5">
             <h1 className="logo mx-auto" style={{ textAlign: "center", color: "#5fcf80" }}>
-                Sign Up
+                Inscription
             </h1>
             <form className="w-50 mx-auto" onSubmit={onSubmit}>
                 {/* Form Fields */}
@@ -404,7 +404,7 @@ export default function Signup() {
                         className={`form-control ${formErrors.name ? "is-invalid" : ""}`}
                         id="name"
                         name="name"
-                        placeholder="Enter Name"
+                        placeholder="Entrez votre prénom"
                         value={formData.name}
                         onChange={onChange}
                         onBlur={onBlur}
@@ -415,10 +415,10 @@ export default function Signup() {
                 <div className="form-group">
                     <input
                         type="text"
-                        className={`form-control ${formErrors.lastName ? "is-invalid" : ""}`} // Fixed class and variable
+                        className={`form-control ${formErrors.lastName ? "is-invalid" : ""}`}
                         id="lastName"
                         name="lastName"
-                        placeholder="Enter Last Name"
+                        placeholder="Entrez votre nom de famille"
                         value={formData.lastName}
                         onChange={onChange}
                         onBlur={onBlur}
@@ -445,7 +445,7 @@ export default function Signup() {
                         className={`form-control ${formErrors.phone ? "is-invalid" : ""}`}
                         id="phone"
                         name="phone"
-                        placeholder="Enter Phone"
+                        placeholder="Entrez votre numéro de téléphone"
                         value={formData.phone}
                         onChange={onChange}
                         onBlur={onBlur}
@@ -459,7 +459,7 @@ export default function Signup() {
                         className={`form-control ${formErrors.email ? "is-invalid" : ""}`}
                         id="email"
                         name="email"
-                        placeholder="Enter Email"
+                        placeholder="Entrez votre email"
                         value={formData.email}
                         onChange={onChange}
                         onBlur={onBlur}
@@ -473,7 +473,7 @@ export default function Signup() {
                         className={`form-control ${formErrors.password ? "is-invalid" : ""}`}
                         id="password"
                         name="password"
-                        placeholder="Enter Password"
+                        placeholder="Entrez votre mot de passe"
                         value={formData.password}
                         onChange={onChange}
                         onBlur={onBlur}
@@ -487,7 +487,7 @@ export default function Signup() {
                         className={`form-control ${formErrors.confirmp ? "is-invalid" : ""}`}
                         id="confirmp"
                         name="confirmp"
-                        placeholder="Confirm Password"
+                        placeholder="Confirmez votre mot de passe"
                         value={formData.confirmp}
                         onChange={onChange}
                         onBlur={onBlur}

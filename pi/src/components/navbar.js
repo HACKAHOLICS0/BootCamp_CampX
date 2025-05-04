@@ -138,7 +138,7 @@ export default function Navbar() {
           <ul className="navbar-nav d-flex flex-row">
             <li className="nav-item">
               <Link to="/" className="nav-link text-dark hover-effect">
-                Home
+                Accueil
               </Link>
             </li>
             {user && ( // N'afficher le dropdown que si l'utilisateur est connecté
@@ -146,7 +146,7 @@ export default function Navbar() {
                 <span
                   className="nav-link text-dark hover-effect dropdown-toggle"
                 >
-                  Categories
+                  Catégories
                 </span>
                 <ul className="dropdown-menu">
                   {categories.map(category => (
@@ -166,19 +166,19 @@ export default function Navbar() {
               <li className="nav-item d-flex">
                 {user.role === 'admin' && (
                   <Link to="/admin" className="nav-link text-dark hover-effect">
-                    Admin Dashboard
+                    Tableau de bord Admin
                   </Link>
                 )}
                 <Link to="/profile" className="nav-link text-dark hover-effect">
-                  Profile
+                  Profil
                 </Link>
                 {/* <Link to="/market-insights" className="nav-link text-dark hover-effect">
-                  Market Insights
+                  Analyses de marché
                 </Link> */}
               <Link to="/events" className="nav-link text-dark hover-effect">
-                Events
+                Événements
               </Link>
-            
+
                 <Link to="/market-videos" className="nav-link text-dark hover-effect">
                   Vidéos recommandées
                 </Link>
@@ -186,19 +186,19 @@ export default function Navbar() {
                   onClick={handleSignOut}
                   className="nav-link btn btn-link text-dark hover-effect"
                 >
-                  Sign Out
+                  Déconnexion
                 </button>
               </li>
             ) : (
               <>
                 <li className="nav-item">
                   <Link to="/signin" className="nav-link text-dark hover-effect">
-                    Sign In
+                    Connexion
                   </Link>
                 </li>
                 <li className="nav-item">
                   <Link to="/signup" className="nav-link text-dark hover-effect">
-                    Sign Up
+                    Inscription
                   </Link>
                 </li>
 

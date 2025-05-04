@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Spinner, Alert } from 'react-bootstrap';
 import Cookies from 'js-cookie';
 import './ModuleStyle.css';
+import './ModuleCardFix.css'; // Import the CSS fix
 
 const backendURL = "http://localhost:5000/api";
 
@@ -23,7 +24,7 @@ const ModuleList = () => {
       setLoading(true);
       setError(null);
       const token = Cookies.get('token');
-      
+
       if (!token) {
         throw new Error('Authentication required');
       }
@@ -91,11 +92,11 @@ const ModuleList = () => {
           {category?.description || 'Explore our collection of interactive modules'}
         </p>
       </div>
-      
+
       {modules.length === 0 ? (
         <Alert variant="info">
-          <p className="mb-0">No modules available for this category.</p>
-          <p className="mb-0">Check back soon for new content!</p>
+          <p className="mb-0">Aucun module disponible pour cette catégorie.</p>
+          <p className="mb-0">Revenez bientôt pour découvrir notre nouveau contenu !</p>
         </Alert>
       ) : (
         <Row xs={1} md={2} lg={3} className="g-4">
@@ -107,18 +108,18 @@ const ModuleList = () => {
                   <Card.Text>{module.description}</Card.Text>
                   <div className="module-stats mb-3">
                     <small className="text-muted me-3">
-                      {module.coursesCount || 0} courses
+                      {module.coursesCount || 0} cours
                     </small>
                     <small className="text-muted">
-                      {module.duration || '0h'} total duration
+                      {module.duration || '0h'} durée totale
                     </small>
                   </div>
-                  <Button 
+                  <Button
                     variant="primary"
                     onClick={() => navigateToCourses(module._id)}
                     className="w-100"
                   >
-                    Explore Courses
+                    Explorer les cours
                   </Button>
                 </Card.Body>
               </Card>

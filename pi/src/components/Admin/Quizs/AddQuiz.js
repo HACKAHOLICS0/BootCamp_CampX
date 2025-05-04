@@ -11,6 +11,7 @@ const schema = yup.object().shape({
     title: yup.string().required('Quiz title is required'),
     courseId: yup.string().required('Course selection is required'),
     chrono: yup.boolean(),
+    isFinalQuiz: yup.boolean(), // Ajout du champ pour quiz final
     chronoVal: yup.number()
         .transform((value) => (isNaN(value) ? undefined : value))
         .when('chrono', {
@@ -33,11 +34,13 @@ const AddQuiz = ({ onClose = () => {}, onSuccess = () => {} }) => {
             title: '',
             chronoVal: 30,
             chrono: false,
+            isFinalQuiz: false, // Valeur par défaut pour quiz final
             courseId: ''
         }
     });
 
     const chrono = watch('chrono');
+    const isFinalQuiz = watch('isFinalQuiz');
 
     useEffect(() => {
         fetchCourses();
@@ -73,6 +76,10 @@ const AddQuiz = ({ onClose = () => {}, onSuccess = () => {} }) => {
         }
     };
 
+    const handleFinalQuizChange = (event) => {
+        setValue('isFinalQuiz', event.target.checked);
+    };
+
     const onSubmit = async (data) => {
         try {
             const token = Cookies.get('token');
@@ -86,7 +93,8 @@ const AddQuiz = ({ onClose = () => {}, onSuccess = () => {} }) => {
                     title: data.title,
                     chrono: data.chrono,
                     chronoVal: data.chrono ? Math.max(1, parseInt(data.chronoVal) || 30) : 0,
-                    course: data.courseId
+                    course: data.courseId,
+                    isFinalQuiz: data.isFinalQuiz
                 })
             });
 
@@ -157,7 +165,7 @@ const AddQuiz = ({ onClose = () => {}, onSuccess = () => {} }) => {
                     />
                     Timer (Minutes)
                 </Form.Label>
-                
+
                 {chrono && (
                     <Form.Control
                         type="number"
@@ -170,6 +178,23 @@ const AddQuiz = ({ onClose = () => {}, onSuccess = () => {} }) => {
                 <Form.Control.Feedback type="invalid">
                     {errors.chronoVal?.message}
                 </Form.Control.Feedback>
+            </Form.Group>
+
+            {/* Ajout de l'option Quiz Final */}
+            <Form.Group className="mb-3">
+                <Form.Label className="d-flex align-items-center">
+                    <Switch
+                        checked={isFinalQuiz}
+                        onChange={handleFinalQuizChange}
+                        color="primary"
+                        size="small"
+                        className="me-2"
+                    />
+                    Quiz Final
+                </Form.Label>
+                <Form.Text className="text-muted">
+                    Désigner ce quiz comme le quiz final du cours. Ce quiz sera accessible uniquement après que tous les autres quiz du cours aient été complétés.
+                </Form.Text>
             </Form.Group>
 
             <div className="d-flex justify-content-end gap-2">

@@ -1,0 +1,58 @@
+/* CSS fixes for module cards that are too large */
+
+/* Reduce the size of module cards */
+.module-card {
+  max-width: 300px;
+  margin: 0 auto;
+  font-size: 0.85rem;
+  height: auto !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Make the card title smaller */
+.module-card .card-title {
+  font-size: 0.95rem;
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+}
+
+/* Make the card text smaller */
+.module-card .card-text {
+  font-size: 0.75rem;
+  margin-bottom: 0.4rem;
+  max-height: 50px;
+  overflow: hidden;
+  color: #666;
+}
+
+/* Make the module stats more compact */
+.module-stats {
+  font-size: 0.7rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+/* Adjust the padding of the card body */
+.module-card .card-body {
+  padding: 0.8rem !important;
+}
+
+/* Make the button smaller */
+.module-card button {
+  padding: 0.25rem 0.5rem !important;
+  font-size: 0.75rem !important;
+}
+
+/* Adjust the module header */
+.module-header {
+  padding: 1.5rem !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.module-header h2 {
+  font-size: 1.8rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.module-header p {
+  font-size: 0.9rem !important;
+}

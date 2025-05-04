@@ -1,0 +1,126 @@
+/* CSS fixes for course cards that are too large */
+
+/* Reduce the size of course cards */
+.course-card {
+  max-width: 300px;
+  margin: 0 auto;
+  font-size: 0.85rem;
+  height: auto !important;
+}
+
+/* Make the card title smaller */
+.course-card .card-title {
+  font-size: 0.95rem;
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+}
+
+/* Make the card text smaller */
+.course-card .card-text {
+  font-size: 0.75rem;
+  margin-bottom: 0.4rem;
+  max-height: 50px;
+  overflow: hidden;
+  color: #666;
+}
+
+/* Make the course meta more compact */
+.course-meta {
+  padding: 0.4rem !important;
+  margin: 0.4rem 0 !important;
+}
+
+/* Make the stats grid more compact */
+.course-stats-grid {
+  gap: 0.2rem !important;
+}
+
+/* Make the stat items smaller */
+.stat-item {
+  padding: 0.2rem !important;
+  min-height: 0 !important;
+}
+
+/* Make the stat icon smaller */
+.stat-icon {
+  min-width: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
+  margin-right: 0.2rem !important;
+  font-size: 0.65rem !important;
+}
+
+/* Make the stat label smaller */
+.stat-label {
+  font-size: 0.65rem !important;
+  margin-bottom: 0 !important;
+}
+
+/* Make the stat value smaller */
+.stat-value {
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+}
+
+/* Make the course footer more compact */
+.course-footer {
+  padding: 0.5rem !important;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Make the course price smaller */
+.course-price {
+  font-size: 0.95rem !important;
+  font-weight: 600;
+}
+
+/* Make the button smaller */
+.course-footer button {
+  padding: 0.2rem 0.4rem !important;
+  font-size: 0.75rem !important;
+}
+
+/* Make the purchased alert smaller */
+.course-purchased-alert {
+  font-size: 0.7rem !important;
+  padding: 0.2rem !important;
+  margin-bottom: 0.3rem !important;
+}
+
+/* Adjust the padding of the card body */
+.course-card .card-body {
+  padding: 0.6rem !important;
+}
+
+/* Adjust the course tags */
+.course-tags {
+  margin-top: 0.3rem !important;
+}
+
+.course-tag {
+  font-size: 0.7rem !important;
+  padding: 0.1rem 0.3rem !important;
+  margin-right: 0.3rem !important;
+}
+
+/* Adjust the participants and duration values */
+.participants-value, .duree-value {
+  font-size: 1rem !important;
+}
+
+/* Adjust the course header */
+.course-header {
+  padding: 1.5rem !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.course-header h2 {
+  font-size: 1.8rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.course-header p {
+  font-size: 0.9rem !important;
+}

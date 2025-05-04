@@ -20,6 +20,7 @@ const EventDetails = () => {
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [calendarLinks, setCalendarLinks] = useState(null);
   const [qrCodeUrl, setQrCodeUrl] = useState(null);
+  const [qrCodeError, setQrCodeError] = useState(false);
 
   useEffect(() => {
     // Récupérer l'utilisateur depuis les cookies ou localStorage
@@ -93,7 +94,10 @@ const EventDetails = () => {
 
       // Si un QR code a été généré, le stocker
       if (response.qrCodeUrl) {
+        console.log('QR code URL received:', response.qrCodeUrl);
         setQrCodeUrl(response.qrCodeUrl);
+      } else {
+        console.log('No QR code URL received in response');
       }
 
       // Refresh event data to update attendee count
@@ -162,7 +166,7 @@ const EventDetails = () => {
         <Col md={8}>
           <Card className="event-details-card">
             {event.image && (
-              <Card.Img variant="top" src={`http://localhost:5000/${event.image}`} alt={event.title} />
+              <Card.Img variant="top" src={`http://localhost:5002/${event.image}`} alt={event.title} />
             )}
             <Card.Body>
               <div className="d-flex justify-content-between align-items-center mb-3">
@@ -190,7 +194,22 @@ const EventDetails = () => {
               {qrCodeUrl && (
                 <div className="qr-code-container mt-4 text-center">
                   <h5>Event QR Code</h5>
-                  <img src={qrCodeUrl} alt="Event QR Code" className="qr-code-image" />
+                  <img
+                    src={qrCodeUrl.startsWith('http') ? qrCodeUrl : `http://localhost:5002${qrCodeUrl}`}
+                    alt="Event QR Code"
+                    className="qr-code-image"
+                    onError={(e) => {
+                      console.error('Error loading QR code:', e);
+                      console.error('QR code URL:', qrCodeUrl);
+                      e.target.src = 'https://via.placeholder.com/150?text=QR+Code+Not+Available';
+                      setQrCodeError(true);
+                    }}
+                  />
+                  {qrCodeError && (
+                    <Alert variant="warning" className="mt-2">
+                      QR code could not be loaded. Please try again later.
+                    </Alert>
+                  )}
                   <p className="mt-2">Scan this QR code to access event details</p>
                 </div>
               )}

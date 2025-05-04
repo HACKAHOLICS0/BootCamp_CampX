@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { useNavigate } from 'react-router-dom';
+import CertificateList from './Certificate/CertificateList';
 
 const backendURL = "http://localhost:5000";
 const getImageUrl = (user) => {
@@ -30,6 +31,7 @@ export default function UserProfile() {
     const [purchasedCourses, setPurchasedCourses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [activeTab, setActiveTab] = useState('info'); // 'info', 'courses', 'certificates'
 
     const [editableUser, setEditableUser] = useState({
         name: "", lastName: "", birthDate: "", email: "", phone: ""
@@ -65,11 +67,11 @@ export default function UserProfile() {
                 const response = await fetch(`${backendURL}/api/interest-points`);
                 const data = await response.json();
                 console.log("Fetched interest points:", data); // Vérifie le format des données
-    
+
                 // Assurez-vous que les données récupérées sont correctement filtrées
                 if (Array.isArray(data)) {
                     setInterestPoints(data);
-    
+
                     if (user && user.interestPoints) {
                         const filteredPoints = data.filter(point => user.interestPoints.includes(point.value));
                         setSelectedPoints(filteredPoints.map(point => point.value));
@@ -81,12 +83,12 @@ export default function UserProfile() {
                 console.error("Erreur lors de la récupération des points d'intérêt :", error);
             }
         };
-    
+
         if (user) {
             fetchInterestPoints();
         }
     }, [user]);
-    
+
 
     const handleEditUser = () => {
         setIsModalOpen(true);
@@ -97,10 +99,10 @@ export default function UserProfile() {
             console.log("No user or user ID found.");
             return;
         }
-    
+
         const userId = user._id || user.id; // Extract and ensure we have a valid ID
         console.log("User ID passed as parameter:", userId); // Ajout du log pour afficher l'ID
-    
+
         try {
             const response = await fetch(`${backendURL}/api/auth/${userId}`, {
                 method: "PUT",
@@ -109,11 +111,11 @@ export default function UserProfile() {
                 },
                 body: JSON.stringify(editableUser),
             });
-    
+
             if (!response.ok) {
                 throw new Error("Failed to update user data");
             }
-    
+
             const updatedUser = await response.json();
             setUser(updatedUser);
             Cookies.set("user", JSON.stringify(updatedUser), { expires: 7 });
@@ -124,7 +126,7 @@ export default function UserProfile() {
                 email: updatedUser.email || "",
                 phone: updatedUser.phone || ""
             });
-    
+
             setIsModalOpen(false);
         } catch (error) {
             console.error("Error updating user:", error);
@@ -154,20 +156,20 @@ export default function UserProfile() {
 
     const handleSaveSelection = async () => {
         const storedUser = Cookies.get("user");
-    
+
         if (!storedUser) {
             console.log("No stored user found in localStorage.");
             return;
         }
-    
+
         const parsedUser = JSON.parse(storedUser);
         const userId = parsedUser._id || parsedUser.id;
-    
+
         console.log("User ID passed as parameter:", userId);
         console.log("Selected points before saving:", selectedPoints);
-    
+
         const updatedSelectedPoints = [...new Set([...user.refinterestpoints, ...selectedPoints])];
-    
+
         try {
             const response = await fetch(`${backendURL}/api/user/${userId}/interest-points`, {
                 method: "PUT",
@@ -176,14 +178,14 @@ export default function UserProfile() {
                 },
                 body: JSON.stringify({ selectedPoints: updatedSelectedPoints }),
             });
-    
+
             if (!response.ok) {
                 throw new Error("Échec de l'enregistrement des points d'intérêt");
             }
-    
+
             const updatedUser = await response.json();
             console.log("Updated user from backend:", updatedUser);
-    
+
             setUser(updatedUser);
             Cookies.set("user", JSON.stringify(updatedUser), { expires: 7 });
             setIsInterestPointModalOpen(false);
@@ -191,10 +193,10 @@ export default function UserProfile() {
             console.error("Erreur lors de l'enregistrement des points d'intérêt :", error);
         }
     };
-    
+
     useEffect(() => {
         if (user && user.interestPoints) {
-            setSelectedPoints(user.interestPoints); 
+            setSelectedPoints(user.interestPoints);
         }
     }, [user]);
 
@@ -205,11 +207,11 @@ export default function UserProfile() {
         email: "",
         phone: ""
     });
-    
+
     const [isFormValid, setIsFormValid] = useState(false);
-    
-   
-    
+
+
+
     const checkFormValidity = (newErrors) => {
         setIsFormValid(!Object.values(newErrors).some(error => error !== '') && Object.values(editableUser).every(value => value !== ''));
     };
@@ -251,11 +253,11 @@ export default function UserProfile() {
                     const today = new Date();
                     let age = today.getFullYear() - birthDate.getFullYear();
                     const monthDiff = today.getMonth() - birthDate.getMonth();
-                    
+
                     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
                         age--;
                     }
-                    
+
                     if (age < 16) {
                         error = "You must be at least 16 years old";
                     } else if (birthDate > today) {
@@ -290,7 +292,7 @@ export default function UserProfile() {
 
         // Check if all fields are valid
         const newErrors = { ...errors, [field]: error };
-        const isValid = !Object.values(newErrors).some(error => error !== '') && 
+        const isValid = !Object.values(newErrors).some(error => error !== '') &&
                        Object.values(editableUser).every(value => value !== '');
         setIsFormValid(isValid);
     };
@@ -299,24 +301,24 @@ export default function UserProfile() {
         setPointToDelete(point);  // Assure-toi d'utiliser `point.value`
         setIsDeleteModalOpen(true);
     };
-    
-    
+
+
     const closeDeleteModal = () => {
         setIsDeleteModalOpen(false);
         setPointToDelete(null);
     };
     const deleteInterestPoint = async () => {
         console.log("Point to delete:", pointToDelete);  // Vérifie ce que contient pointToDelete
-        
+
         const storedUser = Cookies.get("user");
         if (!storedUser) {
             console.log("No stored user found in localStorage.");
             return;
         }
-    
+
         const parsedUser = JSON.parse(storedUser);
         const userId = parsedUser._id || parsedUser.id;
-    
+
         try {
             const response = await fetch(`${backendURL}/api/user/${userId}/interest-point`, {
                 method: 'DELETE',
@@ -325,40 +327,40 @@ export default function UserProfile() {
                 },
                 body: JSON.stringify({ point: pointToDelete })
             });
-    
+
             if (!response.ok) {
                 throw new Error("Failed to delete interest point");
             }
-    
+
             // Mettre à jour les points d'intérêt de l'utilisateur
             const updatedUserInterestPoints = user.refinterestpoints.filter(point => point !== pointToDelete);
-            
+
             // Mettez à jour les données de l'utilisateur pour refléter les points supprimés
-            const updatedUser = { 
-                ...user, 
-                refinterestpoints: updatedUserInterestPoints 
+            const updatedUser = {
+                ...user,
+                refinterestpoints: updatedUserInterestPoints
             };
-    
+
             setUser(updatedUser);
             Cookies.set("user", JSON.stringify(updatedUser), { expires: 7 });
-    
+
             // Mettre à jour l'état local des points d'intérêt
             setInterestPoints(updatedUserInterestPoints);  // Seuls les points de l'utilisateur
-    
+
             // Fermer le modal après suppression
             closeDeleteModal();
-    
+
         } catch (error) {
             console.error("Erreur lors de la suppression du point d'intérêt :", error);
         }
     };
-    
+
     const fetchPurchasedCourses = async () => {
         try {
             setLoading(true);
             setError(null);
             const token = Cookies.get('token');
-            
+
             if (!token) {
                 throw new Error('No authentication token found');
             }
@@ -411,76 +413,111 @@ export default function UserProfile() {
                         <div className="col-md-4 mb-3 d-flex align-items-stretch">
                             <div className="card card-user w-100">
                                 <div className="card-body-user text-center">
-                                <img src={getImageUrl(user)} className="rounded-circle" width="200" alt="User Avatar" />
-                                <div className="mt-3">
+                                    <img src={getImageUrl(user)} className="rounded-circle" width="200" alt="User Avatar" />
+                                    <div className="mt-3">
                                         <h4>{user.name || "User"}</h4>
+                                    </div>
+
+                                    {/* Navigation des onglets */}
+                                    <div className="profile-tabs mt-4">
+                                        <ul className="nav nav-tabs">
+                                            <li className="nav-item">
+                                                <button
+                                                    className={`nav-link ${activeTab === 'info' ? 'active' : ''}`}
+                                                    onClick={() => setActiveTab('info')}
+                                                >
+                                                    <i className="bi bi-person me-1"></i> Profil
+                                                </button>
+                                            </li>
+                                            <li className="nav-item">
+                                                <button
+                                                    className={`nav-link ${activeTab === 'interests' ? 'active' : ''}`}
+                                                    onClick={() => setActiveTab('interests')}
+                                                >
+                                                    <i className="bi bi-star me-1"></i> Intérêts
+                                                </button>
+                                            </li>
+                                            <li className="nav-item">
+                                                <button
+                                                    className={`nav-link ${activeTab === 'certificates' ? 'active' : ''}`}
+                                                    onClick={() => setActiveTab('certificates')}
+                                                >
+                                                    <i className="bi bi-award me-1"></i> Certificats
+                                                </button>
+                                            </li>
+                                        </ul>
                                     </div>
                                 </div>
                             </div>
                         </div>
+
                         <div className="col-md-8 mb-3 d-flex align-items-stretch">
-                            <div className="card-user w-100">
-                                <div className="card-body card-body-user">
-                                    <h4 className="text-center my-3">Personal Information</h4>
-                                    {["name", "lastName", "birthDate", "email", "phone"].map((key, index) => (
-                                        <React.Fragment key={index}>
-                                            <div className="row">
-                                                <div className="col-sm-3">
-                                                    <h6 className="mb-0">{key.replace(/([A-Z])/g, ' $1')}</h6>
+                            {activeTab === 'info' && (
+                                <div className="card-user w-100">
+                                    <div className="card-body card-body-user">
+                                        <h4 className="text-center my-3">Informations Personnelles</h4>
+                                        {["name", "lastName", "birthDate", "email", "phone"].map((key, index) => (
+                                            <React.Fragment key={index}>
+                                                <div className="row">
+                                                    <div className="col-sm-3">
+                                                        <h6 className="mb-0">{key.replace(/([A-Z])/g, ' $1')}</h6>
+                                                    </div>
+                                                    <div className="col-sm-9 text-secondary">{user[key] || "N/A"}</div>
                                                 </div>
-                                                <div className="col-sm-9 text-secondary">{user[key] || "N/A"}</div>
-                                            </div>
-                                            <hr />
-                                        </React.Fragment>
-                                    ))}
-                                     <div className="text-end mt-3">
-            <button className="edit-button" onClick={handleEditUser}>
-                <i className="fa fa-edit"></i> {/* Icône d'édition */}
-              
-            </button>
-        </div>
+                                                <hr />
+                                            </React.Fragment>
+                                        ))}
+                                        <div className="text-end mt-3">
+                                            <button className="edit-button" onClick={handleEditUser} title="Modifier">
+                                                <i className="bi bi-pencil"></i>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
+                            )}
 
-                    <div className="row">
-                        <div className="col-md-8 offset-md-4 my-3 d-flex align-items-stretch">
-                            <div className="card card-point w-100">
-                                <h4 className="text-center my-3">Points of Interest</h4>
-                                <hr />
-                                <div className="row">
-    {user.refinterestpoints && user.refinterestpoints.length > 0 ? (
-        user.refinterestpoints.map((point, i) => (
-            <div key={i} className="col-auto mb-2">
-                <div
-                    className="card point-card"
-                    style={{
-                        cursor: 'pointer',
-                        maxWidth: '250px',
-                        fontSize: '0.9rem',
-                        padding: '10px',
-                        transition: 'transform 0.3s, box-shadow 0.3s',
-                    }}
-                    onClick={() => openDeleteModal(typeof point === 'string' ? point : point.value)} // Vérifie si point est une chaîne ou un objet
-                >
-                    <div className="card-body" style={{ padding: '10px' }}>
-                        <h5>{typeof point === 'string' ? point : point.value}</h5> {/* Affiche correctement le nom du point */}
-                    </div>
-                </div>
-            </div>
-        ))
-    ) : (
-        <p>No points of interest available.</p>
-    )}
-</div>
-<div className="text-end mt-3 me-3">
-    <button className="edit-button" onClick={openInterestPointModal}>
-        <i className="bi bi-plus"></i> {/* Icône + */}
-    </button>
-</div>
+                            {activeTab === 'interests' && (
+                                <div className="card card-point w-100">
+                                    <h4 className="text-center my-3">Points d'Intérêt</h4>
+                                    <hr />
+                                    <div className="row p-3">
+                                        {user.refinterestpoints && user.refinterestpoints.length > 0 ? (
+                                            user.refinterestpoints.map((point, i) => (
+                                                <div key={i} className="col-auto mb-2">
+                                                    <div
+                                                        className="card point-card"
+                                                        style={{
+                                                            cursor: 'pointer',
+                                                            maxWidth: '250px',
+                                                            fontSize: '0.9rem',
+                                                            padding: '10px',
+                                                            transition: 'transform 0.3s, box-shadow 0.3s',
+                                                        }}
+                                                        onClick={() => openDeleteModal(typeof point === 'string' ? point : point.value)}
+                                                    >
+                                                        <div className="card-body" style={{ padding: '10px' }}>
+                                                            <h5>{typeof point === 'string' ? point : point.value}</h5>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <p className="text-center">Aucun point d'intérêt disponible.</p>
+                                        )}
+                                    </div>
+                                    <div className="text-end mt-3 me-3 mb-3">
+                                        <button className="edit-button" onClick={openInterestPointModal}>
+                                            <i className="bi bi-plus"></i> Ajouter
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
 
-                            </div>
+                            {activeTab === 'certificates' && (
+                                <div className="card w-100 certificate-tab-container">
+                                    <CertificateList />
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -507,9 +544,9 @@ export default function UserProfile() {
                     </div>
                 ))}
                 <div className="edit-modal-footer">
-                    <button 
-                        className="edit-save-button" 
-                        onClick={handleSaveUser} 
+                    <button
+                        className="edit-save-button"
+                        onClick={handleSaveUser}
                         disabled={!isFormValid}
                     >
                         Save
@@ -528,9 +565,9 @@ export default function UserProfile() {
             <h4>Select Points of Interest</h4>
             <div className="custom-interest-points-grid">
                 {interestPoints.map((point, index) => (
-                    <div 
-                        key={index} 
-                        className={`custom-card custom-point-card ${selectedPoints.includes(point.value) ? 'custom-selected' : ''}`} 
+                    <div
+                        key={index}
+                        className={`custom-card custom-point-card ${selectedPoints.includes(point.value) ? 'custom-selected' : ''}`}
                         onClick={() => handlePointSelection(point)}
                     >
                         <div className="custom-card-body custom-card-body-point">
@@ -583,7 +620,7 @@ export default function UserProfile() {
         ) : purchasedCourses.length === 0 ? (
             <div className="text-center">
                 <p className="text-muted mb-0">You haven't purchased any courses yet.</p>
-                <button 
+                <button
                     className="btn btn-primary mt-3"
                     onClick={() => navigate('/categories')}
                 >
@@ -598,14 +635,14 @@ export default function UserProfile() {
                             <div className="card-body">
                                 <h5 className="card-title">{course.title}</h5>
                                 <p className="card-text">{course.description}</p>
-                                
+
                                 <div className="progress mb-3">
-                                    <div 
-                                        className="progress-bar" 
-                                        role="progressbar" 
+                                    <div
+                                        className="progress-bar"
+                                        role="progressbar"
                                         style={{ width: `${course.progress}%` }}
-                                        aria-valuenow={course.progress} 
-                                        aria-valuemin="0" 
+                                        aria-valuenow={course.progress}
+                                        aria-valuemin="0"
                                         aria-valuemax="100"
                                     >
                                         {course.progress}%
@@ -614,7 +651,7 @@ export default function UserProfile() {
 
                                 <div className="d-flex justify-content-between align-items-center">
                                     <div>
-                                        
+
                                     </div>
                                     <button
                                         className="btn btn-primary btn-sm"

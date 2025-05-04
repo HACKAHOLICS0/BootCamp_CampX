@@ -172,8 +172,11 @@ const ChatbotPopup = () => {
             }
         };
 
+        // Déterminer l'URL du service chatbot
+        const chatbotUrl = "http://localhost:5001/predict";
+
         console.log("Envoi de la requête au chatbot:", {
-            url: "http://localhost:5001/predict",
+            url: chatbotUrl,
             data: requestData,
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -182,7 +185,7 @@ const ChatbotPopup = () => {
         });
 
         axios.post(
-            "http://localhost:5001/predict",
+            chatbotUrl,
             requestData,
             {
                 headers: {

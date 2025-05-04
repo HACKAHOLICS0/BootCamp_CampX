@@ -22,7 +22,6 @@ import Analytics from './components/Admin/Analytics';
 import Points from './components/Admin/PointsOfIntrest';
 import Settings from './components/Admin/Settings';
 import Notifications from './components/Admin/Notifications';
-import Quiz from './components/Admin/Quizs/QuizAdmin';
 import Categories from './components/Admin/Categories';
 import Modules from './components/Admin/Modules';
 import Videos from './components/Admin/Videos';
@@ -52,7 +51,10 @@ import EventDetails from './components/events/EventDetails';
 import EventStats from './components/events/EventStats';
 import Events from './components/Admin/Events';
 import PendingEvents from './components/Admin/PendingEvents';
-
+import CertificateView from './components/user/Certificate/CertificateView';
+import CertificateList from './components/user/Certificate/CertificateList';
+import VerifyCertificate from './components/user/Certificate/VerifyCertificate';
+import Quiz from './components/Admin/Quizs/QuizAdmin';
 
 
 function App() {
@@ -117,6 +119,19 @@ function App() {
           {/* Quiz Routes */}
           <Route path="/quiz/:quizId" element={<QuizView />} />
           <Route path="/quiz/:quizId/result" element={<QuizResultView />} />
+ {/* Routes pour les certificats */}
+ <Route path="/certificates" element={
+            <PrivateRoute>
+              <CertificateList />
+            </PrivateRoute>
+          } />
+          <Route path="/certificates/:certificateId" element={
+            <PrivateRoute>
+              <CertificateView />
+            </PrivateRoute>
+          } />
+          <Route path="/verify-certificate" element={<VerifyCertificate />} />
+          <Route path="/verify-certificate/:certificateNumber" element={<VerifyCertificate />} />
 
           {/* Routes pour le chat et le chatbot */}
           <Route path="/chat" element={<ChatTest />} />

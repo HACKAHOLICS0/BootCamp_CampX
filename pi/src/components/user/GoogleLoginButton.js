@@ -23,16 +23,25 @@ export default function GoogleLoginButton() {
         .then((data) => {
             if (data.token) {
                 Cookies.set("token", data.token, { expires: 7 });
-        
+
                 // Ajouter `picture` à l'objet utilisateur stocké en local
                 const userData = { ...data.user, picture: data.user.picture || credentialResponse.clientId };
                 Cookies.set("user", JSON.stringify(userData), { expires: 7 });
-        
+
                 window.dispatchEvent(new Event("userUpdated"));
-                window.location.href = "/";
+
+                // Check user role and redirect accordingly
+                console.log("User data:", userData);
+                if (userData && (userData.role === "ADMIN" || userData.typeUser === "admin")) {
+                    console.log("Admin user detected, redirecting to admin dashboard");
+                    window.location.href = "/admin";
+                } else {
+                    console.log("Regular user detected, redirecting to home page");
+                    window.location.href = "/";
+                }
             }
         });
-        
+
         }}
         onError={() => {
           console.log("Google Login Failed");
