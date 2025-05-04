@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 const session = require("express-session"); // Importation de express-session
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
+const fs = require('fs'); // Importation de fs pour la gestion des fichiers
 const interestPointModel = require("./Model/Interestpoint")
 const adminRoutes = require("./routes/AdminRoutes");
 const moduleRoutes = require("./routes/moduleRoutes");
@@ -65,9 +66,42 @@ app.use(passport.initialize());
 app.use(express.json()); // Activer le parsing JSON
 
 
+// Vérifier si les dossiers pour les fichiers statiques existent
+const uploadsDir = path.join(__dirname, "uploads");
+const publicDir = path.join(__dirname, "public");
+const qrCodesDir = path.join(__dirname, "public/qrcodes");
+const icsDir = path.join(__dirname, "public/ics");
+
+// Créer les dossiers s'ils n'existent pas
+if (!fs.existsSync(uploadsDir)) {
+  console.log('Création du dossier uploads...');
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+if (!fs.existsSync(publicDir)) {
+  console.log('Création du dossier public...');
+  fs.mkdirSync(publicDir, { recursive: true });
+}
+
+if (!fs.existsSync(qrCodesDir)) {
+  console.log('Création du dossier public/qrcodes...');
+  fs.mkdirSync(qrCodesDir, { recursive: true });
+}
+
+if (!fs.existsSync(icsDir)) {
+  console.log('Création du dossier public/ics...');
+  fs.mkdirSync(icsDir, { recursive: true });
+}
+
 // Servir les fichiers statiques
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/public", express.static(path.join(__dirname, "public")));
+
+// Afficher les chemins des dossiers statiques pour le débogage
+console.log('Dossier uploads:', uploadsDir);
+console.log('Dossier public:', publicDir);
+console.log('Dossier QR codes:', qrCodesDir);
+console.log('Dossier ICS:', icsDir);
 
 // MongoDB Connection
 require("./config/dbConfig");

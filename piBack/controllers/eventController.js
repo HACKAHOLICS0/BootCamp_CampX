@@ -278,13 +278,27 @@ exports.registerForEvent = async (req, res) => {
         };
 
         // Générer un QR code pour l'événement
-        const qrCodeUrl = await eventUtils.generateQRCode(event, `${req.protocol}://${req.get('host')}`);
+        console.log('Génération du QR code pour l\'événement:', event._id);
+        console.log('URL de base:', `${req.protocol}://${req.get('host')}`);
+
+        let qrCodeUrl;
+        try {
+            qrCodeUrl = await eventUtils.generateQRCode(event, `${req.protocol}://${req.get('host')}`);
+            console.log('QR code généré avec succès:', qrCodeUrl);
+        } catch (qrError) {
+            console.error('Erreur lors de la génération du QR code:', qrError);
+            qrCodeUrl = null;
+        }
 
         // Retourner l'événement avec les liens de calendrier et le QR code
+        // Construire l'URL complète du QR code
+        const fullQrCodeUrl = qrCodeUrl ? `${req.protocol}://${req.get('host')}${qrCodeUrl}` : null;
+        console.log('Full QR code URL:', fullQrCodeUrl);
+
         res.json({
             event,
             calendarLinks,
-            qrCodeUrl: qrCodeUrl ? `${req.protocol}://${req.get('host')}${qrCodeUrl}` : null,
+            qrCodeUrl: fullQrCodeUrl,
             message: 'Successfully registered for the event. You can add this event to your calendar using the provided links.'
         });
     } catch (error) {

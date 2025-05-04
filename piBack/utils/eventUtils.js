@@ -35,7 +35,9 @@ exports.generateQRCode = async (event, baseUrl = 'http://localhost:3000') => {
         });
 
         // Retourner l'URL relative du QR code
-        return `/qrcodes/${fileName}`;
+        console.log('QR code généré avec succès:', filePath);
+        console.log('URL du QR code:', `/public/qrcodes/${fileName}`);
+        return `/public/qrcodes/${fileName}`;
     } catch (error) {
         console.error('Erreur lors de la génération du QR code:', error);
         throw error;
@@ -130,7 +132,9 @@ exports.generateAppleCalendarUrl = (event) => {
         fs.writeFileSync(filePath, icsContent);
 
         // Retourner l'URL du fichier ICS
-        return `/ics/${fileName}`;
+        console.log('Fichier ICS généré avec succès:', filePath);
+        console.log('URL du fichier ICS:', `/public/ics/${fileName}`);
+        return `/public/ics/${fileName}`;
     } catch (error) {
         console.error('Erreur lors de la génération de l\'URL Apple Calendar:', error);
         return null;
