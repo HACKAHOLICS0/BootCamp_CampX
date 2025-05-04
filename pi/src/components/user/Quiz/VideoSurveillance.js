@@ -11,6 +11,7 @@ const VideoSurveillance = ({ onFraudDetected }) => {
   const [fraudDetected, setFraudDetected] = useState(false);
   const [fraudType, setFraudType] = useState(null);
   const [error, setError] = useState(null);
+  const [isDownloadingModels, setIsDownloadingModels] = useState(false);
 
   // Utiliser useRef pour les compteurs pour qu'ils persistent entre les rendus
   const noFaceCount = useRef(0);

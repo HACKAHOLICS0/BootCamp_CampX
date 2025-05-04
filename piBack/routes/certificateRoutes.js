@@ -5,6 +5,7 @@ const { authMiddleware, adminMiddleware } = require('../middleware/authMiddlewar
 
 // Routes protégées par authentification
 router.get('/user', authMiddleware, certificateController.getUserCertificates);
+router.get('/check/:quizId', authMiddleware, certificateController.checkUserCertificateForQuiz);
 router.get('/:certificateId', authMiddleware, certificateController.getCertificateById);
 router.get('/:certificateId/pdf', authMiddleware, certificateController.generateCertificatePDF);
 

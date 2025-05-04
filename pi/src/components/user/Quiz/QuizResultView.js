@@ -69,14 +69,14 @@ const QuizResultView = () => {
       <Container className="mt-4">
         <Card>
           <Card.Body>
-            <Card.Title className="text-center">No Result Available</Card.Title>
-            <p className="text-center">Quiz result not found. Please try taking the quiz again.</p>
+            <Card.Title className="text-center">Aucun résultat disponible</Card.Title>
+            <p className="text-center">Résultat du quiz introuvable. Veuillez réessayer de passer le quiz.</p>
             <div className="text-center">
               <Button
                 variant="primary"
                 onClick={handleReturn}
               >
-                Return to {courseId ? 'Course' : 'Categories'}
+                Retour au {courseId ? 'cours' : 'catégories'}
               </Button>
             </div>
           </Card.Body>
@@ -94,20 +94,26 @@ const QuizResultView = () => {
   const getFeedback = (percentage) => {
     if (percentage >= 80) {
       return {
-        title: 'Excellent work! 🎉',
-        message: "You've demonstrated a strong understanding of the material.",
+        title: 'Excellent travail ! 🎉',
+        message: "Vous avez démontré une forte compréhension du contenu.",
         variant: 'success'
       };
     } else if (percentage >= 60) {
       return {
-        title: 'Good effort! 👍',
-        message: "You're on the right track, but there's room for improvement.",
+        title: 'Bon effort ! 👍',
+        message: "Vous êtes sur la bonne voie, mais il y a encore place à l'amélioration.",
+        variant: 'warning'
+      };
+    } else if (percentage >= 50) {
+      return {
+        title: 'Vous avez réussi ! ✅',
+        message: 'Vous avez obtenu le score minimum requis pour passer au quiz suivant.',
         variant: 'warning'
       };
     } else {
       return {
-        title: 'Keep practicing! 💪',
-        message: 'Review the course material and try again to improve your score.',
+        title: 'Continuez à vous entraîner ! 💪',
+        message: 'Révisez le contenu du cours et réessayez pour améliorer votre score.',
         variant: 'danger'
       };
     }
@@ -199,7 +205,7 @@ const QuizResultView = () => {
                   </Button>
                   <Button
                     variant="outline-success"
-                    href={`/profile/certificates`}
+                    onClick={() => navigate('/profile', { state: { activeTab: 'certificates' } })}
                     className="ms-2"
                   >
                     <i className="fas fa-certificate me-2"></i> Voir mes certificats

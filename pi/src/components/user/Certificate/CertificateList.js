@@ -164,6 +164,14 @@ const CertificateList = () => {
                 <Badge
                   bg={certificate.status === 'active' ? 'success' : 'warning'}
                   className="certificate-status"
+                  style={{
+                    padding: '6px 10px',
+                    borderRadius: '4px',
+                    fontWeight: '600',
+                    fontSize: '0.75rem',
+                    letterSpacing: '0.5px',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                  }}
                 >
                   {certificate.status === 'active' ? (
                     <><FaCheck className="me-1" /> Actif</>
@@ -185,7 +193,7 @@ const CertificateList = () => {
                   </p>
                   <p>
                     <strong>N° Certificat:</strong>
-                    <span className="certificate-number">{certificate.certificateNumber}</span>
+                    <span className="certificate-number">{certificate.certificateNumber.substring(0, 8)}...</span>
                   </p>
                   {certificate.expiryDate && (
                     <p>
@@ -201,15 +209,17 @@ const CertificateList = () => {
                   to={`/certificates/${certificate._id}`}
                   variant="outline-primary"
                   size="sm"
+                  className="view-btn"
                 >
-                  <FaEye className="me-1" /> Voir
+                  <FaEye /> VOIR
                 </Button>
                 <Button
                   variant="primary"
                   size="sm"
                   onClick={() => handleDownload(certificate._id)}
+                  className="download-btn"
                 >
-                  <FaDownload className="me-1" /> Télécharger
+                  <FaDownload /> TÉLÉCHARGER
                 </Button>
               </Card.Footer>
             </Card>

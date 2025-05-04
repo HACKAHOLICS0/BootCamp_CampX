@@ -469,3 +469,28 @@ exports.verifyCertificate = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+// Vérifier si un utilisateur a déjà un certificat pour un quiz donné
+exports.checkUserCertificateForQuiz = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const { quizId } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(quizId)) {
+            return res.status(400).json({ error: 'ID de quiz invalide' });
+        }
+
+        const certificate = await Certificate.findOne({
+            user: userId,
+            quiz: quizId
+        });
+
+        res.status(200).json({
+            hasCertificate: !!certificate,
+            certificateId: certificate ? certificate._id : null
+        });
+    } catch (error) {
+        console.error('Erreur lors de la vérification du certificat pour le quiz:', error);
+        res.status(500).json({ error: error.message });
+    }
+};

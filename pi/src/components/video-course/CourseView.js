@@ -118,9 +118,42 @@ const CourseView = () => {
               });
 
               let completed = false;
+              let lastScore = null;
+              let hasCertificate = false;
+
               if (resultsResponse.ok) {
                 const results = await resultsResponse.json();
                 completed = results.length > 0;
+
+                // Récupérer le dernier score si disponible
+                if (results.length > 0) {
+                  // Trier les résultats par date (du plus récent au plus ancien)
+                  const sortedResults = [...results].sort((a, b) =>
+                    new Date(b.submittedAt) - new Date(a.submittedAt)
+                  );
+
+                  // Prendre le score le plus récent
+                  lastScore = sortedResults[0].percentage;
+                }
+
+                // Vérifier si l'utilisateur a déjà un certificat pour ce quiz
+                if (quizData.isFinalQuiz) {
+                  try {
+                    const certificateResponse = await fetch(`${config.API_URL}/api/certificates/check/${quizId}`, {
+                      headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                      }
+                    });
+
+                    if (certificateResponse.ok) {
+                      const certData = await certificateResponse.json();
+                      hasCertificate = certData.hasCertificate;
+                    }
+                  } catch (error) {
+                    console.warn(`Erreur lors de la vérification du certificat pour le quiz ${quizId}:`, error);
+                  }
+                }
               }
 
               return {
@@ -129,7 +162,9 @@ const CourseView = () => {
                 title: quizData.title || quizData.nom || 'Quiz sans titre',
                 duration: quizData.duration || quizData.duree || quizData.chronoVal || 0,
                 isFinalQuiz: quizData.isFinalQuiz || false,
-                completed
+                completed,
+                lastScore,
+                hasCertificate
               };
             }).catch(error => {
               console.warn(`Erreur lors de la récupération du quiz ${quizId}:`, error);
@@ -294,43 +329,65 @@ const CourseView = () => {
                     {/* Afficher d'abord les quiz standards */}
                     {quizzes
                       .filter(quiz => !quiz.isFinalQuiz)
-                      .map((quiz, index) => (
-                        <div key={quiz._id} className="quiz-card">
-                          <div className="quiz-info">
-                            <h3>{quiz.title}</h3>
-                            <div className="quiz-meta">
-                              <span>
-                                <FaClock />
-                                {formatDuration(quiz.duration)}
-                              </span>
-                              <span>
-                                <FaQuestionCircle />
-                                {quiz.Questions ? quiz.Questions.length : 0} questions
-                              </span>
-                              {quiz.completed && (
-                                <span className="completed-badge">
-                                  ✓ Complété
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <button
-                            className="start-quiz-btn"
-                            onClick={() => startQuiz(quiz._id)}
-                          >
-                            <FaPlay /> {quiz.completed ? 'Recommencer' : 'Commencer'}
-                          </button>
-                        </div>
-                      ))}
+                      .map((quiz, index, array) => {
+                        // Vérifier si ce quiz est accessible
+                        // Le premier quiz est toujours accessible
+                        // Les autres quiz ne sont accessibles que si le quiz précédent a été complété avec au moins 50% de score
+                        const previousQuiz = index > 0 ? array[index - 1] : null;
+                        const isAccessible = index === 0 ||
+                          (previousQuiz && previousQuiz.completed && previousQuiz.lastScore >= 50);
 
-                    {/* Afficher les quiz finaux seulement si tous les quiz standards sont complétés */}
+                        return (
+                          <div key={quiz._id} className={`quiz-card ${!isAccessible ? 'locked-quiz' : ''}`}>
+                            <div className="quiz-info">
+                              <h3>{quiz.title}</h3>
+                              <div className="quiz-meta">
+                                <span>
+                                  <FaClock />
+                                  {formatDuration(quiz.duration)}
+                                </span>
+                                <span>
+                                  <FaQuestionCircle />
+                                  {quiz.Questions ? quiz.Questions.length : 0} questions
+                                </span>
+                                {quiz.completed && (
+                                  <span className={`completed-badge ${quiz.lastScore < 50 ? 'low-score' : ''}`}>
+                                    ✓ Complété {quiz.lastScore ? <span>{quiz.lastScore}%</span> : ''}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            {isAccessible ? (
+                              <button
+                                className="start-quiz-btn"
+                                onClick={() => startQuiz(quiz._id)}
+                              >
+                                <FaPlay /> {quiz.completed ? 'Recommencer' : 'Commencer'}
+                              </button>
+                            ) : (
+                              <button
+                                className="start-quiz-btn disabled"
+                                disabled
+                                title="Complétez le quiz précédent avec un score d'au moins 50% pour débloquer ce quiz"
+                              >
+                                <FaLock /> Verrouillé
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+
+                    {/* Afficher les quiz finaux seulement si tous les quiz standards sont complétés avec au moins 50% */}
                     {quizzes
                       .filter(quiz => quiz.isFinalQuiz)
                       .map((quiz, index) => {
-                        // Vérifier si tous les quiz standards sont complétés
+                        // Vérifier si tous les quiz standards sont complétés avec au moins 50%
                         const standardQuizzes = quizzes.filter(q => !q.isFinalQuiz);
                         const allStandardQuizzesCompleted = standardQuizzes.length > 0 &&
-                          standardQuizzes.every(q => q.completed);
+                          standardQuizzes.every(q => q.completed && q.lastScore >= 50);
+
+                        // Vérifier si l'utilisateur a déjà un certificat pour ce quiz
+                        const hasCertificate = quiz.hasCertificate;
 
                         return (
                           <div key={quiz._id} className={`quiz-card ${quiz.isFinalQuiz ? 'final-quiz' : ''}`}>
@@ -350,26 +407,39 @@ const CourseView = () => {
                                   {quiz.Questions ? quiz.Questions.length : 0} questions
                                 </span>
                                 {quiz.completed && (
-                                  <span className="completed-badge">
-                                    ✓ Complété
+                                  <span className={`completed-badge ${quiz.lastScore < 50 ? 'low-score' : ''}`}>
+                                    ✓ Complété {quiz.lastScore ? <span>{quiz.lastScore}%</span> : ''}
+                                  </span>
+                                )}
+                                {hasCertificate && (
+                                  <span className="certificate-badge">
+                                    <FaTrophy /> Certificat obtenu
                                   </span>
                                 )}
                               </div>
                             </div>
-                            {allStandardQuizzesCompleted ? (
+                            {!allStandardQuizzesCompleted ? (
+                              <button
+                                className="start-quiz-btn disabled"
+                                disabled
+                                title="Complétez tous les quiz avec un score d'au moins 50% pour débloquer le quiz final"
+                              >
+                                <FaLock /> Verrouillé
+                              </button>
+                            ) : hasCertificate ? (
+                              <button
+                                className="start-quiz-btn certificate-btn"
+                                onClick={() => navigate('/profile', { state: { activeTab: 'certificates' } })}
+                                title="Vous avez déjà obtenu un certificat pour ce quiz"
+                              >
+                                <FaTrophy /> Voir mon certificat
+                              </button>
+                            ) : (
                               <button
                                 className="start-quiz-btn"
                                 onClick={() => startQuiz(quiz._id)}
                               >
                                 <FaPlay /> {quiz.completed ? 'Recommencer' : 'Commencer'}
-                              </button>
-                            ) : (
-                              <button
-                                className="start-quiz-btn disabled"
-                                disabled
-                                title="Complétez tous les autres quiz pour débloquer le quiz final"
-                              >
-                                <FaLock /> Verrouillé
                               </button>
                             )}
                           </div>
