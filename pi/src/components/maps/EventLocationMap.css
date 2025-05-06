@@ -1,0 +1,34 @@
+.event-location-map {
+  margin-top: 10px;
+}
+
+.map-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.map-container iframe {
+  width: 100%;
+  height: 300px;
+  border: none;
+}
+
+.location-details {
+  padding: 10px 0;
+}
+
+.online-event-info {
+  margin-top: 10px;
+}
+
+.location-text {
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin-bottom: 10px;
+}
+
+.bi-laptop, .bi-geo-alt {
+  margin-right: 5px;
+}

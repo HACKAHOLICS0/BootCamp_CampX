@@ -134,7 +134,7 @@
   margin-top: 1.5rem;
 }
 
-.video-list h5 {
+.video-list h5, .code-examples-list h5 {
   color: #2c3e50;
   font-size: 1.1rem;
   margin-bottom: 1rem;
@@ -142,7 +142,7 @@
   border-bottom: 1px solid #dee2e6;
 }
 
-.video-list-item {
+.video-list-item, .code-example-item {
   padding: 0.8rem 1rem;
   margin-bottom: 0.5rem;
   border-radius: 8px;
@@ -151,17 +151,17 @@
   transition: all 0.2s ease;
 }
 
-.video-list-item:hover {
+.video-list-item:hover, .code-example-item:hover {
   background: #e9ecef;
   transform: translateX(3px);
 }
 
-.video-list-item.active {
+.video-list-item.active, .code-example-item.active {
   background: #e3f2fd;
   border-left: 3px solid #0d6efd;
 }
 
-.video-list-title {
+.video-list-title, .code-example-title {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -170,7 +170,7 @@
   gap: 0.5rem;
 }
 
-.video-list-title span {
+.video-list-title span, .code-example-title span {
   font-weight: 500;
   color: #495057;
 }
@@ -454,29 +454,47 @@
   }
 }
 
+/* Styles pour l'éditeur de code */
+.code-examples-list {
+  margin-top: 1.5rem;
+}
+
+.code-editor-container {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* Responsive styles */
 @media (max-width: 768px) {
   .course-container {
     padding: 1rem 0;
   }
-  
+
   .course-header {
     padding: 1rem;
   }
-  
+
   .course-main {
     padding: 0 0.5rem;
   }
-  
+
   .course-sidebar {
     margin-bottom: 1.5rem;
     position: static;
   }
-  
+
   .video-item {
     padding: 1rem;
   }
-  
+
   .video-player-container {
     height: 300px !important;
+  }
+
+  .code-editor-container {
+    padding: 1rem;
   }
 }

@@ -7,6 +7,7 @@ import Cookies from 'js-cookie';
 import eventService from '../../services/eventService';
 import recommendationService from '../../services/recommendationService';
 import SimilarEvents from './SimilarEvents';
+import EventLocationMap from '../maps/EventLocationMap';
 import './EventDetails.css';
 
 const EventDetails = () => {
@@ -266,8 +267,14 @@ const EventDetails = () => {
           <Card className="mb-4">
             <Card.Body>
               <Card.Title>Event Location</Card.Title>
-              <Card.Text>{event.location}</Card.Text>
-              {/* Ici, vous pourriez ajouter une carte Google Maps */}
+              <EventLocationMap
+                location={event.location}
+                isOnlineEvent={event.location.toLowerCase().includes('online') ||
+                              event.location.toLowerCase().includes('virtual') ||
+                              event.location.toLowerCase().includes('zoom') ||
+                              event.location.toLowerCase().includes('teams') ||
+                              event.location.toLowerCase().includes('meet')}
+              />
             </Card.Body>
           </Card>
 

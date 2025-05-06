@@ -16,6 +16,38 @@ const courseSchema = new mongoose.Schema({
         ref: 'Module',
         required: true
     },
+    category: {
+        type: String,
+        required: true,
+        enum: [
+            'javascript',
+            'typescript',
+            'python',
+            'java',
+            'csharp',
+            'sql',
+            'mongodb',
+            'html',
+            'css',
+            'php',
+            'ruby',
+            'go',
+            'rust',
+            'swift',
+            'kotlin',
+            'scala',
+            'r',
+            'shell',
+            'powershell',
+            'bash',
+            'docker',
+            'yaml',
+            'json',
+            'xml',
+            'markdown',
+            'other'
+        ]
+    },
     quiz: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Quiz'
@@ -28,6 +60,35 @@ const courseSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    codeExamples: [{
+        title: {
+            type: String,
+            required: true
+        },
+        description: {
+            type: String,
+            required: true
+        },
+        code: {
+            type: String,
+            required: true
+        },
+        language: {
+            type: String,
+            required: true
+        },
+        isExercise: {
+            type: Boolean,
+            default: false
+        },
+        solution: {
+            type: String,
+            default: ''
+        },
+        hints: [{
+            type: String
+        }]
+    }],
     duration: {
         type: Number, // in hours
         required: true
@@ -52,7 +113,18 @@ const courseSchema = new mongoose.Schema({
         title: String,
         url: String,
         description: String
-    }]
+    }],
+    difficulty: {
+        type: String,
+        enum: ['beginner', 'intermediate', 'advanced'],
+        default: 'beginner'
+    },
+    tags: [{
+        type: String
+    }],
+    thumbnail: {
+        type: String
+    }
 });
 
 module.exports = mongoose.model('Course', courseSchema);

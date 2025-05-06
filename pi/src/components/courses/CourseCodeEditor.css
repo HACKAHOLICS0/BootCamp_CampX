@@ -1,0 +1,38 @@
+.course-code-editor {
+  margin-bottom: 30px;
+}
+
+.examples-sidebar {
+  position: sticky;
+  top: 20px;
+}
+
+.examples-sidebar .list-group-item {
+  border-left: 0;
+  border-right: 0;
+  border-radius: 0;
+}
+
+.examples-sidebar .list-group-item:first-child {
+  border-top: 0;
+}
+
+.examples-sidebar .list-group-item.active {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.code-example-container {
+  transition: all 0.3s ease;
+}
+
+.code-example-container.d-none {
+  opacity: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.code-example-container.d-block {
+  opacity: 1;
+  height: auto;
+}
