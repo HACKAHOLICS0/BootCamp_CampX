@@ -70,7 +70,7 @@ const signup = async (req, res) => {
 
       // Hacher le mot de passe avant de le sauvegarder
       const hashedPassword = await bcrypt.hash(password, 10);
-      const verificationToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+      const verificationToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '2h' });
 
       // Créer un nouvel utilisateur
       const newUser = new User({

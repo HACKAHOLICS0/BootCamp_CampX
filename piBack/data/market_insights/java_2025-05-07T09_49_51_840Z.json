@@ -1,0 +1,56 @@
+{
+  "status": "success",
+  "timestamp": "2025-05-07T10:49:58.392549",
+  "search_term": "java",
+  "total_courses": 6,
+  "platform_distribution": {
+    "Coursera": 5,
+    "Udemy": 1
+  },
+  "average_price": 5.83,
+  "average_rating": 4.6,
+  "courses": [
+    {
+      "platform": "Coursera",
+      "title": "Java Programming and Software Engineering Fundamentals",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/specializations/java-programming"
+    },
+    {
+      "platform": "Coursera",
+      "title": "IBM Java Developer",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/professional-certificates/java-developer"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Object Oriented Programming in Java",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/specializations/object-oriented-programming"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Core Java",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/specializations/core-java"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Java FullStack Developer",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/specializations/java-fullstack"
+    },
+    {
+      "platform": "Udemy",
+      "title": "Java Programming Masterclass",
+      "price": 34.99,
+      "rating": 4.6,
+      "url": "https://www.udemy.com/course/java-the-complete-java-developer-course/"
+    }
+  ]
+}

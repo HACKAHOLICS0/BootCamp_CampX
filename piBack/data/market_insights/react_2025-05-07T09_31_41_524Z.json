@@ -1,0 +1,70 @@
+{
+  "status": "success",
+  "timestamp": "2025-05-07T10:31:48.720613",
+  "search_term": "react",
+  "total_courses": 8,
+  "platform_distribution": {
+    "Coursera": 5,
+    "Udemy": 3
+  },
+  "average_price": 9.37,
+  "average_rating": 4.7,
+  "courses": [
+    {
+      "platform": "Coursera",
+      "title": "React Basics",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/learn/react-basics"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Advanced React",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/learn/advanced-react"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Meta React Native",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/specializations/meta-react-native"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Become a Professional React Developer",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/specializations/react"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Learn React",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/learn/learn-react"
+    },
+    {
+      "platform": "Udemy",
+      "title": "React - The Complete Guide 2025 (incl. React Router & Redux)",
+      "price": 29.99,
+      "rating": 4.8,
+      "url": "https://www.udemy.com/course/react-the-complete-guide-incl-redux/"
+    },
+    {
+      "platform": "Udemy",
+      "title": "Modern React with Redux [2025 Update]",
+      "price": 24.99,
+      "rating": 4.7,
+      "url": "https://www.udemy.com/course/react-redux/"
+    },
+    {
+      "platform": "Udemy",
+      "title": "React Testing Library and Jest: The Complete Guide",
+      "price": 19.99,
+      "rating": 4.6,
+      "url": "https://www.udemy.com/course/react-testing-library/"
+    }
+  ]
+}

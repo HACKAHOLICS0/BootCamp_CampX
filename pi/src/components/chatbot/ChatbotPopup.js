@@ -19,7 +19,27 @@ const ChatbotPopup = () => {
     useEffect(() => {
         const storedUser = Cookies.get("user");
         if (storedUser) {
-            setUser(JSON.parse(storedUser));
+            try {
+                // Essayer d'abord de décoder l'URI puis de parser le JSON
+                const decodedUser = decodeURIComponent(storedUser);
+                const parsedUser = JSON.parse(decodedUser);
+                console.log("User cookie parsed successfully:", parsedUser);
+                setUser(parsedUser);
+            } catch (error) {
+                console.error("Error parsing user cookie:", error);
+                console.error("Raw cookie value:", storedUser);
+
+                // Si le décodage URI échoue, essayer de parser directement
+                try {
+                    const parsedUser = JSON.parse(storedUser);
+                    console.log("User cookie parsed without decoding:", parsedUser);
+                    setUser(parsedUser);
+                } catch (parseError) {
+                    console.error("Failed to parse user cookie in any way:", parseError);
+                }
+            }
+        } else {
+            console.warn("No user cookie found");
         }
     }, []);
 
@@ -131,18 +151,40 @@ const ChatbotPopup = () => {
         setIsOpen(!isOpen);
     };
 
-    const sendMessage = (messageText = null) => {
+    const sendMessage = (messageText) => {
         console.log('sendMessage appelé avec messageText:', messageText);
         console.log('Type de messageText:', typeof messageText);
         console.log('Valeur actuelle de input:', input);
 
-        const messageContent = messageText || input;
+        // Utiliser messageText s'il est défini et non vide, sinon utiliser input
+        const messageContent = (typeof messageText === 'string' && messageText.trim())
+            ? messageText
+            : input;
+
         console.log('messageContent calculé:', messageContent);
         console.log('Type de messageContent:', typeof messageContent);
 
-        // Vérifier que messageContent est une chaîne de caractères
-        if (typeof messageContent !== 'string' || !messageContent.trim() || !user || !user.id) {
-            console.error('Message invalide ou utilisateur non connecté', { messageContent, user });
+        // Vérifier que messageContent est une chaîne de caractères et non vide
+        if (typeof messageContent !== 'string' || !messageContent.trim()) {
+            console.error('Message invalide', { messageContent });
+            return;
+        }
+
+        // Vérifier si l'utilisateur est connecté
+        if (!user || !user.id) {
+            console.error('Utilisateur non connecté', { user });
+
+            // Ajouter le message de l'utilisateur quand même
+            const newMessage = { role: "user", content: messageContent };
+            setMessages(prevMessages => [...prevMessages, newMessage]);
+            setInput("");
+
+            // Ajouter un message d'erreur du bot
+            const errorMessage = {
+                role: "bot",
+                content: "Vous devez être connecté pour utiliser le chatbot. Veuillez vous connecter ou créer un compte."
+            };
+            setMessages(prevMessages => [...prevMessages, errorMessage]);
             return;
         }
 
@@ -153,7 +195,14 @@ const ChatbotPopup = () => {
         const tempBotMessage = { role: "bot", content: "..." };
         setMessages(prevMessages => [...prevMessages, tempBotMessage]);
 
-        const token = Cookies.get("token");
+        // Récupérer le token d'authentification
+        let token = Cookies.get("token");
+
+        // Si le token n'est pas trouvé, essayer de le récupérer depuis le localStorage
+        if (!token) {
+            token = localStorage.getItem("token");
+        }
+
         if (!token) {
             console.error("❌ Pas de token d'authentification trouvé");
             setMessages(prevMessages =>
@@ -163,6 +212,8 @@ const ChatbotPopup = () => {
             );
             return;
         }
+
+        console.log("Token d'authentification trouvé:", token.substring(0, 10) + "...");
 
         const requestData = {
             message: messageContent,
@@ -284,7 +335,7 @@ const ChatbotPopup = () => {
                                 type="text"
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+                                onKeyDown={(e) => e.key === 'Enter' && sendMessage(input)}
                                 placeholder={isListening ? 'Je vous écoute...' : 'Écrivez un message...'}
                                 className={isListening ? 'listening' : ''}
                             />
@@ -295,7 +346,7 @@ const ChatbotPopup = () => {
                             >
                                 {isListening ? <FaStop /> : <FaMicrophone />}
                             </button>
-                            <button onClick={() => sendMessage()}>Envoyer</button>
+                            <button onClick={() => sendMessage(input)}>Envoyer</button>
                         </div>
                         {speechError && (
                             <div className="speech-error">{speechError}</div>
