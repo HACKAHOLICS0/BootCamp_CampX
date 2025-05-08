@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Table, Button, Badge, Alert, Spinner, Modal, Form } from 'react-bootstrap';
+import { Table, Button, Alert, Badge, Modal, Form, Spinner } from 'react-bootstrap';
 import { format } from 'date-fns';
+import { getEventImageUrl } from '../../utils/imageUtils';
+import axios from 'axios';
+import Cookies from 'js-cookie';
 import config from '../../config';
+import eventService from '../../services/eventService';
 
 const Events = () => {
   const [events, setEvents] = useState([]);
@@ -12,17 +15,13 @@ const Events = () => {
   const [currentEvent, setCurrentEvent] = useState(null);
   const [notification, setNotification] = useState(null);
 
-  // RÃ©cupÃ©rer tous les Ã©vÃ©nements
+  // Récupérer tous les événements
   const fetchEvents = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token') || '';
-      const response = await axios.get(`${config.apiBaseUrl}/events`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      setEvents(response.data);
+      // Utiliser le service existant au lieu d'appeler axios directement
+      const eventsData = await eventService.getAllEvents();
+      setEvents(eventsData);
       setLoading(false);
     } catch (err) {
       console.error('Error fetching events:', err);
@@ -41,20 +40,16 @@ const Events = () => {
     setShowDeleteModal(true);
   };
 
-  // Supprimer un Ã©vÃ©nement
+  // Supprimer un événement
   const deleteEvent = async () => {
     try {
-      const token = localStorage.getItem('token') || '';
-      await axios.delete(`${config.apiBaseUrl}/events/${currentEvent._id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      // Utiliser le service existant au lieu d'appeler axios directement
+      await eventService.deleteEvent(currentEvent._id);
       
       // Fermer le modal
       setShowDeleteModal(false);
       
-      // Mettre Ã  jour la liste des Ã©vÃ©nements
+      // Mettre à jour la liste des événements
       setEvents(events.filter(event => event._id !== currentEvent._id));
       
       // Afficher une notification
@@ -63,7 +58,7 @@ const Events = () => {
         message: 'Event deleted successfully!'
       });
       
-      // Masquer la notification aprÃ¨s 3 secondes
+      // Masquer la notification après 3 secondes
       setTimeout(() => {
         setNotification(null);
       }, 3000);
@@ -71,12 +66,19 @@ const Events = () => {
       console.error('Error deleting event:', err);
       setNotification({
         type: 'danger',
-        message: 'Failed to delete event. Please try again.'
+        message: err.message || 'Failed to delete event. Please try again.'
       });
+      
+      // Si l'erreur est liée à l'authentification, rediriger vers la page de connexion
+      if (err.message && err.message.includes('session has expired')) {
+        setTimeout(() => {
+          window.location.href = '/signin';
+        }, 2000);
+      }
     }
   };
 
-  // Fonction pour afficher le statut avec un badge colorÃ©
+  // Fonction pour afficher le statut avec un badge coloré
   const renderStatus = (status, isApproved) => {
     let variant = 'secondary';
     let text = status;

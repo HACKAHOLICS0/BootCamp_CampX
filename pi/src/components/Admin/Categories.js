@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { categoryAPI } from "../../services/api";
 import "./styles/AdminPointsStyle.css";
+import "./styles/AdminTableStyle.css";
 
 const Categories = () => {
   const [categories, setCategories] = useState([]);
@@ -126,9 +127,9 @@ const Categories = () => {
       <h2>Category Management</h2>
 
       {loading ? (
-        <p>Loading categories...</p>
+        <p className="loading-message">Loading categories...</p>
       ) : error ? (
-        <p className="error">{error}</p>
+        <p className="error-message">{error}</p>
       ) : (
         <div>
           <button className="action-btn add" onClick={handleAdd}>Add Category</button>
@@ -146,15 +147,15 @@ const Categories = () => {
                   <tr key={category._id}>
                     <td>{category.name}</td>
                     <td>{category.description}</td>
-                    <td>
-                      <button 
-                        className="action-btn modify" 
+                    <td className="action-buttons">
+                      <button
+                        className="action-btn modify"
                         onClick={() => handleModify(category._id)}
                       >
                         Update
                       </button>
-                      <button 
-                        className="action-btn delete" 
+                      <button
+                        className="action-btn delete"
                         onClick={() => handleDelete(category._id)}
                       >
                         Delete
@@ -163,7 +164,7 @@ const Categories = () => {
                   </tr>
                 ))
               ) : (
-                <tr>
+                <tr className="no-data">
                   <td colSpan="3">No categories found</td>
                 </tr>
               )}
@@ -209,14 +210,14 @@ const Categories = () => {
               />
             </div>
             <div className="modal-actions">
-              <button 
-                className="action-btn cancel" 
+              <button
+                className="action-btn cancel"
                 onClick={handleModalClose}
               >
                 Cancel
               </button>
-              <button 
-                className="action-btn submit" 
+              <button
+                className="action-btn submit"
                 onClick={isAdding ? handleAddCategory : handleUpdateCategory}
               >
                 {isAdding ? "Add" : "Update"}

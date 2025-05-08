@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { courseAPI, moduleAPI } from "../../services/api";
 import "./styles/AdminPointsStyle.css";
+import "./styles/AdminTableStyle.css";
 
 const Courses = () => {
   const [courses, setCourses] = useState([]);
@@ -31,7 +32,7 @@ const Courses = () => {
 
         console.log("Réponse des cours:", coursesResponse);
         console.log("Modules récupérés:", modulesResponse.data);
-        
+
         if (coursesResponse && coursesResponse.data) {
           console.log("Nombre de cours récupérés:", coursesResponse.data.length);
           setCourses(coursesResponse.data);
@@ -39,7 +40,7 @@ const Courses = () => {
           console.error("Aucune donnée de cours reçue ou format incorrect");
           setError("Aucune donnée de cours reçue");
         }
-        
+
         setModules(modulesResponse.data);
       } catch (err) {
         console.error("Erreur lors de la récupération des données:", err);
@@ -155,9 +156,9 @@ const Courses = () => {
       <h2>Course Management</h2>
 
       {loading ? (
-        <p>Loading courses...</p>
+        <p className="loading-message">Loading courses...</p>
       ) : error ? (
-        <p className="error">{error}</p>
+        <p className="error-message">{error}</p>
       ) : (
         <div>
           <button className="action-btn add" onClick={handleAdd}>Add Course</button>
@@ -180,18 +181,22 @@ const Courses = () => {
                     <td>{course.module?.title}</td>
                     <td>${course.price}</td>
                     <td>{course.duration} hours</td>
-                    <td>{course.isArchived ? 'Archived' : 'Active'}</td>
                     <td>
+                      <span className={`status-badge ${course.isArchived ? 'status-archived' : 'status-active'}`}>
+                        {course.isArchived ? 'Archived' : 'Active'}
+                      </span>
+                    </td>
+                    <td className="action-buttons">
                       {!course.isArchived && (
                         <>
-                          <button 
-                            className="action-btn modify" 
+                          <button
+                            className="action-btn modify"
                             onClick={() => handleModify(course._id)}
                           >
                             Update
                           </button>
-                          <button 
-                            className="action-btn archive" 
+                          <button
+                            className="action-btn archive"
                             onClick={() => handleArchive(course._id)}
                           >
                             Archive
@@ -202,7 +207,7 @@ const Courses = () => {
                   </tr>
                 ))
               ) : (
-                <tr>
+                <tr className="no-data">
                   <td colSpan="6">No courses found</td>
                 </tr>
               )}
@@ -287,14 +292,14 @@ const Courses = () => {
               />
             </div>
             <div className="modal-actions">
-              <button 
-                className="action-btn cancel" 
+              <button
+                className="action-btn cancel"
                 onClick={handleModalClose}
               >
                 Cancel
               </button>
-              <button 
-                className="action-btn submit" 
+              <button
+                className="action-btn submit"
                 onClick={isAdding ? handleAddCourse : handleUpdateCourse}
               >
                 {isAdding ? "Add" : "Update"}

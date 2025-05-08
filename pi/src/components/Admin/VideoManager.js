@@ -39,7 +39,7 @@ const VideoManager = ({ courseId }) => {
   const fetchVideos = async () => {
     try {
       const token = Cookies.get('token');
-      const response = await axios.get(`http://localhost:5000/api/videos/course/${courseId}`, {
+      const response = await axios.get(`http://51.91.251.228:5000/api/videos/course/${courseId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -100,7 +100,7 @@ const VideoManager = ({ courseId }) => {
       }
 
       if (selectedVideo) {
-        await axios.put(`http://localhost:5000/api/videos/${selectedVideo._id}`, formDataToSend, {
+        await axios.put(`http://51.91.251.228:5000/api/videos/${selectedVideo._id}`, formDataToSend, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
@@ -112,7 +112,7 @@ const VideoManager = ({ courseId }) => {
           severity: 'success'
         });
       } else {
-        await axios.post('http://localhost:5000/api/videos', formDataToSend, {
+        await axios.post('http://51.91.251.228:5000/api/videos', formDataToSend, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
@@ -139,7 +139,7 @@ const VideoManager = ({ courseId }) => {
   const handleDelete = async (videoId) => {
     try {
       const token = Cookies.get('token');
-      await axios.delete(`http://localhost:5000/api/videos/${videoId}`, {
+      await axios.delete(`http://51.91.251.228:5000/api/videos/${videoId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -164,34 +164,45 @@ const VideoManager = ({ courseId }) => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
         <Typography variant="h6">Liste des vidéos</Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
+        <button
+          className="action-btn add"
           onClick={handleOpen}
         >
           Ajouter une vidéo
-        </Button>
+        </button>
       </Box>
 
-      <List>
-        {videos.map((video) => (
-          <ListItem key={video._id}>
-            <ListItemText
-              primary={video.title}
-              secondary={video.description}
-            />
-            <ListItemSecondaryAction>
-              <IconButton edge="end" onClick={() => handleOpenEdit(video)}>
-                <EditIcon />
-              </IconButton>
-              <IconButton edge="end" onClick={() => handleDelete(video._id)}>
-                <DeleteIcon />
-              </IconButton>
-            </ListItemSecondaryAction>
-          </ListItem>
-        ))}
-      </List>
+      <table className="data-table">
+        <thead>
+          <tr>
+            <th>Titre</th>
+            <th>Description</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {videos.length > 0 ? (
+            videos.map((video) => (
+              <tr key={video._id}>
+                <td>{video.title}</td>
+                <td>{video.description}</td>
+                <td className="action-buttons">
+                  <button className="action-btn modify" onClick={() => handleOpenEdit(video)}>
+                    Modifier
+                  </button>
+                  <button className="action-btn delete" onClick={() => handleDelete(video._id)}>
+                    Supprimer
+                  </button>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr className="no-data">
+              <td colSpan="3">Aucune vidéo trouvée</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
 
       {/* Dialog pour ajouter une vidéo */}
       <Dialog open={open} onClose={handleClose}>
@@ -301,4 +312,4 @@ const VideoManager = ({ courseId }) => {
   );
 };
 
-export default VideoManager; 
+export default VideoManager;

@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Spinner, Alert } from 'react-bootstrap';
 import Cookies from 'js-cookie';
+import { FaBook, FaClock, FaArrowRight } from 'react-icons/fa';
 import './ModuleStyle.css';
-import './ModuleCardFix.css'; // Import the CSS fix
 
-const backendURL = "http://localhost:5000/api";
+const backendURL = "http://51.91.251.228:5000/api";
 
 const ModuleList = () => {
   const { categoryId } = useParams();
@@ -66,58 +66,72 @@ const ModuleList = () => {
 
   if (loading) {
     return (
-      <Container className="mt-4 text-center">
-        <Spinner animation="border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
+      <Container className="module-list-container">
+        <div className="loading-container">
+          <Spinner animation="border" role="status" className="custom-spinner">
+            <span className="visually-hidden">Chargement...</span>
+          </Spinner>
+          <p className="loading-text">Chargement des modules...</p>
+        </div>
       </Container>
     );
   }
 
   if (error) {
     return (
-      <Container className="mt-4">
-        <Alert variant="danger">
-          {error}
-        </Alert>
+      <Container className="module-list-container">
+        <div className="error-container">
+          <Alert variant="danger" className="custom-error">
+            <div className="error-icon">⚠️</div>
+            <h3>Une erreur est survenue</h3>
+            <p>{error}</p>
+            <Button
+              variant="outline-danger"
+              onClick={() => fetchData()}
+              className="retry-button"
+            >
+              Réessayer
+            </Button>
+          </Alert>
+        </div>
       </Container>
     );
   }
 
   return (
-    <Container className="mt-4">
-      <div className="module-header mb-4">
+    <Container className="module-list-container">
+      <div className="module-header">
         <h2>{category?.name || 'Modules'}</h2>
-        <p className="text-muted">
-          {category?.description || 'Explore our collection of interactive modules'}
+        <p>
+          {category?.description || 'Explorez notre collection de modules interactifs pour développer vos compétences'}
         </p>
       </div>
 
       {modules.length === 0 ? (
-        <Alert variant="info">
+        <Alert variant="info" className="empty-modules-alert">
           <p className="mb-0">Aucun module disponible pour cette catégorie.</p>
           <p className="mb-0">Revenez bientôt pour découvrir notre nouveau contenu !</p>
         </Alert>
       ) : (
         <Row xs={1} md={2} lg={3} className="g-4">
           {modules.map(module => (
-            <Col key={module._id}>
-              <Card className="h-100 module-card">
+            <Col key={module._id} className="module-column">
+              <Card className="module-card">
                 <Card.Body>
                   <Card.Title>{module.name}</Card.Title>
                   <Card.Text>{module.description}</Card.Text>
-                  <div className="module-stats mb-3">
-                    <small className="text-muted me-3">
-                      {module.coursesCount || 0} cours
+                  <div className="module-stats">
+                    <small>
+                      <FaBook /> {module.coursesCount || 0} cours
                     </small>
-                    <small className="text-muted">
-                      {module.duration || '0h'} durée totale
+                    <small>
+                      <FaClock /> {module.duration || '0'}h durée totale
                     </small>
                   </div>
                   <Button
                     variant="primary"
                     onClick={() => navigateToCourses(module._id)}
-                    className="w-100"
+                    className="explore-button"
                   >
                     Explorer les cours
                   </Button>

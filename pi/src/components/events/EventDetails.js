@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Badge, Spinner, Alert, Modal } from 'react-bootstrap';
-import { format } from 'date-fns';
-import { toast } from 'react-toastify';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Container, Row, Col, Card, Badge, Button, Alert, Spinner, Modal } from 'react-bootstrap';
 import Cookies from 'js-cookie';
+import { toast } from 'react-toastify';
+import { format } from 'date-fns';
+import { getEventImageUrl } from '../../utils/imageUtils';
 import eventService from '../../services/eventService';
 import recommendationService from '../../services/recommendationService';
 import SimilarEvents from './SimilarEvents';
@@ -23,14 +24,15 @@ const EventDetails = () => {
   const [qrCodeError, setQrCodeError] = useState(false);
 
   useEffect(() => {
-    // RÃ©cupÃ©rer l'utilisateur depuis les cookies ou localStorage
+    // Récupérer l'utilisateur uniquement depuis les cookies
     const userFromCookie = Cookies.get('user');
-    const userFromLocalStorage = localStorage.getItem('user');
-
-    if (userFromLocalStorage) {
-      setUser(JSON.parse(userFromLocalStorage));
-    } else if (userFromCookie) {
-      setUser(JSON.parse(userFromCookie));
+    
+    if (userFromCookie) {
+      try {
+        setUser(JSON.parse(userFromCookie));
+      } catch (error) {
+        console.error('Error parsing user cookie:', error);
+      }
     }
 
     fetchEventDetails();
@@ -49,7 +51,7 @@ const EventDetails = () => {
       }
     } catch (error) {
       console.error('Error recording view interaction:', error);
-      // Ne pas afficher d'erreur Ã  l'utilisateur pour cette opÃ©ration silencieuse
+      // Ne pas afficher d'erreur à l'utilisateur pour cette opération silencieuse
     }
   };
 
@@ -59,7 +61,7 @@ const EventDetails = () => {
       const data = await eventService.getEvent(id);
       setEvent(data);
 
-      // VÃ©rifier si l'utilisateur est dÃ©jÃ  inscrit
+      // Vérifier si l'utilisateur est déjà inscrit
       if (user && data.attendees.includes(user._id)) {
         setIsRegistered(true);
       }
@@ -82,17 +84,17 @@ const EventDetails = () => {
       setLoading(true);
       const response = await eventService.registerForEvent(id);
 
-      // Afficher un message de succÃ¨s
+      // Afficher un message de succès
       toast.success('Successfully registered for the event!');
       setIsRegistered(true);
 
-      // Afficher un modal pour proposer d'ajouter l'Ã©vÃ©nement au calendrier
+      // Afficher un modal pour proposer d'ajouter l'événement au calendrier
       if (response.calendarLinks) {
         setCalendarLinks(response.calendarLinks);
         setShowCalendarModal(true);
       }
 
-      // Si un QR code a Ã©tÃ© gÃ©nÃ©rÃ©, le stocker
+      // Si un QR code a été généré, le stocker
       if (response.qrCodeUrl) {
         console.log('QR code URL received:', response.qrCodeUrl);
         setQrCodeUrl(response.qrCodeUrl);
@@ -109,7 +111,7 @@ const EventDetails = () => {
     }
   };
 
-  // Fonctions pour ajouter l'Ã©vÃ©nement au calendrier
+  // Fonctions pour ajouter l'événement au calendrier
   const addToGoogleCalendar = async () => {
     try {
       await eventService.openGoogleCalendar(id);
@@ -165,8 +167,8 @@ const EventDetails = () => {
       <Row>
         <Col md={8}>
           <Card className="event-details-card">
-            {event.image && (
-              <Card.Img variant="top" src={`http://localhost:5002/${event.image}`} alt={event.title} />
+            {event.image && event.image !== 'undefined' && (
+              <Card.Img variant="top" src={getEventImageUrl(event)} alt={event.title} />
             )}
             <Card.Body>
               <div className="d-flex justify-content-between align-items-center mb-3">
@@ -195,7 +197,7 @@ const EventDetails = () => {
                 <div className="qr-code-container mt-4 text-center">
                   <h5>Event QR Code</h5>
                   <img
-                    src={qrCodeUrl.startsWith('http') ? qrCodeUrl : `http://localhost:5002${qrCodeUrl}`}
+                    src={qrCodeUrl.startsWith('http') ? qrCodeUrl : `http://51.91.251.228:5000${qrCodeUrl}`}
                     alt="Event QR Code"
                     className="qr-code-image"
                     onError={(e) => {
@@ -300,7 +302,7 @@ const EventDetails = () => {
         </Col>
       </Row>
 
-      {/* Modal pour ajouter l'Ã©vÃ©nement au calendrier */}
+      {/* Modal pour ajouter l'événement au calendrier */}
       <Modal show={showCalendarModal} onHide={() => setShowCalendarModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Add Event to Calendar</Modal.Title>

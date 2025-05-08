@@ -10,7 +10,7 @@ export default function Signin() {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errorDisplay, setErrorDisplay] = useState("");
   const [recaptchaToken, setRecaptchaToken] = useState("");
-  const [recaptchaKey, setRecaptchaKey] = useState("6LdMceMqAAAAAIvQOWZXdqzeX6EYouBNktOpVYj5");
+  const [recaptchaKey, setRecaptchaKey] = useState("6LfYvSwrAAAAAEQwkoqF-DyCmy7qIINm-RuH6qzs");
 
   useEffect(() => {
     // Forcer le rendu des composants externes
@@ -36,7 +36,7 @@ export default function Signin() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/signin", {
+      const response = await fetch("http://51.91.251.228:5000/api/auth/signin", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -70,11 +70,11 @@ export default function Signin() {
   };
 
   const handleGoogleLoginSuccess = async () => {
-    window.location.href = "http://localhost:5000/api/auth/google";
+    window.location.href = "http://51.91.251.228:5000/api/auth/google";
   };
 
   const handleGitHubLogin = () => {
-    window.location.href = "http://localhost:5000/api/auth/github/callback";
+    window.location.href = "http://51.91.251.228:5000/api/auth/github/callback";
   };
 
   return (

@@ -20,7 +20,7 @@ const QuizView = () => {
     const fetchQuiz = async () => {
       try {
         const token = Cookies.get('token');
-        const response = await axios.get(`http://localhost:5000/api/quizzes/${quizId}`, {
+        const response = await axios.get(`http://51.91.251.228:5000/api/quizzes/${quizId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setQuiz(response.data);
@@ -78,7 +78,7 @@ const QuizView = () => {
 
     try {
       const token = Cookies.get('token');
-      await axios.post(`http://localhost:5000/api/quizzes/${quizId}/submit`, {
+      await axios.post(`http://51.91.251.228:5000/api/quizzes/${quizId}/submit`, {
         answers: selectedAnswers,
         timeSpent: quiz.timeLimit * 60 - timeLeft,
         score: correctAnswers

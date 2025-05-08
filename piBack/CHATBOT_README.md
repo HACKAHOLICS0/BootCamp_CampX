@@ -85,7 +85,7 @@ npm run check-chatbot
 
 Ou accédez directement à :
 ```
-http://localhost:5001/health
+http://51.91.251.228:5001/health
 ```
 
 Vous devriez voir une réponse JSON indiquant que le service est en bonne santé.
@@ -100,7 +100,7 @@ python scripts/train_model.py
 
 Ou via l'API (réservé aux administrateurs) :
 ```
-POST http://localhost:5000/api/chat/train-model
+POST http://51.91.251.228:5000/api/chat/train-model
 ```
 
 ## Dépannage

@@ -5,22 +5,45 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 import { useNavigate } from 'react-router-dom';
 import CertificateList from './Certificate/CertificateList';
 
-const backendURL = "http://localhost:5000";
+const backendURL = "http://51.91.251.228:5000";
 const getImageUrl = (user) => {
-    // V√©rifie si l'utilisateur ou son image est d√©fini
+    // VÈrifie si l'utilisateur ou son image est dÈfini
     if (!user || !user.image) {
-        return "/uploads/avatar7.png"; // Image par d√©faut
+        return "/uploads/avatar7.png"; // Image par dÈfaut
     }
 
-    // Si l'image est d√©j√† une URL compl√®te (Google OAuth, GitHub, etc.)
+    // Si l'utilisateur utilise Google ou GitHub
+    if (user.googleId || user.authProvider === "github" || user.authProvider === "google") {
+        return user.image; // Retourner directement l'URL de l'image
+    }
+
+    // Si l'image est dÈj‡ une URL complËte
     if (user.image.startsWith("http")) {
-        return user.image; // Retourner directement l'URL de l'image de Google
+        return user.image;
     }
 
-    // Sinon, utiliser l'image locale stock√©e sur le serveur
-    return `${backendURL}/${user.image.replace(/\\/g, "/")}`;  // Assurez-vous que le chemin soit correctement format√©
-};
+    // Si l'image contient le chemin complet du serveur
+    if (user.image.includes('/home/ubuntu/camp-final/campx_finale/piBack/')) {
+        // Extraire la partie relative du chemin (aprËs 'piBack/')
+        const relativePath = user.image.split('piBack/')[1];
+        return `${backendURL}/${relativePath}`;
+    }
 
+    // Cas pour les chemins avec backslashes (comme uploads\\1746221655607-unnamed.jpg)
+    if (user.image.includes('\\')) {
+        // Remplacer tous les backslashes par des forward slashes
+        const normalizedPath = user.image.replace(/\\/g, "/");
+        return `${backendURL}/${normalizedPath}`;
+    }
+
+    // Pour les chemins relatifs standards (uploads/...)
+    if (user.image.startsWith('uploads/')) {
+        return `${backendURL}/${user.image}`;
+    }
+
+    // Fallback pour tout autre format
+    return `${backendURL}/${user.image}`;
+};
 export default function UserProfile() {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);

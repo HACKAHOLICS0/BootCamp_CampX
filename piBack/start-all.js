@@ -7,7 +7,7 @@ function startChatbotService() {
     console.log('Démarrage du service chatbot via le script Node.js dédié...');
 
     const nodeChatbotProcess = spawn('node', ['start-chatbot.js'], {
-        stdio: 'inherit',
+	stdio: 'inherit',
         shell: true,
         cwd: __dirname
     });
@@ -50,8 +50,8 @@ function startDevEnvironment() {
 
     console.log('Démarrage de l\'environnement de développement...');
 
-    const devProcess = spawn(npmCommand, ['run', 'dev'], {
-        stdio: 'inherit',
+    const devProcess = spawn(npmCommand, ['run', 'dev'], { 
+	stdio: 'inherit',
         shell: true
     });
 

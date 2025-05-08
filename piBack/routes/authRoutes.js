@@ -52,7 +52,7 @@ router.get(
     });
 
     // Redirection vers le frontend en incluant le token dans l'URL
-    res.redirect(`http://localhost:3000/google/${token}`);
+    res.redirect(`${process.env.CLIENT_URL}/google/${token}`);
   }
 );
 router.put("/:id", upload.single('image'), handleMulterErrors, authController.editUser);
@@ -70,7 +70,7 @@ router.get('/github/callback', passport.authenticate('github', { failureRedirect
   const token = jwt.sign({ id: user._id.toString() }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
   // Rediriger vers le frontend avec le token dans l'URL
-  res.redirect(`http://localhost:3000/?token=${token}&user=${encodeURIComponent(JSON.stringify(user))}`);
+  res.redirect(`${process.env.CLIENT_URL}/?token=${token}&user=${encodeURIComponent(JSON.stringify(user))}`);
 });
 
 

@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import VideoManager from './VideoManager';
 import axios from 'axios';
+import './styles/AdminTableStyle.css';
 
 const Videos = () => {
   const [courses, setCourses] = useState([]);
@@ -27,7 +28,7 @@ const Videos = () => {
 
   const fetchCourses = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/courses');
+      const response = await axios.get('http://51.91.251.228:5000/api/courses');
       setCourses(response.data);
       if (response.data.length > 0) {
         setSelectedCourse(response.data[0]._id);
@@ -49,7 +50,7 @@ const Videos = () => {
         <Typography variant="h4" component="h1" gutterBottom>
           Gestion des Vidéos
         </Typography>
-        
+
         <FormControl fullWidth sx={{ mb: 4 }}>
           <InputLabel>Choisir un cours</InputLabel>
           <Select
@@ -93,4 +94,4 @@ const Videos = () => {
   );
 };
 
-export default Videos; 
+export default Videos;

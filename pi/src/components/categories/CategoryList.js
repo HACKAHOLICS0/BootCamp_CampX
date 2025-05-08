@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Spinner, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Card, Spinner, Alert, Button } from 'react-bootstrap';
+import { FaGraduationCap, FaArrowRight, FaExclamationTriangle } from 'react-icons/fa';
 import './CategoryStyle.css';
 
 const backendURL = "http://localhost:5000/api";
@@ -19,7 +20,7 @@ const CategoryList = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await fetch(`${backendURL}/categories`, {
         headers: {
           'Accept': 'application/json'
@@ -46,50 +47,66 @@ const CategoryList = () => {
 
   if (loading) {
     return (
-      <Container className="mt-4 text-center">
-        <Spinner animation="border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
+      <Container className="categories-container">
+        <div className="loading-container">
+          <Spinner animation="border" role="status" className="custom-spinner">
+            <span className="visually-hidden">Chargement...</span>
+          </Spinner>
+          <p className="loading-text">Chargement des catégories...</p>
+        </div>
       </Container>
     );
   }
 
   if (error) {
     return (
-      <Container className="mt-4">
-        <Alert variant="danger">
-          {error}
-        </Alert>
+      <Container className="categories-container">
+        <div className="error-container">
+          <Alert variant="danger" className="custom-error">
+            <div className="error-icon"><FaExclamationTriangle /></div>
+            <h3>Une erreur est survenue</h3>
+            <p>{error}</p>
+            <Button
+              variant="outline-danger"
+              onClick={() => fetchCategories()}
+              className="retry-button"
+            >
+              Réessayer
+            </Button>
+          </Alert>
+        </div>
       </Container>
     );
   }
 
   return (
-    <Container className="mt-4">
-      <h2 className="mb-4">Available Categories</h2>
-      <Row xs={1} md={2} lg={3} className="g-4">
+    <Container className="categories-container">
+      <div className="categories-header">
+        <h2>Explorez nos catégories</h2>
+        <p>Découvrez notre large éventail de catégories de cours pour développer vos compétences</p>
+      </div>
+
+      <div className="categories-grid">
         {categories.map((category) => (
-          <Col key={category._id}>
-            <Card 
-              className="h-100 category-card"
-              onClick={() => navigateToModules(category._id)}
-              style={{ cursor: 'pointer' }}
-            >
-              <Card.Body>
-                <div className="category-icon mb-3">
-                  <img 
-                    src={category.icon || '/default-category-icon.png'} 
-                    alt={category.name}
-                    className="img-fluid"
-                  />
-                </div>
-                <Card.Title>{category.name}</Card.Title>
-                <Card.Text>{category.description}</Card.Text>
-              </Card.Body>
-            </Card>
-          </Col>
+          <div
+            key={category._id}
+            className="category-card"
+            onClick={() => navigateToModules(category._id)}
+          >
+            <div className="category-icon">
+              <div className="icon-wrapper">
+                <FaGraduationCap />
+              </div>
+            </div>
+            <h3>{category.name}</h3>
+            <p>{category.description}</p>
+            <div className="category-action">
+              <span>Explorer les modules</span>
+              <FaArrowRight className="arrow-icon" />
+            </div>
+          </div>
         ))}
-      </Row>
+      </div>
     </Container>
   );
 };

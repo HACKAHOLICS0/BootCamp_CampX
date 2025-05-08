@@ -152,7 +152,7 @@ async function runChecks() {
 runChecks().then((result) => {
     if (result) {
         console.log('Vous pouvez démarrer le service chatbot avec la commande:');
-        console.log('python scripts/chatbot_service.py --host=127.0.0.1 --port=5001');
+        console.log('python scripts/chatbot_service.py --host=127.0.0.1 --port=5000');
     } else {
         console.error('Veuillez corriger les erreurs ci-dessus avant de démarrer le service chatbot.');
     }

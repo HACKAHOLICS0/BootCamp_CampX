@@ -220,14 +220,14 @@ const InteractiveVideoPlayer = ({ videoUrl, videoTitle }) => {
           if (recognitionRef.current.noSpeechErrorCount >= 3) {
             console.log("Trop d'erreurs no-speech consécutives, passage en mode de secours");
             setIsFallbackMode(true);
-            useFallbackTranscription();
+            activateFallbackTranscription();
           }
         }
         // Pour les autres types d'erreurs critiques, passer immédiatement en mode de secours
         else if (event.error === 'audio-capture' || event.error === 'not-allowed') {
           console.log("Erreur critique de reconnaissance vocale, passage en mode de secours");
           setIsFallbackMode(true);
-          useFallbackTranscription();
+          activateFallbackTranscription();
         }
       };
 
@@ -268,7 +268,7 @@ const InteractiveVideoPlayer = ({ videoUrl, videoTitle }) => {
               } else {
                 console.error('Erreur inattendue, passage en mode de secours');
                 setIsFallbackMode(true);
-                useFallbackTranscription();
+                activateFallbackTranscription();
               }
             }
           }, delayBeforeRestart);
@@ -285,12 +285,12 @@ const InteractiveVideoPlayer = ({ videoUrl, videoTitle }) => {
     } catch (error) {
       console.error('Erreur lors du démarrage de la reconnaissance vocale:', error);
       setIsFallbackMode(true);
-      useFallbackTranscription();
+      activateFallbackTranscription();
     }
   };
 
-  // Fonction pour utiliser la transcription de secours
-  const useFallbackTranscription = () => {
+  // Fonction pour activer la transcription de secours
+  const activateFallbackTranscription = () => {
     // Conserver la transcription existante si elle existe
     const existingTranscription = transcriptionRef.current;
 
@@ -574,7 +574,7 @@ const InteractiveVideoPlayer = ({ videoUrl, videoTitle }) => {
 
       console.log("Envoi de la transcription récente pour générer une question:", recentTranscription.substring(0, 100) + "...");
 
-      const response = await fetch('http://localhost:5000/api/questions/generate', {
+      const response = await fetch('http://51.91.251.228:5000/api/questions/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

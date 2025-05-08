@@ -1,9 +1,19 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ProgressBar } from 'react-bootstrap';
 import './CourseProgress.css';
 
 const CourseProgress = ({ completedQuizzes, totalQuizzes }) => {
+  const [animatedProgress, setAnimatedProgress] = useState(0);
   const progress = totalQuizzes > 0 ? (completedQuizzes / totalQuizzes) * 100 : 0;
+
+  useEffect(() => {
+    // Animation de la barre de progression
+    const timer = setTimeout(() => {
+      setAnimatedProgress(progress);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [progress]);
 
   return (
     <div className="course-progress">
@@ -15,13 +25,14 @@ const CourseProgress = ({ completedQuizzes, totalQuizzes }) => {
           {Math.round(progress)}%
         </span>
       </div>
-      <ProgressBar 
-        now={progress} 
-        label={`${Math.round(progress)}%`}
+      <ProgressBar
+        now={animatedProgress}
         variant={progress === 100 ? "success" : "primary"}
+        striped={progress === 100}
+        animated={progress === 100}
       />
     </div>
   );
 };
 
-export default CourseProgress; 
+export default CourseProgress;

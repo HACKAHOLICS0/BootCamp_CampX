@@ -83,7 +83,7 @@ Créez un fichier `.env` dans le dossier `config/` avec les variables suivantes 
 PORT=5000
 CHATBOT_PORT=5001
 CHATBOT_HOST=0.0.0.0
-MONGODB_URI=mongodb://localhost:27017/pidb
+MONGODB_URI=mongodb://51.91.251.228:27017/pidb
 JWT_SECRET=votre_secret_jwt
 ```
 
@@ -132,13 +132,13 @@ pm2 save
 1. Vérifier que le serveur Node.js est accessible :
 
 ```bash
-curl http://localhost:5000/api/health
+curl http://51.91.251.228:5000/api/health
 ```
 
 2. Vérifier que le service chatbot est accessible :
 
 ```bash
-curl http://localhost:5001/health
+curl http://51.91.251.228:5001/health
 ```
 
 ## Dépannage

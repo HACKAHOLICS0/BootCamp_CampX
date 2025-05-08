@@ -1,5 +1,6 @@
 const Module = require('../Model/Module');
 const Course = require('../Model/Course');
+const mongoose = require('mongoose');
 
 // Get all modules
 const getAllModules = async (req, res) => {
@@ -7,8 +8,28 @@ const getAllModules = async (req, res) => {
         const modules = await Module.find()
             .populate('category')
             .sort({ createdAt: -1 });
-        res.json(modules);
+
+        // Récupérer les statistiques pour chaque module
+        const modulesWithStats = await Promise.all(modules.map(async (module) => {
+            // Compter les cours pour ce module
+            const courses = await Course.find({ module: module._id });
+
+            // Calculer la durée totale
+            const totalDuration = courses.reduce((total, course) => total + (course.duration || 0), 0);
+
+            // Convertir en objet pour pouvoir ajouter des propriétés
+            const moduleObj = module.toObject();
+
+            // Ajouter les statistiques
+            moduleObj.coursesCount = courses.length;
+            moduleObj.duration = totalDuration;
+
+            return moduleObj;
+        }));
+
+        res.json(modulesWithStats);
     } catch (error) {
+        console.error('Error in getAllModules:', error);
         res.status(500).json({ error: error.message });
     }
 };
@@ -19,8 +40,28 @@ const getModulesByCategory = async (req, res) => {
         const modules = await Module.find({ category: req.params.categoryId })
             .populate('category')
             .sort({ createdAt: -1 });
-        res.json(modules);
+
+        // Récupérer les statistiques pour chaque module
+        const modulesWithStats = await Promise.all(modules.map(async (module) => {
+            // Compter les cours pour ce module
+            const courses = await Course.find({ module: module._id });
+
+            // Calculer la durée totale
+            const totalDuration = courses.reduce((total, course) => total + (course.duration || 0), 0);
+
+            // Convertir en objet pour pouvoir ajouter des propriétés
+            const moduleObj = module.toObject();
+
+            // Ajouter les statistiques
+            moduleObj.coursesCount = courses.length;
+            moduleObj.duration = totalDuration;
+
+            return moduleObj;
+        }));
+
+        res.json(modulesWithStats);
     } catch (error) {
+        console.error('Error in getModulesByCategory:', error);
         res.status(500).json({ error: error.message });
     }
 };
@@ -33,8 +74,23 @@ const getModuleById = async (req, res) => {
         if (!module) {
             return res.status(404).json({ error: 'Module not found' });
         }
-        res.json(module);
+
+        // Compter les cours pour ce module
+        const courses = await Course.find({ module: module._id });
+
+        // Calculer la durée totale
+        const totalDuration = courses.reduce((total, course) => total + (course.duration || 0), 0);
+
+        // Convertir en objet pour pouvoir ajouter des propriétés
+        const moduleObj = module.toObject();
+
+        // Ajouter les statistiques
+        moduleObj.coursesCount = courses.length;
+        moduleObj.duration = totalDuration;
+
+        res.json(moduleObj);
     } catch (error) {
+        console.error('Error in getModuleById:', error);
         res.status(500).json({ error: error.message });
     }
 };
@@ -94,11 +150,27 @@ const getModuleStatistics = async (req, res) => {
     try {
         const module = await Module.findById(req.params.id).populate('category');
         if (!module) return res.status(404).json({ error: 'Module not found' });
-        
-        // Pour l'instant, on retourne juste le module
-        // Plus tard, on pourra ajouter des statistiques plus détaillées
-        res.json(module);
+
+        // Compter les cours pour ce module
+        const courses = await Course.find({ module: module._id });
+
+        // Calculer la durée totale
+        const totalDuration = courses.reduce((total, course) => total + (course.duration || 0), 0);
+
+        // Convertir en objet pour pouvoir ajouter des propriétés
+        const moduleObj = module.toObject();
+
+        // Ajouter les statistiques
+        moduleObj.coursesCount = courses.length;
+        moduleObj.duration = totalDuration;
+
+        // Ajouter des statistiques supplémentaires si nécessaire
+        const totalStudents = courses.reduce((total, course) => total + (course.purchasedBy?.length || 0), 0);
+        moduleObj.totalStudents = totalStudents;
+
+        res.json(moduleObj);
     } catch (error) {
+        console.error('Error in getModuleStatistics:', error);
         res.status(500).json({ error: error.message });
     }
 };

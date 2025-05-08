@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import "./styles/AdminPointsStyle.css";
+import "./styles/AdminTableStyle.css";
 
-const backendURL = "http://localhost:5000"; // URL de base pour l'API
+const backendURL = "http://51.91.251.228:5000"; // URL de base pour l'API
 
 const InterestPoints = () => {
   const [pointsOfInterest, setPointsOfInterest] = useState([]); // Liste des points d'intérêt
@@ -62,11 +63,11 @@ const handleToggleActivation = async (id, isActive) => {
         },
         body: JSON.stringify({ isActive: !isActive }), // Alterne l'état d'activation
       });
-  
+
       if (!response.ok) {
         throw new Error("Failed to update point activation");
       }
-  
+
       const updatedPoints = pointsOfInterest.map((point) =>
         point._id === id ? { ...point, isActive: !isActive } : point
       );
@@ -76,8 +77,8 @@ const handleToggleActivation = async (id, isActive) => {
       alert("Error toggling activation: " + error.message);
     }
   };
-  
-  
+
+
   // Ajouter un nouveau point d'intérêt
   const handleAddPoint = async () => {
     if (!newPointValue) {
@@ -111,7 +112,7 @@ const handleToggleActivation = async (id, isActive) => {
       alert("Please enter a valid value for the point!");
       return;
     }
-  
+
     try {
       const response = await fetch(`${backendURL}/api/api/interest-point/${selectedPoint._id}`, {
         method: "PUT",
@@ -120,7 +121,7 @@ const handleToggleActivation = async (id, isActive) => {
         },
         body: JSON.stringify({ value: newPointValue }), // Mettre à jour la valeur du point
       });
-  
+
       if (!response.ok) {
         throw new Error("Failed to update point");
       }
@@ -128,30 +129,30 @@ const handleToggleActivation = async (id, isActive) => {
 
       const updatedPoint = await response.json();
       console.log("Point mis à jour:", updatedPoint); // Vérification de la réponse du serveur
-    
+
       // Mettre à jour l'état avec la nouvelle valeur du point modifié
       setPointsOfInterest((prevPoints) =>
         prevPoints.map((point) =>
           point._id === updatedPoint.point._id ? { ...point, value: updatedPoint.point.value } : point
         )
       );
-  
+
       setIsModalOpen(false); // Fermer la modale après la mise à jour
     } catch (error) {
       alert("Error updating point: " + error.message);
     }
   };
-  
-  
+
+
 
   return (
     <div className="content-section">
       <h2>Interest Points Management</h2>
 
       {loading ? (
-        <p>Loading points of interest...</p>
+        <p className="loading-message">Loading points of interest...</p>
       ) : error ? (
-        <p className="error">{error}</p>
+        <p className="error-message">{error}</p>
       ) : (
         <div>
           <button className="action-btn add" onClick={handleAdd}>Add Point</button>
@@ -169,20 +170,23 @@ const handleToggleActivation = async (id, isActive) => {
                   <tr key={point._id}>
                     <td>{point.value}</td> {/* Affichage de la valeur du point */}
                     <td>
+                      <span className={`status-badge ${point.isActive ? "status-active" : "status-inactive"}`}>
+                        {point.isActive ? "Active" : "Inactive"}
+                      </span>
+                    </td>
+                    <td className="action-buttons">
                       <button
                         className={`action-btn ${point.isActive ? "deactivate" : "activate"}`}
                         onClick={() => handleToggleActivation(point._id, point.isActive)}
                       >
                         {point.isActive ? "Deactivate" : "Activate"}
                       </button>
-                    </td>
-                    <td>
                       <button className="action-btn modify" onClick={() => handleModify(point._id)}>Update</button>
                     </td>
                   </tr>
                 ))
               ) : (
-                <tr>
+                <tr className="no-data">
                   <td colSpan="3">No points found</td>
                 </tr>
               )}

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/videos";
+const API_URL = "http://51.91.251.228:5000/api/videos";
 
 export const getVideos = async () => {
   try {

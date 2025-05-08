@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 
 // Créer une instance axios avec l'URL de base
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:5000/api', // Utiliser le port 5000
+  baseURL: 'http://51.91.251.228:5000/api', // Utiliser le domaine ikramsegni.fr
 });
 
 // Ajouter un intercepteur pour les requêtes

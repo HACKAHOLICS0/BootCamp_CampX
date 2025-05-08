@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';  // Bootstrap from npm
 import 'font-awesome/css/font-awesome.min.css';  // Font Awesome from npm
 // Now import the CSS files that we've placed in src/assets/css
@@ -6,6 +6,7 @@ import './assets/css/imagehover.min.css';
 // import './assets/css/style.css';
 import './assets/css/certificate-verification.css';
 import './assets/css/modern-template.css';
+import './assets/css/trainer-carousel.css';  // Import trainer carousel styles
 import axios from 'axios';
 import config from './config';
 import { useNavigate } from 'react-router-dom';
@@ -16,6 +17,20 @@ const Template = () => {
   const [verificationResult, setVerificationResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Initialize carousel when component mounts
+  useEffect(() => {
+    // Check if the carousel element exists
+    const trainersCarousel = document.getElementById('trainersCarousel');
+    if (trainersCarousel && window.bootstrap) {
+      // Initialize the Bootstrap carousel
+      new window.bootstrap.Carousel(trainersCarousel, {
+        interval: 5000, // Change slides every 5 seconds
+        wrap: true,     // Continuous loop
+        touch: true     // Enable touch swiping on mobile
+      });
+    }
+  }, []);
 
   // Fonction pour vérifier un certificat
   const verifyCertificate = async (e) => {
@@ -316,7 +331,7 @@ const Template = () => {
                 </div>
               </section>
               {/*/ work-shop*/}
-              {/*Faculity member*/}
+              {/*Trainers Carousel*/}
               <section id="faculity-member" className="section-padding">
                 <div className="container">
                   <div className="row">
@@ -325,52 +340,135 @@ const Template = () => {
                       <p>Découvrez notre équipe de formateurs experts qui vous accompagneront tout au long de votre parcours d'apprentissage.</p>
                       <hr className="bottom-line" />
                     </div>
-                    <div className="col-lg-4 col-md-4 col-sm-4">
-                      <div className="pm-staff-profile-container">
-                        <div className="pm-staff-profile-image-wrapper text-center">
-                          <div className="pm-staff-profile-image">
-                            <img src="/src/assets/img/mentor.jpg" alt="" className="img-thumbnail img-circle" />
+                  </div>
+
+                  <div className="trainer-carousel">
+                    <div id="trainersCarousel" className="carousel slide" data-bs-ride="carousel">
+                      <div className="carousel-indicators">
+                        <button type="button" data-bs-target="#trainersCarousel" data-bs-slide-to="0" className="active" aria-current="true" aria-label="Slide 1"></button>
+                        <button type="button" data-bs-target="#trainersCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                        <button type="button" data-bs-target="#trainersCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+                      </div>
+
+                      <div className="carousel-inner">
+                        {/* First slide - 3 trainers */}
+                        <div className="carousel-item active">
+                          <div className="row">
+                            <div className="col-md-4">
+                              <div className="trainer-profile">
+                                <div className="trainer-image">
+                                  <img src="https://ui-avatars.com/api/?name=Ikram+Segni&background=5FCF80&color=fff&size=200" alt="Ikram Segni" />
+                                </div>
+                                <h3 className="trainer-name">Ikram Segni</h3>
+                                <p className="trainer-title">Développeur Full Stack</p>
+                                <p className="trainer-bio">Expert en développement web avec une solide expérience dans les technologies modernes. Passionné par la transmission de connaissances et l'accompagnement des apprenants.</p>
+                              </div>
+                            </div>
+                            <div className="col-md-4">
+                              <div className="trainer-profile">
+                                <div className="trainer-image">
+                                  <img src="https://ui-avatars.com/api/?name=Achraf+Farhat&background=5FCF80&color=fff&size=200" alt="Achraf Farhat" />
+                                </div>
+                                <h3 className="trainer-name">Achraf Farhat</h3>
+                                <p className="trainer-title">Expert en Intelligence Artificielle</p>
+                                <p className="trainer-bio">Spécialiste en IA et machine learning avec une approche pédagogique claire et accessible. Aide les étudiants à maîtriser les concepts complexes de l'intelligence artificielle.</p>
+                              </div>
+                            </div>
+                            <div className="col-md-4">
+                              <div className="trainer-profile">
+                                <div className="trainer-image">
+                                  <img src="https://ui-avatars.com/api/?name=Med+Firas+Zighni&background=5FCF80&color=fff&size=200" alt="Med Firas Zighni" />
+                                </div>
+                                <h3 className="trainer-name">Med Firas Zighni</h3>
+                                <p className="trainer-title">Expert en Cybersécurité</p>
+                                <p className="trainer-bio">Consultant en sécurité informatique avec une expertise reconnue dans la protection des systèmes et la gestion des risques. Formateur certifié avec une approche pratique.</p>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                        <div className="pm-staff-profile-details text-center">
-                          <p className="pm-staff-profile-name">Thomas Dubois</p>
-                          <p className="pm-staff-profile-title">Ingénieur Logiciel Principal</p>
-                          <p className="pm-staff-profile-bio">Expert en développement web avec plus de 10 ans d'expérience. Spécialisé dans les technologies front-end modernes et passionné par la transmission de connaissances.</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-lg-4 col-md-4 col-sm-4">
-                      <div className="pm-staff-profile-container">
-                        <div className="pm-staff-profile-image-wrapper text-center">
-                          <div className="pm-staff-profile-image">
-                            <img src="/src/assets/img/mentor.jpg" alt="" className="img-thumbnail img-circle" />
+
+                        {/* Second slide - 2 trainers */}
+                        <div className="carousel-item">
+                          <div className="row">
+                            <div className="col-md-6">
+                              <div className="trainer-profile">
+                                <div className="trainer-image">
+                                  <img src="https://ui-avatars.com/api/?name=Khalil+Wnich&background=5FCF80&color=fff&size=200" alt="Khalil Wnich" />
+                                </div>
+                                <h3 className="trainer-name">Khalil Wnich</h3>
+                                <p className="trainer-title">Architecte Cloud</p>
+                                <p className="trainer-bio">Expert en solutions cloud et infrastructure avec plus de 8 ans d'expérience. Aide les étudiants à comprendre et mettre en œuvre des architectures cloud robustes et évolutives.</p>
+                              </div>
+                            </div>
+                            <div className="col-md-6">
+                              <div className="trainer-profile">
+                                <div className="trainer-image">
+                                  <img src="https://ui-avatars.com/api/?name=Ahmed+Hmid&background=5FCF80&color=fff&size=200" alt="Ahmed Hmid" />
+                                </div>
+                                <h3 className="trainer-name">Ahmed Hmid</h3>
+                                <p className="trainer-title">Expert en DevOps</p>
+                                <p className="trainer-bio">Spécialiste en pratiques DevOps et automatisation des processus de développement. Passionné par l'optimisation des workflows et l'amélioration continue des processus de livraison.</p>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                        <div className="pm-staff-profile-details text-center">
-                          <p className="pm-staff-profile-name">Sophie Martin</p>
-                          <p className="pm-staff-profile-title">Experte en Data Science</p>
-                          <p className="pm-staff-profile-bio">Spécialiste en intelligence artificielle et analyse de données avec une solide expérience dans l'industrie. Passionnée par l'enseignement des concepts complexes de manière accessible.</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-lg-4 col-md-4 col-sm-4">
-                      <div className="pm-staff-profile-container">
-                        <div className="pm-staff-profile-image-wrapper text-center">
-                          <div className="pm-staff-profile-image">
-                            <img src="/src/assets/img/mentor.jpg" alt="" className="img-thumbnail img-circle" />
+
+                        {/* Third slide - All trainers in a different layout */}
+                        <div className="carousel-item">
+                          <div className="row">
+                            <div className="col-md-12 text-center mb-4">
+                              <h3>Notre équipe complète</h3>
+                              <p>Une équipe d'experts passionnés par l'enseignement et le partage de connaissances</p>
+                            </div>
+                          </div>
+                          <div className="row">
+                            <div className="col-md-2 col-sm-4 col-6">
+                              <div className="trainer-image">
+                                <img src="https://ui-avatars.com/api/?name=Ikram+Segni&background=5FCF80&color=fff&size=200" alt="Ikram Segni" />
+                              </div>
+                              <h5 className="trainer-name text-center mt-2">Ikram Segni</h5>
+                            </div>
+                            <div className="col-md-2 col-sm-4 col-6">
+                              <div className="trainer-image">
+                                <img src="https://ui-avatars.com/api/?name=Achraf+Farhat&background=5FCF80&color=fff&size=200" alt="Achraf Farhat" />
+                              </div>
+                              <h5 className="trainer-name text-center mt-2">Achraf Farhat</h5>
+                            </div>
+                            <div className="col-md-2 col-sm-4 col-6">
+                              <div className="trainer-image">
+                                <img src="https://ui-avatars.com/api/?name=Med+Firas+Zighni&background=5FCF80&color=fff&size=200" alt="Med Firas Zighni" />
+                              </div>
+                              <h5 className="trainer-name text-center mt-2">Med Firas Zighni</h5>
+                            </div>
+                            <div className="col-md-2 col-sm-4 col-6">
+                              <div className="trainer-image">
+                                <img src="https://ui-avatars.com/api/?name=Khalil+Wnich&background=5FCF80&color=fff&size=200" alt="Khalil Wnich" />
+                              </div>
+                              <h5 className="trainer-name text-center mt-2">Khalil Wnich</h5>
+                            </div>
+                            <div className="col-md-2 col-sm-4 col-6">
+                              <div className="trainer-image">
+                                <img src="https://ui-avatars.com/api/?name=Ahmed+Hmid&background=5FCF80&color=fff&size=200" alt="Ahmed Hmid" />
+                              </div>
+                              <h5 className="trainer-name text-center mt-2">Ahmed Hmid</h5>
+                            </div>
                           </div>
                         </div>
-                        <div className="pm-staff-profile-details text-center">
-                          <p className="pm-staff-profile-name">Léa Bernard</p>
-                          <p className="pm-staff-profile-title">Experte en Cybersécurité</p>
-                          <p className="pm-staff-profile-bio">Consultante en sécurité informatique avec une expertise reconnue dans la protection des systèmes et la gestion des risques. Formatrice certifiée avec une approche pratique de l'enseignement.</p>
-                        </div>
                       </div>
+
+                      <button className="carousel-control-prev" type="button" data-bs-target="#trainersCarousel" data-bs-slide="prev">
+                        <span className="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span className="visually-hidden">Previous</span>
+                      </button>
+                      <button className="carousel-control-next" type="button" data-bs-target="#trainersCarousel" data-bs-slide="next">
+                        <span className="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span className="visually-hidden">Next</span>
+                      </button>
                     </div>
                   </div>
                 </div>
               </section>
-              {/*/ Faculity member*/}
+              {/*/ Trainers Carousel*/}
               {/*Testimonial*/}
               <section id="testimonial" className="testimonial-section section-padding">
                 <div className="container">

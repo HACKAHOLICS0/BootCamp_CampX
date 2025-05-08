@@ -123,7 +123,7 @@ const ExternalVideoPlayer = () => {
       try {
         // Créer une instance axios avec le token d'authentification
         const axiosInstance = axios.create({
-          baseURL: 'http://localhost:5000/api',
+          baseURL: 'http://51.91.251.228:5000/api',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${Cookies.get('token')}`

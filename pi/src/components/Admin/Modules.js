@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { moduleAPI, categoryAPI } from "../../services/api";
 import "./styles/AdminPointsStyle.css";
+import "./styles/AdminTableStyle.css";
 
 const Modules = () => {
   const [modules, setModules] = useState([]);
@@ -141,9 +142,9 @@ const Modules = () => {
       <h2>Module Management</h2>
 
       {loading ? (
-        <p>Loading modules...</p>
+        <p className="loading-message">Loading modules...</p>
       ) : error ? (
-        <p className="error">{error}</p>
+        <p className="error-message">{error}</p>
       ) : (
         <div>
           <button className="action-btn add" onClick={handleAdd}>Add Module</button>
@@ -164,16 +165,23 @@ const Modules = () => {
                     <td>{module.title}</td>
                     <td>{module.category?.name}</td>
                     <td>{module.duration} hours</td>
-                    <td>{module.difficulty}</td>
                     <td>
-                      <button 
-                        className="action-btn modify" 
+                      <span className={`status-badge ${
+                        module.difficulty === 'beginner' ? 'status-active' :
+                        module.difficulty === 'advanced' ? 'status-archived' : 'status-inactive'
+                      }`}>
+                        {module.difficulty.charAt(0).toUpperCase() + module.difficulty.slice(1)}
+                      </span>
+                    </td>
+                    <td className="action-buttons">
+                      <button
+                        className="action-btn modify"
                         onClick={() => handleModify(module._id)}
                       >
                         Update
                       </button>
-                      <button 
-                        className="action-btn delete" 
+                      <button
+                        className="action-btn delete"
                         onClick={() => handleDelete(module._id)}
                       >
                         Delete
@@ -182,7 +190,7 @@ const Modules = () => {
                   </tr>
                 ))
               ) : (
-                <tr>
+                <tr className="no-data">
                   <td colSpan="5">No modules found</td>
                 </tr>
               )}
@@ -268,14 +276,14 @@ const Modules = () => {
               />
             </div>
             <div className="modal-actions">
-              <button 
-                className="action-btn cancel" 
+              <button
+                className="action-btn cancel"
                 onClick={handleModalClose}
               >
                 Cancel
               </button>
-              <button 
-                className="action-btn submit" 
+              <button
+                className="action-btn submit"
                 onClick={isAdding ? handleAddModule : handleUpdateModule}
               >
                 {isAdding ? "Add" : "Update"}

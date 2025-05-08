@@ -33,7 +33,7 @@ const GoogleRedirectHandler = () => {
       login({ id: decodedUser.id, token });
 
       // Fetch user data to get role information
-      fetch("http://localhost:5000/api/users/me", {
+      fetch("http://51.91.251.228:5000/api/users/me", {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json'

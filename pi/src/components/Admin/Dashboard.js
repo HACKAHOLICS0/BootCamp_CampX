@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Book, FolderTree, Layers, Activity, TrendingUp, BarChart2 } from 'lucide-react';
+import { Users, Book, FolderTree, Layers, Activity } from 'lucide-react';
 import './styles/AdminPointsStyle.css';
 import './styles/DashboardStyle.css';
 import axios from 'axios';
-import { Pie, Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 
 const DashboardCard = ({ title, value, icon: Icon, color }) => (
   <div className="dashboard-card" style={{ borderColor: color }}>
@@ -18,8 +16,7 @@ const DashboardCard = ({ title, value, icon: Icon, color }) => (
   </div>
 );
 
-// Enregistrer les composants Chart.js nécessaires
-ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
+
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -30,18 +27,6 @@ const Dashboard = () => {
   });
 
   const [loading, setLoading] = useState(true);
-  const [monthlyData, setMonthlyData] = useState({
-    labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'],
-    datasets: [
-      {
-        label: 'Nouveaux utilisateurs',
-        data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // Sera mis à jour avec des données réelles
-        backgroundColor: 'rgba(54, 162, 235, 0.5)',
-        borderColor: 'rgba(54, 162, 235, 1)',
-        borderWidth: 1
-      }
-    ]
-  });
 
   // État pour les activités récentes
   const [recentActivities, setRecentActivities] = useState([]);
@@ -50,20 +35,18 @@ const Dashboard = () => {
     const fetchStats = async () => {
       try {
         // Assurez-vous que l'URL de base est correcte
-        const baseURL = 'http://localhost:5000'; // ou votre URL de backend
+        const baseURL = 'http://51.91.251.228:5000'; // ou votre URL de backend
 
         const [
           usersResponse,
           categoriesResponse,
           modulesResponse,
-          coursesResponse,
-          monthlyUsersResponse
+          coursesResponse
         ] = await Promise.all([
           axios.get(`${baseURL}/api/admin/users/count`),
           axios.get(`${baseURL}/api/admin/categories/count`),
           axios.get(`${baseURL}/api/admin/modules/count`),
-          axios.get(`${baseURL}/api/admin/courses/count`),
-          axios.get(`${baseURL}/api/admin/users/monthly`) // Récupérer les données mensuelles
+          axios.get(`${baseURL}/api/admin/courses/count`)
         ]);
 
         // Afficher les réponses complètes pour déboguer la structure
@@ -71,8 +54,7 @@ const Dashboard = () => {
           users: usersResponse.data,
           categories: categoriesResponse.data,
           modules: modulesResponse.data,
-          courses: coursesResponse.data,
-          monthlyUsers: monthlyUsersResponse.data
+          courses: coursesResponse.data
         });
 
         // Vérifier la structure exacte de chaque réponse
@@ -80,7 +62,6 @@ const Dashboard = () => {
         console.log('Structure categories:', JSON.stringify(categoriesResponse.data));
         console.log('Structure modules:', JSON.stringify(modulesResponse.data));
         console.log('Structure courses:', JSON.stringify(coursesResponse.data));
-        console.log('Structure monthly users:', JSON.stringify(monthlyUsersResponse.data));
 
         // Extraire les valeurs en vérifiant différentes structures possibles
         const getUserCount = () => {
@@ -125,29 +106,7 @@ const Dashboard = () => {
         console.log('Valeurs extraites:', newStats);
         setStats(newStats);
 
-        // Traiter les données mensuelles d'utilisateurs
-        if (monthlyUsersResponse.data && Array.isArray(monthlyUsersResponse.data)) {
-          // Créer un tableau de 12 mois avec des valeurs à 0
-          const monthlyUsers = Array(12).fill(0);
-
-          // Remplir avec les données réelles
-          monthlyUsersResponse.data.forEach(item => {
-            if (item.month && typeof item.month === 'number' && item.month >= 1 && item.month <= 12) {
-              monthlyUsers[item.month - 1] = item.count || 0;
-            } else if (item.date) {
-              const month = new Date(item.date).getMonth();
-              monthlyUsers[month] = item.count || 0;
-            }
-          });
-
-          setMonthlyData(prev => ({
-            ...prev,
-            datasets: [{
-              ...prev.datasets[0],
-              data: monthlyUsers
-            }]
-          }));
-        }
+        // Nous avons supprimé le code pour les données mensuelles qui ne sont plus utilisées
 
         // Récupérer les activités récentes
         try {
@@ -185,101 +144,7 @@ const Dashboard = () => {
     fetchStats();
   }, []);
 
-  // Configuration des données pour le graphique circulaire
-  const pieChartData = {
-    labels: ['Cours', 'Modules', 'Catégories', 'Utilisateurs'],
-    datasets: [
-      {
-        data: [stats.courses, stats.modules, stats.categories, stats.users],
-        backgroundColor: [
-          '#E91E63',
-          '#FF9800',
-          '#2196F3',
-          '#4CAF50'
-        ],
-        borderColor: [
-          '#C2185B',
-          '#F57C00',
-          '#1976D2',
-          '#388E3C'
-        ],
-        borderWidth: 1
-      }
-    ]
-  };
-
-  // Configuration des options pour les graphiques
-  const pieChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'right',
-        labels: {
-          font: {
-            size: 12,
-            weight: 'bold'
-          },
-          padding: 15,
-          usePointStyle: true,
-          pointStyle: 'circle'
-        }
-      },
-      title: {
-        display: false
-      },
-      tooltip: {
-        callbacks: {
-          label: (context) => {
-            const label = context.label || '';
-            const value = context.raw || 0;
-            const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-            const percentage = Math.round((value / total) * 100);
-            return `${label}: ${value} (${percentage}%)`;
-          }
-        }
-      }
-    }
-  };
-
-  const barChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    indexAxis: 'x', // Utiliser l'axe x pour les catégories (mois)
-    plugins: {
-      legend: {
-        position: 'top',
-      },
-      title: {
-        display: false
-      },
-      tooltip: {
-        callbacks: {
-          title: (tooltipItems) => {
-            return `${tooltipItems[0].label} 2024`;
-          },
-          label: (context) => {
-            return `Nouveaux utilisateurs: ${context.raw}`;
-          }
-        }
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        title: {
-          display: true,
-          text: 'Nombre d\'utilisateurs'
-        }
-      },
-      x: {
-        title: {
-          display: true,
-          text: 'Mois'
-        }
-      }
-    }
-  };
+  // Les options des graphiques ont été supprimées car les graphiques ne sont plus utilisés
 
   if (loading) {
     return <div className="loading-container">
@@ -322,31 +187,7 @@ const Dashboard = () => {
         />
       </div>
 
-      <div className="dashboard-charts">
-        <div className="chart-container">
-          <div className="chart-header">
-            <h3>Répartition des Ressources</h3>
-            <div className="chart-icon">
-              <BarChart2 size={20} color="#333" />
-            </div>
-          </div>
-          <div style={{ height: '300px', position: 'relative' }}>
-            <Pie data={pieChartData} options={pieChartOptions} />
-          </div>
-        </div>
-
-        <div className="chart-container">
-          <div className="chart-header">
-            <h3>Nouveaux Utilisateurs (2024)</h3>
-            <div className="chart-icon">
-              <TrendingUp size={20} color="#333" />
-            </div>
-          </div>
-          <div style={{ height: '300px', position: 'relative' }}>
-            <Bar data={monthlyData} options={barChartOptions} />
-          </div>
-        </div>
-      </div>
+      {/* Les graphiques statistiques ont été supprimés */}
 
       <div className="recent-activity">
         <div className="activity-header">

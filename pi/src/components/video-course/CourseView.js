@@ -477,18 +477,14 @@ const CourseView = () => {
 
           <div className="sidebar-card">
             <h2>Statistiques</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>Temps estimé</span>
-                <span>{course.duree || 'N/A'}</span>
+            <div className="stats-container">
+              <div className="stat-item">
+                <span className="stat-label">Niveau</span>
+                <span className="stat-value stat-highlight">{course.niveau || 'Intermédiaire'}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>Niveau</span>
-                <span style={{ color: '#28a745' }}>{course.niveau || 'Intermédiaire'}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>Quiz complétés</span>
-                <span>{quizzes.filter(q => q.completed).length}/{quizzes.length}</span>
+              <div className="stat-item">
+                <span className="stat-label">Quiz complétés</span>
+                <span className="stat-value">{quizzes.filter(q => q.completed).length}/{quizzes.length}</span>
               </div>
             </div>
           </div>
