@@ -7,7 +7,7 @@ import PaymentForm from './PaymentForm';
 import './CourseStyle.css';
 import './CourseCardFix.css'; // Import the CSS fix
 
-const backendURL = "http://localhost:5000/api";
+const backendURL = "http://51.91.251.228:5000/api";
 
 const CourseList = () => {
   const { categoryId, moduleId } = useParams();

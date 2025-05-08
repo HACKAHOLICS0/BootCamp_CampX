@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Card, Button, Modal, Form, Alert, Badge } from 'react-bootstrap';
+import { Table, Button, Alert, Badge, Modal, Form, Spinner, Card } from 'react-bootstrap';
 import { format } from 'date-fns';
 import Cookies from 'js-cookie';
 import config from '../../config';
+import { getEventImageUrl } from '../../utils/imageUtils';
 
 const PendingEvents = () => {
   const [pendingEvents, setPendingEvents] = useState([]);
@@ -14,25 +15,25 @@ const PendingEvents = () => {
   const [currentEvent, setCurrentEvent] = useState(null);
   const [notification, setNotification] = useState(null);
 
-  // RÃ©cupÃ©rer les Ã©vÃ©nements en attente
+  // Récupérer les événements en attente
   const fetchPendingEvents = async () => {
     try {
       setLoading(true);
 
-      // RÃ©cupÃ©rer le token depuis localStorage ou cookies
+      // Récupérer le token depuis localStorage ou cookies
       const localStorageToken = localStorage.getItem('token');
       const cookieToken = Cookies.get('token');
       const token = localStorageToken || cookieToken || '';
 
       console.log('Token used for authentication:', token ? 'Token exists' : 'No token found');
 
-      // Afficher les en-tÃªtes pour le dÃ©bogage
+      // Afficher les en-têtes pour le débogage
       const headers = {
         Authorization: `Bearer ${token}`
       };
       console.log('Request headers:', headers);
 
-      // Afficher l'URL complÃ¨te pour le dÃ©bogage
+      // Afficher l'URL complète pour le débogage
       const url = `${config.apiBaseUrl}/events/admin/pending`;
       console.log('Request URL:', url);
 
@@ -56,10 +57,10 @@ const PendingEvents = () => {
     fetchPendingEvents();
   }, []);
 
-  // Approuver un Ã©vÃ©nement
+  // Approuver un événement
   const approveEvent = async (eventId) => {
     try {
-      // RÃ©cupÃ©rer le token depuis localStorage ou cookies
+      // Récupérer le token depuis localStorage ou cookies
       const localStorageToken = localStorage.getItem('token');
       const cookieToken = Cookies.get('token');
       const token = localStorageToken || cookieToken || '';
@@ -67,11 +68,11 @@ const PendingEvents = () => {
       console.log('Approving event with ID:', eventId);
       console.log('Token used for approval:', token ? 'Token exists' : 'No token found');
 
-      // Afficher l'URL complÃ¨te pour le dÃ©bogage
+      // Afficher l'URL complète pour le débogage
       const url = `${config.apiBaseUrl}/events/${eventId}/approve`;
       console.log('Request URL:', url);
 
-      // Afficher les en-tÃªtes pour le dÃ©bogage
+      // Afficher les en-têtes pour le débogage
       const headers = {
         Authorization: `Bearer ${token}`
       };
@@ -82,7 +83,7 @@ const PendingEvents = () => {
       console.log('Approval response status:', response.status);
       console.log('Approval response data:', response.data);
 
-      // Mettre Ã  jour la liste des Ã©vÃ©nements en attente
+      // Mettre à jour la liste des événements en attente
       setPendingEvents(pendingEvents.filter(event => event._id !== eventId));
 
       // Afficher une notification
@@ -91,7 +92,7 @@ const PendingEvents = () => {
         message: 'Event approved successfully!'
       });
 
-      // Masquer la notification aprÃ¨s 3 secondes
+      // Masquer la notification après 3 secondes
       setTimeout(() => {
         setNotification(null);
       }, 3000);
@@ -114,7 +115,7 @@ const PendingEvents = () => {
     setShowRejectModal(true);
   };
 
-  // Rejeter un Ã©vÃ©nement
+  // Rejeter un événement
   const rejectEvent = async () => {
     if (!rejectionReason.trim()) {
       setNotification({
@@ -125,7 +126,7 @@ const PendingEvents = () => {
     }
 
     try {
-      // RÃ©cupÃ©rer le token depuis localStorage ou cookies
+      // Récupérer le token depuis localStorage ou cookies
       const localStorageToken = localStorage.getItem('token');
       const cookieToken = Cookies.get('token');
       const token = localStorageToken || cookieToken || '';
@@ -134,11 +135,11 @@ const PendingEvents = () => {
       console.log('Rejection reason:', rejectionReason);
       console.log('Token used for rejection:', token ? 'Token exists' : 'No token found');
 
-      // Afficher l'URL complÃ¨te pour le dÃ©bogage
+      // Afficher l'URL complète pour le débogage
       const url = `${config.apiBaseUrl}/events/${currentEvent._id}/reject`;
       console.log('Request URL:', url);
 
-      // Afficher les en-tÃªtes et le corps de la requÃªte pour le dÃ©bogage
+      // Afficher les en-têtes et le corps de la requête pour le débogage
       const headers = {
         Authorization: `Bearer ${token}`
       };
@@ -157,7 +158,7 @@ const PendingEvents = () => {
       // Fermer le modal
       setShowRejectModal(false);
 
-      // Mettre Ã  jour la liste des Ã©vÃ©nements en attente
+      // Mettre à jour la liste des événements en attente
       setPendingEvents(pendingEvents.filter(event => event._id !== currentEvent._id));
 
       // Afficher une notification
@@ -166,7 +167,7 @@ const PendingEvents = () => {
         message: 'Event rejected successfully!'
       });
 
-      // Masquer la notification aprÃ¨s 3 secondes
+      // Masquer la notification après 3 secondes
       setTimeout(() => {
         setNotification(null);
       }, 3000);
@@ -175,7 +176,7 @@ const PendingEvents = () => {
       console.error('Error details:', err.response ? err.response.data : 'No response data');
       console.error('Error status:', err.response ? err.response.status : 'No status code');
 
-      // Fermer le modal malgrÃ© l'erreur
+      // Fermer le modal malgré l'erreur
       setShowRejectModal(false);
 
       setNotification({
@@ -190,7 +191,7 @@ const PendingEvents = () => {
     try {
       setLoading(true);
 
-      // RÃ©cupÃ©rer le token depuis localStorage ou cookies
+      // Récupérer le token depuis localStorage ou cookies
       const localStorageToken = localStorage.getItem('token');
       const cookieToken = Cookies.get('token');
       const token = localStorageToken || cookieToken || '';
@@ -210,7 +211,7 @@ const PendingEvents = () => {
         message: `Authentication successful! User: ${response.data.user.name}, Role: ${response.data.user.typeUser}`
       });
 
-      // RÃ©essayer de charger les Ã©vÃ©nements en attente
+      // Réessayer de charger les événements en attente
       fetchPendingEvents();
     } catch (err) {
       console.error('Admin auth test error:', err);
@@ -225,10 +226,10 @@ const PendingEvents = () => {
     }
   };
 
-  // Fonction pour tester l'approbation d'un Ã©vÃ©nement spÃ©cifique
+  // Fonction pour tester l'approbation d'un événement spécifique
   const testApproveEvent = async (eventId) => {
     try {
-      // RÃ©cupÃ©rer le token depuis localStorage ou cookies
+      // Récupérer le token depuis localStorage ou cookies
       const localStorageToken = localStorage.getItem('token');
       const cookieToken = Cookies.get('token');
       const token = localStorageToken || cookieToken || '';
@@ -236,7 +237,7 @@ const PendingEvents = () => {
       console.log('Testing event approval with ID:', eventId);
       console.log('Token used for test:', token ? 'Token exists' : 'No token found');
 
-      // Afficher l'URL complÃ¨te pour le dÃ©bogage
+      // Afficher l'URL complète pour le débogage
       const url = `${config.apiBaseUrl}/events/admin/test-approve/${eventId}`;
       console.log('Test URL:', url);
 
@@ -263,10 +264,10 @@ const PendingEvents = () => {
     }
   };
 
-  // Fonction pour tester le rejet d'un Ã©vÃ©nement spÃ©cifique
+  // Fonction pour tester le rejet d'un événement spécifique
   const testRejectEvent = async (eventId) => {
     try {
-      // RÃ©cupÃ©rer le token depuis localStorage ou cookies
+      // Récupérer le token depuis localStorage ou cookies
       const localStorageToken = localStorage.getItem('token');
       const cookieToken = Cookies.get('token');
       const token = localStorageToken || cookieToken || '';
@@ -274,7 +275,7 @@ const PendingEvents = () => {
       console.log('Testing event rejection with ID:', eventId);
       console.log('Token used for test:', token ? 'Token exists' : 'No token found');
 
-      // Afficher l'URL complÃ¨te pour le dÃ©bogage
+      // Afficher l'URL complète pour le débogage
       const url = `${config.apiBaseUrl}/events/admin/test-reject/${eventId}`;
       console.log('Test URL:', url);
 
@@ -291,7 +292,7 @@ const PendingEvents = () => {
         message: `Event can be rejected: ${response.data.event.title}`
       });
 
-      // Ne pas fermer le modal pour permettre Ã  l'utilisateur de continuer avec le rejet
+      // Ne pas fermer le modal pour permettre à l'utilisateur de continuer avec le rejet
     } catch (err) {
       console.error('Test rejection error:', err);
       console.error('Error details:', err.response ? err.response.data : 'No response data');
@@ -335,14 +336,20 @@ const PendingEvents = () => {
           {pendingEvents.map(event => (
             <div className="col-md-6 col-lg-4 mb-4" key={event._id}>
               <Card>
-                {event.image && (
-                  <Card.Img
-                    variant="top"
-                    src={`${config.apiBaseUrl}${event.image}`}
-                    alt={event.title}
-                    style={{ height: '200px', objectFit: 'cover' }}
-                  />
-                )}
+                {event.image && event.image !== 'undefined' && (
+             <Card.Img
+  variant="top"
+  src={getEventImageUrl(event)}
+  alt={event.title}
+  style={{ height: '200px', objectFit: 'cover' }}
+  onError={(e) => {
+    console.error('Error loading image:', e);
+    console.log('Event image data:', event.image);
+    console.log('Constructed image URL:', getEventImageUrl(event));
+    // Utiliser l'URL complète pour l'image par défaut
+    e.target.src = `${config.apiBaseUrl}/uploads/events/default-event.jpg`;
+  }}
+/>                )}
                 <Card.Body>
                   <Card.Title>{event.title}</Card.Title>
                   <Badge bg="warning" className="mb-2">Pending</Badge>

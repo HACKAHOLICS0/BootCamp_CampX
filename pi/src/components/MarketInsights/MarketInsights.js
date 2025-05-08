@@ -56,7 +56,7 @@ const MarketInsights = () => {
 
     // Create axios instance with default config
     const axiosInstance = axios.create({
-        baseURL: 'http://localhost:5000/api',
+        baseURL: 'http://51.91.251.228:5000/api',
         withCredentials: true
     });
 

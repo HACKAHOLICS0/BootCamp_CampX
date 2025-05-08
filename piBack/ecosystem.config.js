@@ -18,7 +18,7 @@ module.exports = {
     name: 'pi-chatbot',
     script: './scripts/chatbot_service.py',
     interpreter: 'python',
-    args: '--host=0.0.0.0 --port=5001',
+    args: '--host=0.0.0.0 --port=5000',
     instances: 1,
     autorestart: true,
     watch: false,

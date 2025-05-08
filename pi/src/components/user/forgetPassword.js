@@ -10,7 +10,7 @@ const ForgotPassword = () => {
 
   const handleSendCode = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/auth/send-code", {
+      const response = await fetch("http://51.91.251.228:5000/api/auth/send-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone }),

@@ -1,0 +1,417 @@
+/*
+   Styles unifiés pour les tableaux du dashboard admin
+   Sections: Points d'intérêt, Quiz, Catégories, Modules, Cours, Vidéos
+*/
+
+/* Variables de couleurs */
+:root {
+  /* Couleurs principales */
+  --primary-color: #3b82f6;       /* Bleu principal */
+  --primary-dark: #2563eb;        /* Bleu foncé */
+  --secondary-color: #8b5cf6;     /* Violet */
+  --success-color: #10b981;       /* Vert */
+  --warning-color: #f59e0b;       /* Orange */
+  --danger-color: #ef4444;        /* Rouge */
+  --info-color: #3b82f6;          /* Bleu info */
+
+  /* Couleurs de fond */
+  --bg-light: #f8fafc;            /* Fond clair */
+  --bg-dark: #1e293b;             /* Fond sombre */
+  --bg-card: #ffffff;             /* Fond carte */
+  --bg-card-dark: #1e293b;        /* Fond carte sombre */
+
+  /* Couleurs de texte */
+  --text-dark: #1e293b;           /* Texte foncé */
+  --text-light: #f8fafc;          /* Texte clair */
+  --text-muted: #64748b;          /* Texte atténué */
+  --text-muted-dark: #94a3b8;     /* Texte atténué sombre */
+
+  /* Couleurs de bordure */
+  --border-light: #e2e8f0;        /* Bordure claire */
+  --border-dark: #334155;         /* Bordure sombre */
+
+  /* Ombres */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --shadow-dark-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-dark-md: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --shadow-dark-lg: 0 10px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Styles de base pour les tableaux */
+.data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 20px;
+  background-color: var(--bg-card);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  transition: all 0.3s ease;
+}
+
+.dark .data-table {
+  background-color: var(--bg-card-dark);
+  box-shadow: var(--shadow-dark-md);
+}
+
+/* En-têtes de tableau */
+.data-table thead {
+  background-color: var(--primary-color);
+}
+
+.data-table th {
+  padding: 16px;
+  text-align: left;
+  color: var(--text-light);
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: none;
+}
+
+/* Cellules de tableau */
+.data-table td {
+  padding: 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-dark);
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.dark .data-table td {
+  border-bottom: 1px solid var(--border-dark);
+  color: var(--text-light);
+}
+
+/* Lignes de tableau */
+.data-table tbody tr {
+  transition: background-color 0.2s;
+}
+
+.data-table tbody tr:hover {
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+.dark .data-table tbody tr:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Ligne archivée */
+.data-table tbody tr.archived td {
+  background-color: rgba(100, 116, 139, 0.1);
+  color: var(--text-muted);
+}
+
+.dark .data-table tbody tr.archived td {
+  background-color: rgba(100, 116, 139, 0.2);
+  color: var(--text-muted-dark);
+}
+
+/* Message quand aucune donnée n'est disponible */
+.data-table tbody tr.no-data td {
+  text-align: center;
+  padding: 30px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.dark .data-table tbody tr.no-data td {
+  color: var(--text-muted-dark);
+}
+
+/* Boutons d'action */
+.action-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-block;
+  text-align: center;
+  margin: 0 5px;
+  box-shadow: var(--shadow-sm);
+}
+
+.dark .action-btn {
+  box-shadow: var(--shadow-dark-sm);
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.dark .action-btn:hover {
+  box-shadow: var(--shadow-dark-md);
+}
+
+.action-btn:active {
+  transform: translateY(0);
+}
+
+/* Bouton Ajouter */
+.action-btn.add {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 10px 20px;
+  font-size: 14px;
+  margin-bottom: 15px;
+  display: inline-block;
+}
+
+.action-btn.add:hover {
+  background-color: var(--primary-dark);
+}
+
+/* Bouton Modifier */
+.action-btn.modify,
+.action-btn.update,
+.action-btn.edit {
+  background-color: var(--warning-color);
+  color: white;
+}
+
+.action-btn.modify:hover,
+.action-btn.update:hover,
+.action-btn.edit:hover {
+  background-color: #e69009;
+}
+
+/* Bouton Supprimer */
+.action-btn.delete {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+.action-btn.delete:hover {
+  background-color: #dc2626;
+}
+
+/* Bouton Activer */
+.action-btn.activate {
+  background-color: var(--success-color);
+  color: white;
+}
+
+.action-btn.activate:hover {
+  background-color: #0d9668;
+}
+
+/* Bouton Désactiver */
+.action-btn.deactivate {
+  background-color: var(--text-muted);
+  color: white;
+}
+
+.action-btn.deactivate:hover {
+  background-color: #475569;
+}
+
+/* Bouton Détails */
+.action-btn.details,
+.action-btn.view {
+  background-color: var(--info-color);
+  color: white;
+}
+
+.action-btn.details:hover,
+.action-btn.view:hover {
+  background-color: var(--primary-dark);
+}
+
+/* Bouton Questions (pour Quiz) */
+.action-btn.questions {
+  background-color: var(--secondary-color);
+  color: white;
+}
+
+.action-btn.questions:hover {
+  background-color: #7c3aed;
+}
+
+/* Conteneur pour les boutons d'action */
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+/* Styles pour les états */
+.status-badge {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.status-active {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--success-color);
+}
+
+.status-inactive {
+  background-color: rgba(100, 116, 139, 0.1);
+  color: var(--text-muted);
+}
+
+.status-archived {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--danger-color);
+}
+
+.dark .status-active {
+  background-color: rgba(16, 185, 129, 0.2);
+}
+
+.dark .status-inactive {
+  background-color: rgba(100, 116, 139, 0.2);
+  color: var(--text-muted-dark);
+}
+
+.dark .status-archived {
+  background-color: rgba(239, 68, 68, 0.2);
+}
+
+/* Styles pour les messages de chargement et d'erreur */
+.loading-message,
+.error-message {
+  text-align: center;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.loading-message {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: var(--primary-color);
+}
+
+.error-message {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--danger-color);
+}
+
+.dark .loading-message {
+  background-color: rgba(59, 130, 246, 0.2);
+}
+
+.dark .error-message {
+  background-color: rgba(239, 68, 68, 0.2);
+}
+
+/* Responsive design pour les tableaux */
+@media (max-width: 992px) {
+  .data-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 768px) {
+  .action-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 576px) {
+  .action-buttons {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .action-btn {
+    margin: 3px 0;
+    width: 100%;
+  }
+}
+
+/* Pagination Styles */
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  user-select: none;
+}
+
+.pagination {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.pagination-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 8px;
+  margin: 0 2px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: var(--bg-card);
+  color: var(--text-dark);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.pagination-item:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.pagination-item.active {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.pagination-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.dark .pagination-item {
+  background-color: var(--bg-card-dark);
+  color: var(--text-light);
+}
+
+.dark .pagination-item:hover {
+  background-color: rgba(59, 130, 246, 0.2);
+}
+
+.pagination-info {
+  margin-top: 10px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.dark .pagination-info {
+  color: var(--text-muted-dark);
+}

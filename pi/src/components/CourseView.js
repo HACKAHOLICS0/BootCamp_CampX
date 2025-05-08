@@ -13,7 +13,7 @@
                 gap: '10px',
                 margin: '20px auto'
             }}
-            onClick={() => window.location.href = 'http://localhost:3000/chat'}
+            onClick={() => window.location.href = 'http://51.91.251.228:3000/chat'}
         >
             <FaComments /> Accéder au Chat
         </button>

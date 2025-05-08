@@ -1,41 +1,43 @@
-import { Route, useNavigate, useParams } from "react-router-dom";
 import React, { useState, useEffect } from 'react';
-import { Badge, Card, Collapse, Table, Modal, Button } from "react-bootstrap";
+import { Badge, Modal, Button, Card } from "react-bootstrap";
 import AddQuiz from "./AddQuiz";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faChevronDown, faChevronUp } from "@fortawesome/free-solid-svg-icons";
 import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
 import AddQuestion from "./AddQuestion";
 import { Switch } from "@mui/material";
 import Cookies from 'js-cookie';
 import config from '../../../config';
+import '../styles/AdminTableStyle.css';
+import '../styles/AdminPointsStyle.css';
+import Pagination from '../common/Pagination';
 
 const QuizAdmin = () => {
-    const { idModule } = useParams();
     const [quizzes, setQuizzes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
-    const [openAdd, setopenAdd] = useState(false);
     const [showAddQuestion, setShowAddQuestion] = useState(false);
     const [Quizselected, setQuizselected] = useState(null);
     const [editQuiz, setEditQuiz] = useState(false);
     const [keySelected, setKeySelected] = useState(-1);
     const [checked, setChecked] = useState(false);
     const [erroChronoval, setSeTerroChronoval] = useState(false);
-    const [selectedQuizId, setSelectedQuizId] = useState(null);
-    const [isOpen, setIsOpen] = useState(false);
-    const [courses, setCourses] = useState([]);
-    const [selectedCourse, setSelectedCourse] = useState('');
-    const [selectedCourseTemp, setSelectedCourseTemp] = useState('');
     const [reloadquiz, setreloadquiz] = useState(false);
     const [showDetails, setShowDetails] = useState(false);
     const [selectedQuizDetails, setSelectedQuizDetails] = useState(null);
 
+    // Modal states
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(5);
+
+    // Filter state
+    const [quizTypeFilter, setQuizTypeFilter] = useState('all'); // 'all', 'standard', 'final'
+
     useEffect(() => {
         fetchQuizzes();
-        fetchCourses();
     }, [reloadquiz]);
 
     const fetchQuizzes = async () => {
@@ -56,6 +58,7 @@ const QuizAdmin = () => {
 
             const data = await response.json();
             setQuizzes(data);
+            setCurrentPage(1); // Reset to first page when quizzes are reloaded
             setLoading(false);
         } catch (err) {
             console.error('Error fetching quizzes:', err);
@@ -64,27 +67,7 @@ const QuizAdmin = () => {
         }
     };
 
-    const fetchCourses = async () => {
-        try {
-            const token = Cookies.get('token');
-            const response = await fetch(`${config.API_URL}/api/courses`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch courses');
-            }
-
-            const data = await response.json();
-            setCourses(data);
-        } catch (err) {
-            console.error('Error fetching courses:', err);
-            setError(err.message);
-        }
-    };
+    // Removed unused fetchCourses function
 
     const handleKeyPresstitle = async (event) => {
         if (event.key === 'Enter' && Quizselected?._id) {
@@ -295,6 +278,26 @@ const QuizAdmin = () => {
         setShowDetails(true);
     };
 
+    // Utility function to filter quizzes by type
+    const filterQuizzesByType = (quizList) => {
+        return quizList.filter(quiz => {
+            if (quizTypeFilter === 'all') return true;
+            if (quizTypeFilter === 'standard') return !quiz.isFinalQuiz;
+            if (quizTypeFilter === 'final') return quiz.isFinalQuiz;
+            return true;
+        });
+    };
+
+    // Handle opening the add quiz modal
+    const handleAdd = () => {
+        setIsModalOpen(true);
+    };
+
+    // Handle closing the add quiz modal
+    const handleModalClose = () => {
+        setIsModalOpen(false);
+    };
+
     return (
         <div className="content-section">
             <h2>Quiz Management</h2>
@@ -314,49 +317,62 @@ const QuizAdmin = () => {
                 </div>
             ) : (
                 <div className="row mt-5 mx-auto">
-                    <div className="col-4 me-3">
-                        {openAdd ? (
-                            <a className="btn col-12 btncustom mb-3" onClick={() => setopenAdd(false)}>
-                                <FontAwesomeIcon icon={faChevronUp} /> Close
-                            </a>
-                        ) : (
-                            <a className="btn col-12 btncustom mb-3" onClick={() => setopenAdd(true)}>
-                                <FontAwesomeIcon icon={faChevronDown} /> Add Quiz
-                            </a>
-                        )}
+                    <div className="col-12">
+                        <button className="action-btn add" onClick={handleAdd}>Add Quiz</button>
 
-                        <Collapse in={openAdd}>
-                            <Card className="mb-3">
-                                <Card.Body>
-                                    <AddQuiz
-                                        onClose={() => setopenAdd(false)}
-                                        onSuccess={() => {
-                                            setSuccess('Quiz added successfully');
-                                            setopenAdd(false);
-                                            setreloadquiz(!reloadquiz);
-                                            setTimeout(() => setSuccess(null), 3000);
-                                        }}
-                                    />
-                                </Card.Body>
-                            </Card>
-                        </Collapse>
-
-                        <Collapse in={showAddQuestion && Quizselected}>
-                            <Card className="mb-3">
-                                <Card.Header>
-                                    <Card.Title style={{ textAlign: "center" }}>
-                                        {Quizselected?.title || 'No Quiz Selected'}
-                                    </Card.Title>
-                                </Card.Header>
-                                <Card.Body>
-                                    <AddQuestion onAddQuestion={addQuestionEvent} quiz={Quizselected} />
-                                </Card.Body>
-                            </Card>
-                        </Collapse>
-                    </div>
-
-                    <div className="col-7">
-                        <Table striped bordered hover>
+                        {/* Modal for adding questions is now using Bootstrap Modal component */}
+                        <div className="table-controls" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <label htmlFor="quizTypeFilter" style={{ marginRight: '10px', fontSize: '14px' }}>
+                                    Type de quiz:
+                                </label>
+                                <select
+                                    id="quizTypeFilter"
+                                    value={quizTypeFilter}
+                                    onChange={(e) => {
+                                        setQuizTypeFilter(e.target.value);
+                                        setCurrentPage(1); // Reset to first page when changing filter
+                                    }}
+                                    style={{
+                                        padding: '5px 10px',
+                                        borderRadius: '4px',
+                                        border: '1px solid #e2e8f0',
+                                        backgroundColor: '#fff',
+                                        fontSize: '14px'
+                                    }}
+                                >
+                                    <option value="all">Tous les quiz</option>
+                                    <option value="standard">Quiz Standard</option>
+                                    <option value="final">Quiz Final</option>
+                                </select>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <label htmlFor="itemsPerPage" style={{ marginRight: '10px', fontSize: '14px' }}>
+                                    Items per page:
+                                </label>
+                                <select
+                                    id="itemsPerPage"
+                                    value={itemsPerPage}
+                                    onChange={(e) => {
+                                        setItemsPerPage(Number(e.target.value));
+                                        setCurrentPage(1); // Reset to first page when changing items per page
+                                    }}
+                                    style={{
+                                        padding: '5px 10px',
+                                        borderRadius: '4px',
+                                        border: '1px solid #e2e8f0',
+                                        backgroundColor: '#fff',
+                                        fontSize: '14px'
+                                    }}
+                                >
+                                    <option value={5}>5</option>
+                                    <option value={10}>10</option>
+                                    <option value={15}>15</option>
+                                    <option value={20}>20</option>
+                                </select>
+                            </div>
+                        </div>
+                        <table className="data-table">
                             <thead>
                                 <tr>
                                     <th>#</th>
@@ -367,16 +383,20 @@ const QuizAdmin = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {quizzes.map((quiz, index) => (
+                                {quizzes.length > 0 ? (
+                                    // Filter quizzes by type and then paginate
+                                    filterQuizzesByType(quizzes)
+                                        .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                                        .map((quiz, index) => (
                                     <tr key={quiz._id}>
-                                        <td>{index + 1}</td>
+                                        <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                                         <td>
                                             {editQuiz && keySelected === index ? (
                                                 <input
                                                     type="text"
                                                     className="form-control"
                                                     defaultValue={quiz.title}
-                                                    onKeyPress={handleKeyPresstitle}
+                                                    onKeyDown={(e) => e.key === 'Enter' && handleKeyPresstitle(e)}
                                                 />
                                             ) : (
                                                 quiz.title
@@ -398,7 +418,7 @@ const QuizAdmin = () => {
                                                                 type="number"
                                                                 className="form-control"
                                                                 defaultValue={quiz.chronoVal}
-                                                                onKeyPress={handleKeyPresschrono}
+                                                                onKeyDown={(e) => e.key === 'Enter' && handleKeyPresschrono(e)}
                                                                 min="1"
                                                             />
                                                         ) : (
@@ -420,58 +440,74 @@ const QuizAdmin = () => {
                                                 <Badge bg="primary">Quiz Standard</Badge>
                                             )}
                                         </td>
-                                        <td>
-                                            <div className="btn-group">
-                                                {editQuiz && keySelected === index ? (
-                                                    <button
-                                                        className="btn btn-secondary"
-                                                        onClick={() => {
-                                                            setEditQuiz(false);
-                                                            setKeySelected(-1);
-                                                        }}
-                                                    >
-                                                        Cancel
-                                                    </button>
-                                                ) : (
-                                                    <button
-                                                        className="btn btn-primary"
-                                                        onClick={() => {
-                                                            setQuizselected(quiz);
-                                                            setKeySelected(index);
-                                                            setEditQuiz(true);
-                                                            setChecked(Boolean(quiz.chrono));
-                                                        }}
-                                                    >
-                                                        Edit
-                                                    </button>
-                                                )}
+                                        <td className="action-buttons">
+                                            {editQuiz && keySelected === index ? (
                                                 <button
-                                                    className="btn btn-info"
+                                                    className="action-btn cancel"
                                                     onClick={() => {
-                                                        setQuizselected(quiz);
-                                                        setShowAddQuestion(true);
+                                                        setEditQuiz(false);
+                                                        setKeySelected(-1);
                                                     }}
                                                 >
-                                                    Questions
+                                                    Cancel
                                                 </button>
+                                            ) : (
                                                 <button
-                                                    className="btn btn-success"
-                                                    onClick={() => handleShowDetails(quiz)}
+                                                    className="action-btn modify"
+                                                    onClick={() => {
+                                                        setQuizselected(quiz);
+                                                        setKeySelected(index);
+                                                        setEditQuiz(true);
+                                                        setChecked(Boolean(quiz.chrono));
+                                                    }}
                                                 >
-                                                    Details
+                                                    Edit
                                                 </button>
-                                                <button
-                                                    className="btn btn-danger"
-                                                    onClick={() => confirmDelete(quiz._id)}
-                                                >
-                                                    Delete
-                                                </button>
-                                            </div>
+                                            )}
+                                            <button
+                                                className="action-btn questions"
+                                                onClick={() => {
+                                                    setQuizselected(quiz);
+                                                    setShowAddQuestion(true);
+                                                }}
+                                            >
+                                                Questions
+                                            </button>
+                                            <button
+                                                className="action-btn details"
+                                                onClick={() => handleShowDetails(quiz)}
+                                            >
+                                                Details
+                                            </button>
+                                            <button
+                                                className="action-btn delete"
+                                                onClick={() => confirmDelete(quiz._id)}
+                                            >
+                                                Delete
+                                            </button>
                                         </td>
                                     </tr>
-                                ))}
+                                ))
+                                ) : (
+                                    <tr className="no-data">
+                                        <td colSpan="5">No quizzes found</td>
+                                    </tr>
+                                )}
                             </tbody>
-                        </Table>
+                        </table>
+
+                        {/* Pagination */}
+                        {quizzes.length > 0 && (
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={Math.ceil(
+                                    filterQuizzesByType(quizzes).length / itemsPerPage
+                                )}
+                                onPageChange={setCurrentPage}
+                                totalItems={filterQuizzesByType(quizzes).length}
+                                itemsPerPage={itemsPerPage}
+                            />
+                        )}
                     </div>
                 </div>
             )}
@@ -550,6 +586,24 @@ const QuizAdmin = () => {
                     </Button>
                 </Modal.Footer>
             </Modal>
+
+            {/* Modal for adding quiz */}
+            {isModalOpen && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <h3>Add New Quiz</h3>
+                        <AddQuiz
+                            onClose={handleModalClose}
+                            onSuccess={() => {
+                                setSuccess('Quiz added successfully');
+                                handleModalClose();
+                                setreloadquiz(!reloadquiz);
+                                setTimeout(() => setSuccess(null), 3000);
+                            }}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

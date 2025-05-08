@@ -20,7 +20,11 @@ const moduleSchema = new mongoose.Schema({
     },
     duration: {
         type: Number, // in hours
-        required: true
+        default: 0
+    },
+    coursesCount: {
+        type: Number,
+        default: 0
     },
     difficulty: {
         type: String,

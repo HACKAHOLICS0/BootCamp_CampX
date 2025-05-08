@@ -198,12 +198,12 @@ const AddQuiz = ({ onClose = () => {}, onSuccess = () => {} }) => {
             </Form.Group>
 
             <div className="d-flex justify-content-end gap-2">
-                <Button variant="secondary" onClick={onClose}>
+                <button className="action-btn cancel" onClick={onClose}>
                     Cancel
-                </Button>
-                <Button variant="primary" type="submit">
+                </button>
+                <button className="action-btn add" type="submit">
                     Create Quiz
-                </Button>
+                </button>
             </div>
         </Form>
     );

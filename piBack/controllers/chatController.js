@@ -3,7 +3,7 @@ const User = require('../Model/User');
 const { getPrediction } = require('../utils/pythonAiService');
 const axios = require('axios');
 
-const PYTHON_SERVICE_URL = 'http://127.0.0.1:5001/predict';
+const PYTHON_SERVICE_URL = 'http://127.0.0.1:5000/predict';
 
 exports.createConversation = async (req, res) => {
     try {

@@ -1,13 +1,19 @@
+import axios from 'axios';
 import axiosInstance from './axiosConfig';
+import Cookies from 'js-cookie';
 
 // URL de base pour les fichiers statiques (comme les fichiers ICS)
-const API_URL = 'http://localhost:5000/api/events'; // Mise Ã  jour du port
+const API_URL = 'http://51.91.251.228:5000/api/events'; // Mise à jour du port
 
 class EventService {
+    constructor() {
+        // Stocker l'instance axios comme propriété de la classe
+        this.axiosInstance = axiosInstance;
+    }
 
     async getAllEvents() {
         try {
-            const response = await axiosInstance.get('/events');
+            const response = await this.axiosInstance.get('/events');
             return response.data;
         } catch (error) {
             console.error('Error fetching events:', error);
@@ -17,7 +23,7 @@ class EventService {
 
     async getEvent(id) {
         try {
-            const response = await axiosInstance.get(`/events/${id}`);
+            const response = await this.axiosInstance.get(`/events/${id}`);
             return response.data;
         } catch (error) {
             console.error('Error fetching event:', error);
@@ -39,7 +45,7 @@ class EventService {
                 }
             });
 
-            const response = await axiosInstance.post(
+            const response = await this.axiosInstance.post(
                 '/events',
                 formData,
                 {
@@ -70,7 +76,7 @@ class EventService {
                 }
             });
 
-            const response = await axiosInstance.put(
+            const response = await this.axiosInstance.put(
                 `/events/${id}`,
                 formData,
                 {
@@ -89,37 +95,108 @@ class EventService {
 
     async deleteEvent(id) {
         try {
-            await axiosInstance.delete(`/events/${id}`);
+            console.log('Deleting event with ID:', id);
+            
+            // Récupérer le token depuis les cookies
+            const token = Cookies.get('token');
+            console.log('Token available:', token ? 'Yes' : 'No');
+            
+            if (!token) {
+                throw new Error('Authentication token is missing. Please log in again.');
+            }
+            
+            // Utiliser axios avec le token d'authentification
+            const response = await axios.delete(`http://51.91.251.228:5000/api/events/${id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            
+            console.log('Delete response:', response);
+            return response.data;
         } catch (error) {
             console.error('Error deleting event:', error);
+            console.error('Error details:', error.response ? error.response.data : 'No response data');
+            console.error('Error status:', error.response ? error.response.status : 'No status code');
+            
+            if (error.response && error.response.status === 401) {
+                console.log('Authentication failed. Token might be expired.');
+                // Supprimer le token expiré
+                Cookies.remove('token');
+                Cookies.remove('user');
+                
+                throw new Error('Your session has expired. Please log in again.');
+            }
+            
             throw new Error(error.response?.data?.message || 'Failed to delete event');
         }
     }
 
+    // Fonction pour s'inscrire à un événement
     async registerForEvent(eventId) {
         try {
-            const response = await axiosInstance.post(
-                `/events/${eventId}/register`,
-                {}
-            );
-            return response.data;
+            // Vérifier si eventId est valide
+            if (!eventId) {
+                throw new Error('Event ID is required');
+            }
+
+            // Récupérer le token depuis localStorage ou cookies
+            const token = localStorage.getItem('token') || Cookies.get('token');
+            
+            if (!token) {
+                throw new Error('Authentication required. Please sign in.');
+            }
+
+            // Ajouter des logs pour le débogage
+            console.log(`Attempting to register for event: ${eventId}`);
+            console.log(`Using token: ${token ? 'Token exists' : 'No token'}`);
+
+            // Utiliser this.axiosInstance qui est maintenant correctement initialisé
+            const response = await this.axiosInstance.post(`/events/${eventId}/register`, {}, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            // Vérifier si la réponse contient des données
+            if (response.data) {
+                console.log('Registration successful:', response.data);
+                return response.data;
+            } else {
+                console.warn('Registration response has no data');
+                return { success: true };
+            }
         } catch (error) {
+            // Améliorer la gestion des erreurs
+            console.error('API Error:', error);
+            
+            if (error.response) {
+                console.error('Error data:', error.response.data);
+                console.error('Error status:', error.response.status);
+                console.error('Error headers:', error.response.headers);
+                
+                // Si le serveur renvoie un message d'erreur spécifique, l'utiliser
+                if (error.response.data && error.response.data.message) {
+                    throw new Error(error.response.data.message);
+                }
+            }
+            
             console.error('Error registering for event:', error);
-            throw new Error(error.response?.data?.message || 'Failed to register for event');
+            throw new Error(error.message || 'Failed to register for event');
         }
     }
 
-    // MÃ©thodes pour les fonctionnalitÃ©s de calendrier
+    // Méthodes pour les fonctionnalités de calendrier
 
-    // Obtenir l'URL du fichier iCalendar pour un Ã©vÃ©nement
+    // Obtenir l'URL du fichier iCalendar pour un événement
     getICalendarUrl(eventId) {
         return `${API_URL}/${eventId}/calendar.ics`;
     }
 
-    // Obtenir l'URL Google Calendar pour un Ã©vÃ©nement
+    // Obtenir l'URL Google Calendar pour un événement
     async getGoogleCalendarUrl(eventId) {
         try {
-            const response = await axiosInstance.get(`/events/${eventId}/google-calendar`);
+            const response = await this.axiosInstance.get(`/events/${eventId}/google-calendar`);
             return response.data.url;
         } catch (error) {
             console.error('Error getting Google Calendar URL:', error);
@@ -127,10 +204,10 @@ class EventService {
         }
     }
 
-    // Obtenir l'URL Apple Calendar pour un Ã©vÃ©nement
+    // Obtenir l'URL Apple Calendar pour un événement
     async getAppleCalendarUrl(eventId) {
         try {
-            const response = await axiosInstance.get(`/events/${eventId}/apple-calendar`);
+            const response = await this.axiosInstance.get(`/events/${eventId}/apple-calendar`);
             return response.data.url;
         } catch (error) {
             console.error('Error getting Apple Calendar URL:', error);
@@ -138,12 +215,12 @@ class EventService {
         }
     }
 
-    // Ouvrir le fichier iCalendar dans une nouvelle fenÃªtre
+    // Ouvrir le fichier iCalendar dans une nouvelle fenêtre
     openICalendarFile(eventId) {
         window.open(this.getICalendarUrl(eventId), '_blank');
     }
 
-    // Ouvrir l'URL Google Calendar dans une nouvelle fenÃªtre
+    // Ouvrir l'URL Google Calendar dans une nouvelle fenêtre
     async openGoogleCalendar(eventId) {
         try {
             const url = await this.getGoogleCalendarUrl(eventId);
@@ -154,7 +231,7 @@ class EventService {
         }
     }
 
-    // Ouvrir l'URL Apple Calendar dans une nouvelle fenÃªtre
+    // Ouvrir l'URL Apple Calendar dans une nouvelle fenêtre
     async openAppleCalendar(eventId) {
         try {
             const url = await this.getAppleCalendarUrl(eventId);
@@ -167,7 +244,7 @@ class EventService {
 
     async getEventAttendees(eventId) {
         try {
-            const response = await axiosInstance.get(`/events/${eventId}`);
+            const response = await this.axiosInstance.get(`/events/${eventId}`);
             return response.data.attendees;
         } catch (error) {
             console.error('Error fetching event attendees:', error);
@@ -238,7 +315,7 @@ class EventService {
 
     // Helper method to calculate monthly attendance
     calculateMonthlyAttendance(events) {
-        const months = ['Jan', 'FÃ©v', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'AoÃ»', 'Sep', 'Oct', 'Nov', 'DÃ©c'];
+        const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
         const monthCounts = Array(12).fill(0);
 
         events.forEach(event => {

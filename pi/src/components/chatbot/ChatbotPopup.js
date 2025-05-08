@@ -19,7 +19,25 @@ const ChatbotPopup = () => {
     useEffect(() => {
         const storedUser = Cookies.get("user");
         if (storedUser) {
-            setUser(JSON.parse(storedUser));
+            try {
+                const parsedUser = JSON.parse(storedUser);
+                console.log("User cookie parsed successfully:", parsedUser);
+                setUser(parsedUser);
+            } catch (error) {
+                console.error("Error parsing user cookie:", error);
+                console.error("Raw cookie value:", storedUser);
+                // Try to decode URI component if needed
+                try {
+                    const decodedUser = decodeURIComponent(storedUser);
+                    const parsedUser = JSON.parse(decodedUser);
+                    console.log("User cookie parsed after decoding:", parsedUser);
+                    setUser(parsedUser);
+                } catch (decodeError) {
+                    console.error("Error parsing decoded user cookie:", decodeError);
+                }
+            }
+        } else {
+            console.warn("No user cookie found");
         }
     }, []);
 
@@ -140,9 +158,27 @@ const ChatbotPopup = () => {
         console.log('messageContent calculé:', messageContent);
         console.log('Type de messageContent:', typeof messageContent);
 
-        // Vérifier que messageContent est une chaîne de caractères
-        if (typeof messageContent !== 'string' || !messageContent.trim() || !user || !user.id) {
-            console.error('Message invalide ou utilisateur non connecté', { messageContent, user });
+        // Vérifier que messageContent est une chaîne de caractères et non vide
+        if (typeof messageContent !== 'string' || !messageContent.trim()) {
+            console.error('Message invalide', { messageContent });
+            return;
+        }
+
+        // Vérifier si l'utilisateur est connecté
+        if (!user || !user.id) {
+            console.error('Utilisateur non connecté', { user });
+
+            // Ajouter le message de l'utilisateur quand même
+            const newMessage = { role: "user", content: messageContent };
+            setMessages(prevMessages => [...prevMessages, newMessage]);
+            setInput("");
+
+            // Ajouter un message d'erreur du bot
+            const errorMessage = {
+                role: "bot",
+                content: "Vous devez être connecté pour utiliser le chatbot. Veuillez vous connecter ou créer un compte."
+            };
+            setMessages(prevMessages => [...prevMessages, errorMessage]);
             return;
         }
 
@@ -173,7 +209,7 @@ const ChatbotPopup = () => {
         };
 
         // Déterminer l'URL du service chatbot
-        const chatbotUrl = "http://localhost:5001/predict";
+        const chatbotUrl = "http://51.91.251.228:5000/predict";
 
         console.log("Envoi de la requête au chatbot:", {
             url: chatbotUrl,

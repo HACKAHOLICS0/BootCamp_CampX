@@ -11,7 +11,7 @@ const ResetPassword = () => {
   const handleResetPassword = async () => {
     try {
       // Send the plain text password; let the back end hash it
-      const response = await fetch("http://localhost:5000/api/auth/reset-password", {
+      const response = await fetch("http://51.91.251.228:5000/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone, password }),

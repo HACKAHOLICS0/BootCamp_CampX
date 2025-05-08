@@ -296,7 +296,7 @@ const validateImage = async (req, res) => {
 const validateFace = async (imagePath) => {
   console.log(`Validation du visage pour l'image: ${imagePath}`);
 
-  // VÃ©rifier si le fichier existe
+  // Vérifier si le fichier existe
   const fs = require('fs');
   if (!fs.existsSync(imagePath)) {
     console.error(`Le fichier n'existe pas: ${imagePath}`);
@@ -308,7 +308,7 @@ const validateFace = async (imagePath) => {
       const scriptPath = path.resolve(__dirname, '../scripts/face_validator_cli.py');
       console.log(`Chemin du script Python: ${scriptPath}`);
 
-      // VÃ©rifier si le script Python existe
+      // Vérifier si le script Python existe
       if (!fs.existsSync(scriptPath)) {
         console.error(`Le script Python n'existe pas: ${scriptPath}`);
         resolve({ isValid: false, message: "Erreur de configuration: script Python introuvable" });
@@ -319,8 +319,12 @@ const validateFace = async (imagePath) => {
       const absoluteImagePath = path.resolve(imagePath);
       console.log(`Chemin absolu de l'image: ${absoluteImagePath}`);
 
+      // Utiliser python3 au lieu de python
+      const pythonCommand = 'python3';
+      console.log(`Utilisation de la commande Python: ${pythonCommand}`);
+
       // Lancer le processus Python avec des arguments explicites
-      const pythonProcess = spawn('python', [
+      const pythonProcess = spawn(pythonCommand, [
           scriptPath,
           absoluteImagePath
       ]);
@@ -340,7 +344,7 @@ const validateFace = async (imagePath) => {
           error += chunk;
       });
 
-      // DÃ©finir un timeout pour le processus Python
+      // Définir un timeout pour le processus Python
       const timeout = setTimeout(() => {
           console.error('Timeout: Le processus Python prend trop de temps');
           pythonProcess.kill();
@@ -349,47 +353,47 @@ const validateFace = async (imagePath) => {
 
       pythonProcess.on('close', (code) => {
           clearTimeout(timeout); // Annuler le timeout
-          console.log(`Process Python terminÃ© avec le code: ${code}`);
+          console.log(`Process Python terminé avec le code: ${code}`);
 
           if (code !== 0) {
               console.error('Python script error:', error);
-              // Au lieu de rejeter, on renvoie une rÃ©ponse d'erreur
-              resolve({ isValid: false, message: "Erreur lors de l'exÃ©cution du script de validation" });
+              // Au lieu de rejeter, on renvoie une réponse d'erreur
+              resolve({ isValid: false, message: "Erreur lors de l'exécution du script de validation" });
               return;
           }
 
           try {
-              // Nettoyez la rÃ©ponse pour s'assurer qu'elle est un JSON valide
+              // Nettoyez la réponse pour s'assurer qu'elle est un JSON valide
               let cleanResult = result.trim();
-              console.log(`RÃ©sultat nettoyÃ©: ${cleanResult}`);
+              console.log(`Résultat nettoyé: ${cleanResult}`);
 
               if (!cleanResult) {
-                  console.error('RÃ©ponse vide du script Python');
-                  resolve({ isValid: false, message: 'RÃ©ponse vide du script Python' });
+                  console.error('Réponse vide du script Python');
+                  resolve({ isValid: false, message: 'Réponse vide du script Python' });
                   return;
               }
 
-              // Recherche d'un objet JSON complet dans la rÃ©ponse
+              // Recherche d'un objet JSON complet dans la réponse
               const jsonRegex = /(\{.*\})/s;  // Regex pour trouver un objet JSON complet
               const match = cleanResult.match(jsonRegex);
 
               if (match && match[1]) {
-                  // Extraire uniquement la partie JSON de la rÃ©ponse
+                  // Extraire uniquement la partie JSON de la réponse
                   let jsonString = match[1];
                   console.log(`JSON extrait par regex: ${jsonString}`);
 
                   try {
                       const response = JSON.parse(jsonString);
-                      console.log(`RÃ©ponse parsÃ©e:`, response);
+                      console.log(`Réponse parsée:`, response);
 
-                      // VÃ©rifier que la rÃ©ponse contient les champs attendus
+                      // Vérifier que la réponse contient les champs attendus
                       if (response.hasOwnProperty('isValid') && response.hasOwnProperty('message')) {
                           resolve(response);
                       } else {
-                          console.error('RÃ©ponse JSON incomplÃ¨te:', response);
+                          console.error('Réponse JSON incomplète:', response);
                           resolve({
                               isValid: false,
-                              message: "RÃ©ponse incomplÃ¨te du script de validation"
+                              message: "Réponse incomplète du script de validation"
                           });
                       }
                   } catch (e) {
@@ -397,16 +401,16 @@ const validateFace = async (imagePath) => {
 
                       // Tentative alternative: chercher le dernier objet JSON valide
                       try {
-                          // Trouver le dernier objet JSON dans la chaÃ®ne
+                          // Trouver le dernier objet JSON dans la chaîne
                           const lastJsonStart = cleanResult.lastIndexOf('{');
                           const lastJsonEnd = cleanResult.lastIndexOf('}');
 
                           if (lastJsonStart !== -1 && lastJsonEnd !== -1 && lastJsonEnd > lastJsonStart) {
                               jsonString = cleanResult.substring(lastJsonStart, lastJsonEnd + 1);
-                              console.log(`Dernier JSON trouvÃ©: ${jsonString}`);
+                              console.log(`Dernier JSON trouvé: ${jsonString}`);
 
                               const response = JSON.parse(jsonString);
-                              console.log(`RÃ©ponse parsÃ©e (dernier JSON):`, response);
+                              console.log(`Réponse parsée (dernier JSON):`, response);
 
                               if (response.hasOwnProperty('isValid') && response.hasOwnProperty('message')) {
                                   resolve(response);
@@ -414,20 +418,20 @@ const validateFace = async (imagePath) => {
                               }
                           }
 
-                          // Si on arrive ici, c'est qu'on n'a pas trouvÃ© de JSON valide
-                          throw new Error("Aucun JSON valide trouvÃ©");
+                          // Si on arrive ici, c'est qu'on n'a pas trouvé de JSON valide
+                          throw new Error("Aucun JSON valide trouvé");
                       } catch (e2) {
                           console.error('Second parse error:', e2);
                           resolve({
                               isValid: false,
-                              message: "Erreur de format dans la rÃ©ponse du script"
+                              message: "Erreur de format dans la réponse du script"
                           });
                       }
                   }
               } else {
-                  console.error('Aucun JSON valide trouvÃ© par regex dans:', cleanResult);
+                  console.error('Aucun JSON valide trouvé par regex dans:', cleanResult);
 
-                  // DerniÃ¨re tentative: chercher manuellement les accolades
+                  // Dernière tentative: chercher manuellement les accolades
                   try {
                       const lastOpenBrace = cleanResult.lastIndexOf('{');
                       const lastCloseBrace = cleanResult.lastIndexOf('}');
@@ -437,7 +441,7 @@ const validateFace = async (imagePath) => {
                           console.log(`JSON extrait manuellement: ${jsonString}`);
 
                           const response = JSON.parse(jsonString);
-                          console.log(`RÃ©ponse parsÃ©e (extraction manuelle):`, response);
+                          console.log(`Réponse parsée (extraction manuelle):`, response);
 
                           if (response.hasOwnProperty('isValid') && response.hasOwnProperty('message')) {
                               resolve(response);
@@ -445,25 +449,25 @@ const validateFace = async (imagePath) => {
                           }
                       }
                   } catch (e3) {
-                      console.error('Extraction manuelle Ã©chouÃ©e:', e3);
+                      console.error('Extraction manuelle échouée:', e3);
                   }
 
-                  // Si toutes les tentatives Ã©chouent, renvoyer une erreur
+                  // Si toutes les tentatives échouent, renvoyer une erreur
                   resolve({
                       isValid: false,
-                      message: "Format de rÃ©ponse invalide du script de validation"
+                      message: "Format de réponse invalide du script de validation"
                   });
               }
           } catch (e) {
               console.error('General error:', e, 'Raw result:', result);
               resolve({
                   isValid: false,
-                  message: "Erreur lors du traitement de la rÃ©ponse"
+                  message: "Erreur lors du traitement de la réponse"
               });
           }
       });
 
-      // GÃ©rer les erreurs de lancement du processus
+      // Gérer les erreurs de lancement du processus
       pythonProcess.on('error', (err) => {
           clearTimeout(timeout); // Annuler le timeout
           console.error('Failed to start Python process:', err);

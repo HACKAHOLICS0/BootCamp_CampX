@@ -29,7 +29,7 @@ require("dotenv").config({ path: "./config/.env" });
 require("./utils/passport"); // Local auth
 require("./utils/passport1") // Pass the app to githubAuth.js
 
-const videoRoutes = require("./routes/videoRoutes");
+const videoRoutes = require("./routes/VideoRoutes");
 
 const bodyParser = require("body-parser");
 const path = require("path");
@@ -45,7 +45,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: true, // Permet toutes les origines
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
     credentials: true,
     allowedHeaders: [
@@ -63,7 +63,7 @@ const io = new Server(server, {
 const HUGGINGFACE_API_URL = "https://api-inference.huggingface.co/models";
 const MODEL_NAME = "mistralai/Mistral-7B-Instruct-v0.2";
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: true, // Permet toutes les origines
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"],
   allowedHeaders: [
@@ -126,14 +126,14 @@ console.log('Dossier QR codes:', qrCodesDir);
 console.log('Dossier ICS:', icsDir);
 // Configuration pour servir les fichiers statiques avec CORS
 app.use('/uploads', (req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+  res.header('Access-Control-Allow-Origin', '*'); // Permet toutes les origines
   res.header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Cache-Control, Content-Type');
   next();
 }, express.static(path.join(__dirname, 'uploads')));
 // Configuration pour servir les fichiers du dossier public avec CORS
 app.use('/public', (req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+  res.header('Access-Control-Allow-Origin', '*'); // Permet toutes les origines
   res.header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Cache-Control, Content-Type');
   next();
@@ -163,12 +163,32 @@ app.use("/api/videos", videoRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/modules", moduleRoutes);
-app.use("/api/courses",cors({
-  origin: "http://localhost:3000",
+
+const allowedOrigins = [
+  'http://localhost:3001',
+  'http://www.ikramsegni.fr',
+  'https://www.ikramsegni.fr',
+  'http://51.91.251.228',
+  'https://51.91.251.228'
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Autoriser les requêtes sans origin (comme Postman ou curl)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin", "Cache-Control"],
   credentials: true,
-}), courseRoutes);
+optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+
+app.use("/api/courses", cors(corsOptions), courseRoutes);
 app.options('/api/courses/:id', cors());
 
 app.use("/api/quizzes", quizRoutes);

@@ -1,4 +1,4 @@
-const Event = require('../Model/Event'); // Corriger le chemin du modÃ¨le
+const Event = require('../Model/Event'); // Corriger le chemin du modèle
 const { uploadImage } = require('../utils/uploadImage');
 
 // Create a new event
@@ -8,13 +8,13 @@ exports.createEvent = async (req, res) => {
         console.log('Received file:', req.file);
         console.log('User:', req.user);
 
-        // VÃ©rifier si l'utilisateur est authentifiÃ©
+        // Vérifier si l'utilisateur est authentifié
         if (!req.user || !req.user._id) {
             console.error('User not authenticated or missing ID');
             return res.status(401).json({ message: 'Authentication required' });
         }
 
-        // VÃ©rifier les champs obligatoires
+        // Vérifier les champs obligatoires
         const requiredFields = ['title', 'description', 'date', 'location', 'maxAttendees', 'category'];
         const missingFields = requiredFields.filter(field => !req.body[field]);
 
@@ -26,18 +26,18 @@ exports.createEvent = async (req, res) => {
             });
         }
 
-        // PrÃ©parer les donnÃ©es de l'Ã©vÃ©nement
+        // Préparer les données de l'événement
         const eventData = {
             ...req.body,
             organizer: req.user._id,
             date: new Date(req.body.date),
-            isApproved: false, // Par dÃ©faut, l'Ã©vÃ©nement n'est pas approuvÃ©
+            isApproved: false, // Par défaut, l'événement n'est pas approuvé
             maxAttendees: parseInt(req.body.maxAttendees) // S'assurer que maxAttendees est un nombre
         };
 
-        // VÃ©rifier si le statut est valide, sinon utiliser la valeur par dÃ©faut
+        // Vérifier si le statut est valide, sinon utiliser la valeur par défaut
         if (req.body.status && !['upcoming', 'ongoing', 'completed', 'cancelled', 'pending'].includes(req.body.status)) {
-            eventData.status = 'upcoming'; // Valeur par dÃ©faut si le statut n'est pas valide
+            eventData.status = 'upcoming'; // Valeur par défaut si le statut n'est pas valide
         }
 
         // Traiter l'image si elle existe
@@ -45,8 +45,9 @@ exports.createEvent = async (req, res) => {
             try {
                 console.log('Processing image file...');
                 const imageUrl = await uploadImage(req.file);
-                eventData.image = imageUrl;
-                console.log('Image URL:', imageUrl);
+                // Normaliser le chemin avec des forward slashes
+                eventData.image = imageUrl.replace(/\\/g, "/");
+                console.log('Image URL:', eventData.image);
             } catch (uploadError) {
                 console.error('Image upload error:', uploadError);
                 return res.status(400).json({ message: 'Failed to upload image', error: uploadError.message });
@@ -55,13 +56,13 @@ exports.createEvent = async (req, res) => {
 
         console.log('Processed event data:', eventData);
 
-        // CrÃ©er et sauvegarder l'Ã©vÃ©nement
+        // Créer et sauvegarder l'événement
         try {
             const event = new Event(eventData);
             const savedEvent = await event.save();
             console.log('Event saved successfully:', savedEvent._id);
 
-            // RÃ©cupÃ©rer l'Ã©vÃ©nement avec les rÃ©fÃ©rences peuplÃ©es
+            // Récupérer l'événement avec les références peuplées
             const populatedEvent = await Event.findById(savedEvent._id)
                 .populate('organizer', 'name email');
 
@@ -92,14 +93,14 @@ exports.getAllEvents = async (req, res) => {
     try {
         console.log('Fetching all events');
 
-        // DÃ©terminer si l'utilisateur est un administrateur
+        // Déterminer si l'utilisateur est un administrateur
         const isAdmin = req.user && req.user.typeUser === 'admin';
 
-        // Construire la requÃªte en fonction du type d'utilisateur
+        // Construire la requête en fonction du type d'utilisateur
         let query = {};
 
-        // Si l'utilisateur n'est pas un administrateur, ne montrer que les Ã©vÃ©nements approuvÃ©s
-        // ou les Ã©vÃ©nements dont l'utilisateur est l'organisateur
+        // Si l'utilisateur n'est pas un administrateur, ne montrer que les événements approuvés
+        // ou les événements dont l'utilisateur est l'organisateur
         if (!isAdmin && req.user) {
             query = {
                 $or: [
@@ -108,7 +109,7 @@ exports.getAllEvents = async (req, res) => {
                 ]
             };
         } else if (!isAdmin) {
-            // Pour les utilisateurs non connectÃ©s, ne montrer que les Ã©vÃ©nements approuvÃ©s
+            // Pour les utilisateurs non connectés, ne montrer que les événements approuvés
             query = { isApproved: true };
         }
 
@@ -137,11 +138,11 @@ exports.getEvent = async (req, res) => {
             return res.status(404).json({ message: 'Event not found' });
         }
 
-        // VÃ©rifier si l'utilisateur a le droit de voir cet Ã©vÃ©nement
+        // Vérifier si l'utilisateur a le droit de voir cet événement
         const isAdmin = req.user && req.user.typeUser === 'admin';
         const isOrganizer = req.user && event.organizer._id.toString() === req.user._id.toString();
 
-        // Si l'Ã©vÃ©nement n'est pas approuvÃ© et que l'utilisateur n'est ni admin ni l'organisateur
+        // Si l'événement n'est pas approuvé et que l'utilisateur n'est ni admin ni l'organisateur
         if (!event.isApproved && !isAdmin && !isOrganizer) {
             return res.status(403).json({
                 message: 'This event is pending approval and can only be viewed by the organizer or administrators'
@@ -168,17 +169,17 @@ exports.updateEvent = async (req, res) => {
             return res.status(403).json({ message: 'Not authorized to update this event' });
         }
 
-        // Si l'Ã©vÃ©nement est dÃ©jÃ  approuvÃ©, empÃªcher les modifications majeures
+        // Si l'événement est déjà approuvé, empêcher les modifications majeures
         const updateData = { ...req.body, updatedAt: Date.now() };
 
         if (event.isApproved) {
-            // EmpÃªcher la modification de certains champs importants si l'Ã©vÃ©nement est approuvÃ©
+            // Empêcher la modification de certains champs importants si l'événement est approuvé
             delete updateData.date;
             delete updateData.location;
             delete updateData.maxAttendees;
             delete updateData.category;
 
-            // RÃ©initialiser le statut d'approbation si des modifications importantes sont tentÃ©es
+            // Réinitialiser le statut d'approbation si des modifications importantes sont tentées
             if (req.body.date || req.body.location || req.body.maxAttendees || req.body.category) {
                 updateData.isApproved = false;
                 updateData.approvedBy = null;
@@ -190,8 +191,9 @@ exports.updateEvent = async (req, res) => {
         if (req.file) {
             try {
                 const imageUrl = await uploadImage(req.file);
-                updateData.image = imageUrl;
-                console.log('Updated image URL:', imageUrl);
+                // Normaliser le chemin avec des forward slashes
+                updateData.image = imageUrl.replace(/\\/g, "/");
+                console.log('Updated image URL:', updateData.image);
             } catch (uploadError) {
                 console.error('Image upload error:', uploadError);
                 return res.status(400).json({ message: 'Failed to upload image', error: uploadError.message });
@@ -204,7 +206,7 @@ exports.updateEvent = async (req, res) => {
             { new: true }
         ).populate('organizer', 'name email');
 
-        // Message personnalisÃ© si l'Ã©vÃ©nement a perdu son approbation
+        // Message personnalisé si l'événement a perdu son approbation
         let message = 'Event updated successfully';
         if (event.isApproved && !updatedEvent.isApproved) {
             message = 'Event updated successfully but requires re-approval due to significant changes';
@@ -228,8 +230,8 @@ exports.deleteEvent = async (req, res) => {
             return res.status(404).json({ message: 'Event not found' });
         }
 
-        // Check if user is the organizer
-        if (event.organizer.toString() !== req.user._id.toString()) {
+        // Check if user is the organizer or an admin
+        if (event.organizer.toString() !== req.user._id.toString() && req.user.typeUser !== 'admin') {
             return res.status(403).json({ message: 'Not authorized to delete this event' });
         }
 
@@ -251,7 +253,7 @@ exports.registerForEvent = async (req, res) => {
             return res.status(404).json({ message: 'Event not found' });
         }
 
-        // VÃ©rifier si l'Ã©vÃ©nement est approuvÃ©
+        // Vérifier si l'événement est approuvé
         if (!event.isApproved) {
             return res.status(400).json({ message: 'Cannot register for an unapproved event' });
         }
@@ -266,32 +268,32 @@ exports.registerForEvent = async (req, res) => {
             return res.status(400).json({ message: 'Already registered for this event' });
         }
 
-        // Ajouter l'utilisateur Ã  la liste des participants
+        // Ajouter l'utilisateur à la liste des participants
         event.attendees.push(req.user._id);
         await event.save();
 
-        // GÃ©nÃ©rer les URLs pour les calendriers
+        // Générer les URLs pour les calendriers
         const calendarLinks = {
             ics: `${req.protocol}://${req.get('host')}/api/events/${event._id}/calendar.ics`,
             google: eventUtils.generateGoogleCalendarUrl(event),
             apple: `${req.protocol}://${req.get('host')}/api/events/${event._id}/apple-calendar`
         };
 
-        // GÃ©nÃ©rer un QR code pour l'Ã©vÃ©nement
-        console.log('GÃ©nÃ©ration du QR code pour l\'Ã©vÃ©nement:', event._id);
+        // Générer un QR code pour l'événement
+        console.log('Génération du QR code pour l\'événement:', event._id);
         console.log('URL de base:', `${req.protocol}://${req.get('host')}`);
 
         let qrCodeUrl;
         try {
             qrCodeUrl = await eventUtils.generateQRCode(event, `${req.protocol}://${req.get('host')}`);
-            console.log('QR code gÃ©nÃ©rÃ© avec succÃ¨s:', qrCodeUrl);
+            console.log('QR code généré avec succès:', qrCodeUrl);
         } catch (qrError) {
-            console.error('Erreur lors de la gÃ©nÃ©ration du QR code:', qrError);
+            console.error('Erreur lors de la génération du QR code:', qrError);
             qrCodeUrl = null;
         }
 
-        // Retourner l'Ã©vÃ©nement avec les liens de calendrier et le QR code
-        // Construire l'URL complÃ¨te du QR code
+        // Retourner l'événement avec les liens de calendrier et le QR code
+        // Construire l'URL complète du QR code
         const fullQrCodeUrl = qrCodeUrl ? `${req.protocol}://${req.get('host')}${qrCodeUrl}` : null;
         console.log('Full QR code URL:', fullQrCodeUrl);
 
@@ -331,17 +333,17 @@ exports.approveEvent = async (req, res) => {
 
         console.log('Event current approval status:', event.isApproved);
 
-        // VÃ©rifier si l'Ã©vÃ©nement est dÃ©jÃ  approuvÃ©
+        // Vérifier si l'événement est déjà approuvé
         if (event.isApproved) {
             console.log('Event is already approved');
             return res.status(400).json({ message: 'Event is already approved' });
         }
 
-        // Mettre Ã  jour l'Ã©vÃ©nement
+        // Mettre à jour l'événement
         event.isApproved = true;
         event.approvedBy = req.user._id;
         event.approvedAt = new Date();
-        event.rejectionReason = null; // Effacer toute raison de rejet prÃ©cÃ©dente
+        event.rejectionReason = null; // Effacer toute raison de rejet précédente
 
         // Si le statut est "pending", le changer en "upcoming"
         if (event.status === 'pending') {
@@ -358,7 +360,7 @@ exports.approveEvent = async (req, res) => {
             return res.status(500).json({ message: 'Error saving event: ' + saveError.message });
         }
 
-        // Retourner l'Ã©vÃ©nement mis Ã  jour
+        // Retourner l'événement mis à jour
         let updatedEvent;
         try {
             updatedEvent = await Event.findById(req.params.id)
@@ -368,7 +370,7 @@ exports.approveEvent = async (req, res) => {
             console.log('Updated event retrieved successfully');
         } catch (retrieveError) {
             console.error('Error retrieving updated event:', retrieveError);
-            // Continuer malgrÃ© l'erreur, car l'Ã©vÃ©nement a dÃ©jÃ  Ã©tÃ© mis Ã  jour
+            // Continuer malgré l'erreur, car l'événement a déjà été mis à jour
             return res.json({ message: 'Event approved successfully, but could not retrieve updated details' });
         }
 
@@ -411,13 +413,13 @@ exports.rejectEvent = async (req, res) => {
             return res.status(404).json({ message: 'Event not found' });
         }
 
-        // Mettre Ã  jour l'Ã©vÃ©nement
+        // Mettre à jour l'événement
         event.isApproved = false;
         event.rejectionReason = reason;
         event.approvedBy = null;
         event.approvedAt = null;
 
-        // Si le statut est "upcoming" et que l'Ã©vÃ©nement n'a jamais Ã©tÃ© approuvÃ©, le remettre Ã  "pending"
+        // Si le statut est "upcoming" et que l'événement n'a jamais été approuvé, le remettre à "pending"
         if (event.status === 'upcoming' && !event.approvedAt) {
             event.status = 'pending';
         }
@@ -432,7 +434,7 @@ exports.rejectEvent = async (req, res) => {
             return res.status(500).json({ message: 'Error saving event: ' + saveError.message });
         }
 
-        // Retourner l'Ã©vÃ©nement mis Ã  jour
+        // Retourner l'événement mis à jour
         let updatedEvent;
         try {
             updatedEvent = await Event.findById(req.params.id)
@@ -441,7 +443,7 @@ exports.rejectEvent = async (req, res) => {
             console.log('Updated event retrieved successfully after rejection');
         } catch (retrieveError) {
             console.error('Error retrieving updated event after rejection:', retrieveError);
-            // Continuer malgrÃ© l'erreur, car l'Ã©vÃ©nement a dÃ©jÃ  Ã©tÃ© mis Ã  jour
+            // Continuer malgré l'erreur, car l'événement a déjà été mis à jour
             return res.json({ message: 'Event rejected successfully, but could not retrieve updated details' });
         }
 
@@ -459,7 +461,7 @@ exports.getPendingEvents = async (req, res) => {
         console.log('Admin user ID:', req.user._id);
         console.log('Admin user type:', req.user.typeUser);
 
-        // VÃ©rifier s'il y a des Ã©vÃ©nements en attente
+        // Vérifier s'il y a des événements en attente
         const count = await Event.countDocuments({ isApproved: false });
         console.log('Number of pending events found:', count);
 
@@ -468,7 +470,7 @@ exports.getPendingEvents = async (req, res) => {
 
         console.log('Pending events retrieved successfully');
 
-        // Retourner un tableau vide si aucun Ã©vÃ©nement n'est trouvÃ©
+        // Retourner un tableau vide si aucun événement n'est trouvé
         res.json(events || []);
     } catch (error) {
         console.error('Error fetching pending events:', error);
@@ -476,10 +478,10 @@ exports.getPendingEvents = async (req, res) => {
     }
 };
 
-// Importer les utilitaires d'Ã©vÃ©nements
+// Importer les utilitaires d'événements
 const eventUtils = require('../utils/eventUtils');
 
-// GÃ©nÃ©rer et retourner un fichier iCalendar pour un Ã©vÃ©nement
+// Générer et retourner un fichier iCalendar pour un événement
 exports.getEventCalendar = async (req, res) => {
     try {
         const event = await Event.findById(req.params.id)
@@ -489,19 +491,19 @@ exports.getEventCalendar = async (req, res) => {
             return res.status(404).json({ message: 'Event not found' });
         }
 
-        // VÃ©rifier si l'Ã©vÃ©nement est approuvÃ©
+        // Vérifier si l'événement est approuvé
         if (!event.isApproved) {
             return res.status(400).json({ message: 'Cannot get calendar for an unapproved event' });
         }
 
-        // GÃ©nÃ©rer le fichier iCalendar
+        // Générer le fichier iCalendar
         const icsContent = eventUtils.generateICalendar(event);
 
         if (!icsContent) {
             return res.status(500).json({ message: 'Failed to generate iCalendar file' });
         }
 
-        // DÃ©finir les en-tÃªtes pour le tÃ©lÃ©chargement du fichier
+        // Définir les en-têtes pour le téléchargement du fichier
         res.setHeader('Content-Type', 'text/calendar');
         res.setHeader('Content-Disposition', `attachment; filename="event_${event._id}.ics"`);
 
@@ -513,7 +515,7 @@ exports.getEventCalendar = async (req, res) => {
     }
 };
 
-// GÃ©nÃ©rer et retourner une URL Google Calendar pour un Ã©vÃ©nement
+// Générer et retourner une URL Google Calendar pour un événement
 exports.getGoogleCalendarUrl = async (req, res) => {
     try {
         const event = await Event.findById(req.params.id)
@@ -523,12 +525,12 @@ exports.getGoogleCalendarUrl = async (req, res) => {
             return res.status(404).json({ message: 'Event not found' });
         }
 
-        // VÃ©rifier si l'Ã©vÃ©nement est approuvÃ©
+        // Vérifier si l'événement est approuvé
         if (!event.isApproved) {
             return res.status(400).json({ message: 'Cannot get calendar for an unapproved event' });
         }
 
-        // GÃ©nÃ©rer l'URL Google Calendar
+        // Générer l'URL Google Calendar
         const googleCalendarUrl = eventUtils.generateGoogleCalendarUrl(event);
 
         if (!googleCalendarUrl) {
@@ -543,7 +545,7 @@ exports.getGoogleCalendarUrl = async (req, res) => {
     }
 };
 
-// GÃ©nÃ©rer et retourner une URL Apple Calendar pour un Ã©vÃ©nement
+// Générer et retourner une URL Apple Calendar pour un événement
 exports.getAppleCalendarUrl = async (req, res) => {
     try {
         const event = await Event.findById(req.params.id)
@@ -553,12 +555,12 @@ exports.getAppleCalendarUrl = async (req, res) => {
             return res.status(404).json({ message: 'Event not found' });
         }
 
-        // VÃ©rifier si l'Ã©vÃ©nement est approuvÃ©
+        // Vérifier si l'événement est approuvé
         if (!event.isApproved) {
             return res.status(400).json({ message: 'Cannot get calendar for an unapproved event' });
         }
 
-        // GÃ©nÃ©rer l'URL Apple Calendar
+        // Générer l'URL Apple Calendar
         const appleCalendarUrl = eventUtils.generateAppleCalendarUrl(event);
 
         if (!appleCalendarUrl) {
