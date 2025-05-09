@@ -16,8 +16,7 @@ import random
 
 app = Flask(__name__)
 CORS(app)  # Active CORS pour toutes les routes
-CORS(app, origins=["http://51.91.251.228:5000"])
-
+CORS(app, origins=["http://51.91.251.228:5000", "https://ikramsegni.fr"])
 
 class ChatbotPredictor:
     def __init__(self, model_name='chatbot_model'):
