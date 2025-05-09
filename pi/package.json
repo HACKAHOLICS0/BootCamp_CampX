@@ -82,5 +82,5 @@
     "@craco/craco": "^7.1.0",
     "webpack": "^4.46.0"
   },
-  "proxy": "http://ikramsegni.fr:3001"
+  "proxy": "https://ikramsegni.fr"
 }

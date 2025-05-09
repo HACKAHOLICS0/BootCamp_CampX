@@ -574,7 +574,7 @@ const InteractiveVideoPlayer = ({ videoUrl, videoTitle }) => {
 
       console.log("Envoi de la transcription récente pour générer une question:", recentTranscription.substring(0, 100) + "...");
 
-      const response = await fetch('http://51.91.251.228:5000/api/questions/generate', {
+      const response = await fetch('https://ikramsegni.fr/api/questions/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

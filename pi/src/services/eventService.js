@@ -3,7 +3,7 @@ import axiosInstance from './axiosConfig';
 import Cookies from 'js-cookie';
 
 // URL de base pour les fichiers statiques (comme les fichiers ICS)
-const API_URL = 'http://51.91.251.228:5000/api/events'; // Mise à jour du port
+const API_URL = 'https://ikramsegni.fr/api/events'; // Mise à jour du port
 
 class EventService {
     constructor() {
@@ -106,7 +106,7 @@ class EventService {
             }
             
             // Utiliser axios avec le token d'authentification
-            const response = await axios.delete(`http://51.91.251.228:5000/api/events/${id}`, {
+            const response = await axios.delete(`https://ikramsegni.fr/api/events/${id}`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }

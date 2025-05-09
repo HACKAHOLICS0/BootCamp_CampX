@@ -35,7 +35,7 @@ const Dashboard = () => {
     const fetchStats = async () => {
       try {
         // Assurez-vous que l'URL de base est correcte
-        const baseURL = 'http://51.91.251.228:5000'; // ou votre URL de backend
+        const baseURL = 'https://ikramsegni.fr'; // ou votre URL de backend
 
         const [
           usersResponse,

@@ -39,7 +39,7 @@ const VideoManager = ({ courseId }) => {
   const fetchVideos = async () => {
     try {
       const token = Cookies.get('token');
-      const response = await axios.get(`http://51.91.251.228:5000/api/videos/course/${courseId}`, {
+      const response = await axios.get(`https://ikramsegni.fr/api/videos/course/${courseId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -100,7 +100,7 @@ const VideoManager = ({ courseId }) => {
       }
 
       if (selectedVideo) {
-        await axios.put(`http://51.91.251.228:5000/api/videos/${selectedVideo._id}`, formDataToSend, {
+        await axios.put(`https://ikramsegni.fr/api/videos/${selectedVideo._id}`, formDataToSend, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
@@ -112,7 +112,7 @@ const VideoManager = ({ courseId }) => {
           severity: 'success'
         });
       } else {
-        await axios.post('http://51.91.251.228:5000/api/videos', formDataToSend, {
+        await axios.post('https://ikramsegni.fr/api/videos', formDataToSend, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
@@ -139,7 +139,7 @@ const VideoManager = ({ courseId }) => {
   const handleDelete = async (videoId) => {
     try {
       const token = Cookies.get('token');
-      await axios.delete(`http://51.91.251.228:5000/api/videos/${videoId}`, {
+      await axios.delete(`https://ikramsegni.fr/api/videos/${videoId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

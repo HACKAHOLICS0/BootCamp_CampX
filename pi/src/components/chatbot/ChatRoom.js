@@ -5,7 +5,7 @@ import './ChatRoom.css';
 import ChatbotLogo from "../../assets/img/img.jpg";
 import axios from 'axios';
 
-const SOCKET_SERVER_URL = 'http://51.91.251.228:5000';
+const SOCKET_SERVER_URL = 'https://ikramsegni.fr';
 const DEFAULT_AVATAR = 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y';
 
 const ChatRoom = ({ roomId }) => {
@@ -21,7 +21,7 @@ const ChatRoom = ({ roomId }) => {
   // Fonction pour récupérer l'avatar d'un utilisateur
   const fetchUserAvatar = async (userId) => {
     try {
-      const response = await axios.get(`http://51.91.251.228:5000/api/users/${userId}`, {
+      const response = await axios.get(`https://ikramsegni.fr/api/users/${userId}`, {
         headers: {
           Authorization: `Bearer ${Cookies.get('token')}`
         }

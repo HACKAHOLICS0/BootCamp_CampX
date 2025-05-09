@@ -39,7 +39,7 @@ export default function Navbar() {
 
   const fetchUserProfile = async (token) => {
     try {
-      const response = await fetch("http://51.91.251.228:5000/api/user/profile", {
+      const response = await fetch("https://ikramsegni.fr/api/user/profile", {
         headers: {
           "Authorization": `Bearer ${token}`
         }
@@ -88,7 +88,7 @@ export default function Navbar() {
     const fetchCategories = async () => {
       try {
         const token = Cookies.get('token');
-        const response = await axios.get('http://51.91.251.228:5000/api/categories', {
+        const response = await axios.get('https://ikramsegni.fr/api/categories', {
           headers: {
             'Authorization': `Bearer ${token}`
           }

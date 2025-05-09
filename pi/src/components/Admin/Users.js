@@ -6,7 +6,7 @@ const Users = () => {
   const [loading, setLoading] = useState(true); // Loading state
   const [error, setError] = useState(null); // Error state
   
-  const API_BASE_URL = "http://51.91.251.228:5000"; // URL de base pour l'API
+  const API_BASE_URL = "https://ikramsegni.fr"; // URL de base pour l'API
 
   // Fetch users from API
   useEffect(() => {

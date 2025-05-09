@@ -17,7 +17,7 @@ const VerifyCodeEmail = () => {
     }
 
     try {
-      const response = await fetch("http://51.91.251.228:5000/api/auth/resetpasswordemail", {
+      const response = await fetch("https://ikramsegni.fr/api/auth/resetpasswordemail", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -1,5 +1,5 @@
 // Utilitaire pour gérer les URLs d'images
-const backendURL = "http://51.91.251.228:5000";
+const backendURL = "https://ikramsegni.fr";
 
 // Fonction pour obtenir l'URL d'image d'un événement
 export const getEventImageUrl = (event) => {

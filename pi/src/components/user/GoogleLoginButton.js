@@ -14,7 +14,7 @@ export default function GoogleLoginButton() {
     <div style={containerStyle} className="google-btn-container">
       <GoogleLogin
         onSuccess={(credentialResponse) => {
-          fetch("http://51.91.251.228:5000/api/auth/google/token", {
+          fetch("https://ikramsegni.fr/api/auth/google/token", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ token: credentialResponse.credential }),

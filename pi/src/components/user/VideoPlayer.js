@@ -40,7 +40,7 @@ const VideoPlayer = ({ videoUrl, quiz }) => {
   return (
     <div>
       <video ref={videoRef} controls width="500">
-        <source src={`http://51.91.251.228:5000${videoUrl}`} type="video/mp4" />
+        <source src={`https://ikramsegni.fr${videoUrl}`} type="video/mp4" />
         Votre navigateur ne supporte pas la lecture des vidéos.
       </video>
 

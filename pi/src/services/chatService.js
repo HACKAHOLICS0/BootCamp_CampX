@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = "http://51.91.251.228:5000";  // URL complète pour le backend
+const API_URL = "https://ikramsegni.fr";  // URL complète pour le backend
 // Récupérer le token depuis les cookies (ou localStorage si tu l'utilises)
 const getAuthToken = () => {
   const token = document.cookie
@@ -17,7 +17,7 @@ const chatService = {
   createConversation: async (userId) => {
     try {
       const token = getAuthToken();
-      const response = await axios.post("http://51.91.251.228:5000/api/chat/conversations", { userId }, {
+      const response = await axios.post("https://ikramsegni.fr/api/chat/conversations", { userId }, {
         withCredentials: true,
         headers: {
           Authorization: `Bearer ${token}`

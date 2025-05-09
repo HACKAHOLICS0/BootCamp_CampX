@@ -5,7 +5,7 @@ import Cookies from 'js-cookie';
 import { FaBook, FaClock, FaArrowRight } from 'react-icons/fa';
 import './ModuleStyle.css';
 
-const backendURL = "http://51.91.251.228:5000/api";
+const backendURL = "https://ikramsegni.fr/api";
 
 const ModuleList = () => {
   const { categoryId } = useParams();

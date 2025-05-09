@@ -36,7 +36,7 @@ const YouTubeRecommendedVideos = ({ category, limit = 6 }) => {
 
         // Créer une instance axios avec le token d'authentification
         const axiosInstance = axios.create({
-          baseURL: 'http://51.91.251.228:5000/api',
+          baseURL: 'https://ikramsegni.fr/api',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${Cookies.get('token')}`

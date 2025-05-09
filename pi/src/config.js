@@ -1,9 +1,10 @@
 // API URLs and other configuration
 const config = {
-    API_URL: 'http://51.91.251.228:5000',  // Utiliser HTTPS en production
-    apiBaseUrl: 'http://51.91.251.228:5000/api',  // Utiliser HTTPS en production
+    API_URL: 'https://ikramsegni.fr',  // Utiliser HTTPS en production
+    apiBaseUrl: 'https://ikramsegni.fr/api',  // Utiliser HTTPS en production
     stripePublicKey: process.env.REACT_APP_STRIPE_PUBLIC_KEY,
-    paymentApiUrl: 'http://51.91.251.228:5000/api/payments',  // Utiliser HTTPS
+    paymentApiUrl: 'https://ikramsegni.fr/api/payments',  // Utiliser HTTPS
+    websocketUrl: 'wss://ikramsegni.fr/ws',  // Ajout de l'URL WebSocket sans port spécifique
     endpoints: {
         courses: '/api/courses',
         quizzes: '/api/quiz',

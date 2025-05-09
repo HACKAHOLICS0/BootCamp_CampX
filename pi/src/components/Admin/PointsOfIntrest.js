@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./styles/AdminPointsStyle.css";
 import "./styles/AdminTableStyle.css";
 
-const backendURL = "http://51.91.251.228:5000"; // URL de base pour l'API
+const backendURL = "https://ikramsegni.fr"; // URL de base pour l'API
 
 const InterestPoints = () => {
   const [pointsOfInterest, setPointsOfInterest] = useState([]); // Liste des points d'intérêt

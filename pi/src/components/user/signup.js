@@ -118,7 +118,7 @@ export default function Signup() {
         try {
             // Vérifie si l'email existe déjà
             try {
-                const emailCheckResponse = await fetch(`http://51.91.251.228:5000/api/auth/check/${formData.email}`);
+                const emailCheckResponse = await fetch(`https://ikramsegni.fr/api/auth/check/${formData.email}`);
                 if (!emailCheckResponse.ok) {
                     throw new Error("Erreur lors de la vérification de l'email");
                 }
@@ -165,7 +165,7 @@ export default function Signup() {
                     autoClose: 3000
                 });
 
-                const signupResponse = await fetch("http://51.91.251.228:5000/api/auth/signup", {
+                const signupResponse = await fetch("https://ikramsegni.fr/api/auth/signup", {
                     method: "POST",
                     body: formDataToSend,
                 });
@@ -269,7 +269,7 @@ export default function Signup() {
             }
 
             try {
-                const response = await axios.post('http://51.91.251.228:5000/api/auth/validate-image', formData, {
+                const response = await axios.post('https://ikramsegni.fr/api/auth/validate-image', formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     },
