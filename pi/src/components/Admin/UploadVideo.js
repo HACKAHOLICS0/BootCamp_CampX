@@ -12,7 +12,7 @@ const UploadVideo = () => {
     formData.append("video", video);
     formData.append("quiz", JSON.stringify(quiz));
 
-    await axios.post("http://51.91.251.228:5000/api/videos/upload", formData);
+    await axios.post("https://ikramsegni.fr/api/videos/upload", formData);
     alert("Vidéo uploadée !");
   };
 

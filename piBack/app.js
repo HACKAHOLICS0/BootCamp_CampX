@@ -2,10 +2,10 @@ const express = require("express");
 const cors = require("cors");
 const passport = require("passport");
 const mongoose = require("mongoose");
-const session = require("express-session"); // Importation de express-session
+const session = require("express-session");
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
-const fs = require('fs'); // Add fs module import
+const fs = require('fs');
 const interestPointModel = require("./Model/Interestpoint")
 const adminRoutes = require("./routes/AdminRoutes");
 const moduleRoutes = require("./routes/moduleRoutes");
@@ -43,9 +43,23 @@ const paymentRoutes = require('./routes/paymentRoutes'); // Add payment routes
 
 const app = express();
 const server = http.createServer(app);
+
+// Liste des origines autorisÈes
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://www.ikramsegni.fr',
+  'https://www.ikramsegni.fr',
+  'http://ikramsegni.fr',
+  'https://ikramsegni.fr',
+  'http://51.91.251.228',
+  'https://51.91.251.228'
+];
+
+// Configuration de Socket.IO avec CORS
 const io = new Server(server, {
   cors: {
-    origin: true, // Permet toutes les origines
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
     credentials: true,
     allowedHeaders: [
@@ -56,29 +70,38 @@ const io = new Server(server, {
       "Origin",
       "Cache-Control"
     ],
-    exposedHeaders: ["Content-Range", "X-Content-Range"]  }
+    exposedHeaders: ["Content-Range", "X-Content-Range"]
+  },
+  path: '/socket.io/'
 });
+
+// Configuration CORS pour Express
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Autoriser les requÍtes sans origin (comme Postman ou curl)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log('Origin non autorisÈe:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin", "Cache-Control"],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+// Appliquer CORS globalement
+app.use(cors(corsOptions));
 
 // Configuration de l'API Hugging Face
 const HUGGINGFACE_API_URL = "https://api-inference.huggingface.co/models";
 const MODEL_NAME = "mistralai/Mistral-7B-Instruct-v0.2";
-app.use(cors({
-  origin: true, // Permet toutes les origines
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"],
-  allowedHeaders: [
-    "Content-Type",
-    "Authorization",
-    "X-Requested-With",
-    "Accept",
-    "Origin",
-    "Cache-Control"
-  ],
-  exposedHeaders: ["Content-Range", "X-Content-Range"]
-}));
-// Attacher io √† l'application pour qu'il soit accessible dans les routes
+
+// Configuration de la session
 app.use(session({
-  secret: process.env.SESSION_SECRET, // Vous pouvez mettre cette valeur dans votre fichier .env
+  secret: process.env.SESSION_SECRET || 'secret_key_for_session',
   resave: false,
   saveUninitialized: true,
   cookie: { secure: false } // Mettre 'true' si vous utilisez HTTPS
@@ -89,61 +112,74 @@ app.use(passport.initialize());
 
 app.use(express.json()); // Activer le parsing JSON
 app.use(express.urlencoded({ extended: true }));
-// V√©rifier si les dossiers pour les fichiers statiques existent
+
+// VÈrifier si les dossiers pour les fichiers statiques existent
 const uploadsDir = path.join(__dirname, "uploads");
 const publicDir = path.join(__dirname, "public");
 const qrCodesDir = path.join(__dirname, "public/qrcodes");
 const icsDir = path.join(__dirname, "public/ics");
 
-// Cr√©er les dossiers s'ils n'existent pas
+// CrÈer les dossiers s'ils n'existent pas
 if (!fs.existsSync(uploadsDir)) {
-  console.log('Cr√©ation du dossier uploads...');
+  console.log('CrÈation du dossier uploads...');
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
 if (!fs.existsSync(publicDir)) {
-  console.log('Cr√©ation du dossier public...');
+  console.log('CrÈation du dossier public...');
   fs.mkdirSync(publicDir, { recursive: true });
 }
 
 if (!fs.existsSync(qrCodesDir)) {
-  console.log('Cr√©ation du dossier public/qrcodes...');
+  console.log('CrÈation du dossier public/qrcodes...');
   fs.mkdirSync(qrCodesDir, { recursive: true });
 }
 
 if (!fs.existsSync(icsDir)) {
-  console.log('Cr√©ation du dossier public/ics...');
+  console.log('CrÈation du dossier public/ics...');
   fs.mkdirSync(icsDir, { recursive: true });
 }
 
+// Configuration pour servir les fichiers statiques
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-// Servir les fichiers statiques du dossier public
 app.use("/public", express.static(path.join(__dirname, "public")));
-// Afficher les chemins des dossiers statiques pour le d√©bogage
+
+// Afficher les chemins des dossiers statiques pour le dÈbogage
 console.log('Dossier uploads:', uploadsDir);
 console.log('Dossier public:', publicDir);
 console.log('Dossier QR codes:', qrCodesDir);
 console.log('Dossier ICS:', icsDir);
+
 // Configuration pour servir les fichiers statiques avec CORS
 app.use('/uploads', (req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*'); // Permet toutes les origines
+  res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Cache-Control, Content-Type');
   next();
 }, express.static(path.join(__dirname, 'uploads')));
-// Configuration pour servir les fichiers du dossier public avec CORS
+
 app.use('/public', (req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*'); // Permet toutes les origines
+  res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Cache-Control, Content-Type');
   next();
 }, express.static(path.join(__dirname, 'public')));
 
-// Connexion MongoDB
+// Connexion MongoDB et dÈmarrage du serveur
 const startServer = async () => {
   try {
     await connectDB();
-    console.log("Connexion √† MongoDB r√©ussie");
+    console.log("Connexion ‡ MongoDB rÈussie");
+    
+    // Corriger les chemins d'image
+    try {
+      const { fixImagePaths } = require('./utils/imagePathFixer');
+      await fixImagePaths();
+      console.log("VÈrification des chemins d'image terminÈe");
+    } catch (error) {
+      console.error("Erreur lors de la correction des chemins d'image:", error);
+    }
+    
     initializePoints();
 
     // Start Server
@@ -152,7 +188,7 @@ const startServer = async () => {
       console.log(`Server running on port ${port}`);
     });
   } catch (err) {
-    console.error("Erreur lors du d√©marrage du serveur:", err);
+    console.error("Erreur lors du dÈmarrage du serveur:", err);
   }
 };
 
@@ -164,33 +200,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/modules", moduleRoutes);
 
-const allowedOrigins = [
-  'http://localhost:3001',
-  'http://www.ikramsegni.fr',
-  'https://www.ikramsegni.fr',
-  'http://51.91.251.228',
-  'https://51.91.251.228'
-];
-
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Autoriser les requ√™tes sans origin (comme Postman ou curl)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin", "Cache-Control"],
-  credentials: true,
-optionsSuccessStatus: 200
-};
-app.use(cors(corsOptions));
-
-app.use("/api/courses", cors(corsOptions), courseRoutes);
-app.options('/api/courses/:id', cors());
-
+// Routes API
 app.use("/api/quizzes", quizRoutes);
 app.use("/api/videos", videoRoutes);
 app.use("/api", interestPointRoutes);
@@ -199,11 +209,11 @@ app.use('/api/quiz', quizRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/modules', moduleRoutes);
 app.use('/api/courses', courseRoutes);
-app.use('/api/chat', chatRoutes); // Ajout des routes du chatbot
+app.use('/api/chat', chatRoutes);
 app.use('/api/market-insights', marketInsightsRoutes);
 app.use('/api/questions', questionRoutes);
-app.use('/api/payments', paymentRoutes); // Mount payment routes
-app.use('/api', transcriptionRoutes); // Routes pour la transcription audio
+app.use('/api/payments', paymentRoutes);
+app.use('/api', transcriptionRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/certificates', certificateRoutes);
 
@@ -214,13 +224,13 @@ app.use('/api/recommendations', recommendationRoutes);
 // Routes pour les recommandations YouTube
 app.use('/api/youtube', youtubeRecommendationRoutes);
 
-// Routes pour le proxy vid√©o
+// Routes pour le proxy vidÈo
 const videoProxyRoutes = require('./routes/videoProxy');
 app.use('/api/video-proxy', videoProxyRoutes);
 
 // Socket.IO events
 io.on('connection', (socket) => {
-  console.log('Un utilisateur s\'est connect√©');
+  console.log('Un utilisateur s\'est connectÈ');
   let currentUser = null;
 
   // Authentification du socket
@@ -233,10 +243,10 @@ io.on('connection', (socket) => {
       socket.userId = userId;
       socket.displayName = displayName;
       socket.avatar = avatar || '';
-      console.log(`Utilisateur ${displayName} (${userId}) authentifi√© avec avatar: ${avatar}`);
+      console.log(`Utilisateur ${displayName} (${userId}) authentifiÈ avec avatar: ${avatar}`);
     } catch (error) {
       console.error('Erreur d\'authentification:', error);
-      socket.emit('auth_error', { message: 'Authentification √©chou√©e' });
+      socket.emit('auth_error', { message: 'Authentification ÈchouÈe' });
     }
   });
 
@@ -247,11 +257,11 @@ io.on('connection', (socket) => {
       console.log('Join room data:', data);
 
       if (!roomId || !userId || !displayName) {
-        console.error('Donn√©es manquantes:', data);
+        console.error('DonnÈes manquantes:', data);
         return;
       }
 
-      // V√©rifier si la room existe, sinon la cr√©er
+      // VÈrifier si la room existe, sinon la crÈer
       let chatRoom = await ChatRoom.findOne({ name: roomId });
 
       try {
@@ -260,10 +270,10 @@ io.on('connection', (socket) => {
             name: roomId,
             createdBy: userId
           });
-          console.log('Nouvelle room cr√©√©e:', roomId);
+          console.log('Nouvelle room crÈÈe:', roomId);
         }
 
-        // Mettre √† jour ou ajouter l'utilisateur avec son avatar
+        // Mettre ‡ jour ou ajouter l'utilisateur avec son avatar
         const existingParticipant = chatRoom.participants.find(p => p.userId === userId);
         if (existingParticipant) {
           existingParticipant.username = displayName;
@@ -276,14 +286,14 @@ io.on('connection', (socket) => {
         socket.join(roomId);
         console.log(`Utilisateur ${displayName} (${userId}) a rejoint la room: ${roomId}`);
 
-        // R√©cup√©rer tous les participants avec leurs avatars
+        // RÈcupÈrer tous les participants avec leurs avatars
         const participants = chatRoom.participants.map(p => ({
           userId: p.userId,
           displayName: p.username,
           avatar: p.avatar || ''
         }));
 
-        // Envoyer la liste mise √† jour des participants √† tous les utilisateurs
+        // Envoyer la liste mise ‡ jour des participants ‡ tous les utilisateurs
         io.to(roomId).emit('users_in_room', participants);
 
         // Envoyer l'historique des messages avec les avatars
@@ -319,31 +329,31 @@ io.on('connection', (socket) => {
   socket.on('send_message', async (data) => {
     try {
       const { roomId, userId, message, username, displayName, avatar } = data;
-      console.log('Message re√ßu:', data);
+      console.log('Message reÁu:', data);
 
       if (!userId || !roomId || !message) {
-        console.error('Donn√©es manquantes:', data);
+        console.error('DonnÈes manquantes:', data);
         return;
       }
 
       // Trouver la room et ajouter le message
       const chatRoom = await ChatRoom.findOne({ name: roomId });
       if (!chatRoom) {
-        console.error('Room non trouv√©e:', roomId);
+        console.error('Room non trouvÈe:', roomId);
         return;
       }
 
       // S'assurer que l'utilisateur est un participant
       const participant = chatRoom.participants.find(p => p.userId === userId);
       if (!participant) {
-        console.error('Utilisateur non trouv√© dans la room:', userId);
+        console.error('Utilisateur non trouvÈ dans la room:', userId);
         return;
       }
 
-      // Utiliser l'avatar le plus r√©cent
+      // Utiliser l'avatar le plus rÈcent
       const messageAvatar = avatar || participant.avatar || '';
 
-      // Mettre √† jour l'avatar du participant si n√©cessaire
+      // Mettre ‡ jour l'avatar du participant si nÈcessaire
       if (avatar && avatar !== participant.avatar) {
         participant.avatar = avatar;
         await chatRoom.save();
@@ -353,10 +363,10 @@ io.on('connection', (socket) => {
       chatRoom.addMessage(userId, username || displayName || participant.username, message, messageAvatar);
       await chatRoom.save();
 
-      // R√©cup√©rer le dernier message ajout√©
+      // RÈcupÈrer le dernier message ajoutÈ
       const newMessage = chatRoom.messages[chatRoom.messages.length - 1].toObject();
 
-      // Pr√©parer le message √† envoyer avec toutes les informations
+      // PrÈparer le message ‡ envoyer avec toutes les informations
       const messageToSend = {
         ...newMessage,
         userId,
@@ -365,9 +375,9 @@ io.on('connection', (socket) => {
         avatar: messageAvatar
       };
 
-      console.log('Message envoy√© √† la room:', roomId, messageToSend);
+      console.log('Message envoyÈ ‡ la room:', roomId, messageToSend);
 
-      // √âmettre le message √† tous les membres de la room
+      // …mettre le message ‡ tous les membres de la room
       io.to(roomId).emit('receive_message', messageToSend);
     } catch (error) {
       console.error('Erreur lors de l\'envoi du message:', error);
@@ -376,7 +386,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    console.log(`Utilisateur ${socket.displayName || 'inconnu'} s'est d√©connect√©`);
+    console.log(`Utilisateur ${socket.displayName || 'inconnu'} s'est dÈconnectÈ`);
   });
 });
 
@@ -386,35 +396,35 @@ app.get('/api/points', async (req, res) => {
       const points = await interestPointModel.find();
       res.status(200).json(points);
   } catch (err) {
-      console.error("Erreur lors de la r√©cup√©ration des points d'int√©r√™t:", err);
+      console.error("Erreur lors de la rÈcupÈration des points d'intÈrÍt:", err);
       res.status(500).json({ message: "Erreur serveur" });
   }
 });
 
-// Route pour r√©cup√©rer les informations de l'utilisateur connect√©
+// Route pour rÈcupÈrer les informations de l'utilisateur connectÈ
 const { authMiddleware } = require('./middleware/authMiddleware');
 const User = require('./Model/User');
 app.get('/api/users/me', authMiddleware, async (req, res) => {
   try {
-    // L'utilisateur est d√©j√† disponible dans req.user gr√¢ce au middleware d'authentification
+    // L'utilisateur est dÈj‡ disponible dans req.user gr‚ce au middleware d'authentification
     const user = req.user;
 
-    console.log("R√©cup√©ration des informations utilisateur pour:", user._id);
+    console.log("RÈcupÈration des informations utilisateur pour:", user._id);
 
-    // R√©cup√©rer l'utilisateur avec les cours achet√©s
+    // RÈcupÈrer l'utilisateur avec les cours achetÈs
     const userWithCourses = await User.findById(user._id)
       .populate('enrolledCourses.courseId', 'title description');
 
     if (!userWithCourses) {
-      console.log("Utilisateur non trouv√© dans la base de donn√©es");
-      return res.status(404).json({ message: 'Utilisateur non trouv√©' });
+      console.log("Utilisateur non trouvÈ dans la base de donnÈes");
+      return res.status(404).json({ message: 'Utilisateur non trouvÈ' });
     }
 
-    // V√©rifier et formater les donn√©es des cours achet√©s
+    // VÈrifier et formater les donnÈes des cours achetÈs
     if (userWithCourses.enrolledCourses && Array.isArray(userWithCourses.enrolledCourses)) {
-      console.log("Nombre de cours achet√©s:", userWithCourses.enrolledCourses.length);
+      console.log("Nombre de cours achetÈs:", userWithCourses.enrolledCourses.length);
 
-      // Afficher les d√©tails des cours achet√©s pour le d√©bogage
+      // Afficher les dÈtails des cours achetÈs pour le dÈbogage
       userWithCourses.enrolledCourses.forEach((course, index) => {
         console.log(`Cours ${index + 1}:`, course);
         if (course.courseId) {
@@ -429,183 +439,30 @@ app.get('/api/users/me', authMiddleware, async (req, res) => {
         }
       });
     } else {
-      console.log("Aucun cours achet√© trouv√© ou format inattendu");
+      console.log("Aucun cours achetÈ trouvÈ ou format inattendu");
     }
 
     // Retourner les informations de l'utilisateur
     res.status(200).json(userWithCourses);
   } catch (error) {
-    console.error('Erreur lors de la r√©cup√©ration des informations utilisateur:', error);
+    console.error('Erreur lors de la rÈcupÈration des informations utilisateur:', error);
     res.status(500).json({ message: 'Erreur serveur' });
   }
 });
 
-
-
-// Route pour g√©n√©rer des questions
-app.post('/api/generate-question', async (req, res) => {
-  try {
-    const { timestamp, videoUrl, section } = req.body;
-    console.log('G√©n√©ration de question pour:', { timestamp, videoUrl, section });
-
-    if (!timestamp || !videoUrl) {
-      return res.status(400).json({ error: 'timestamp et videoUrl sont requis' });
-    }
-
-    // Extraire le sujet de la vid√©o de l'URL et du chemin
-    const videoPath = videoUrl.toLowerCase();
-    let videoSubject = 'programmation';
-
-    // D√©tection automatique du sujet bas√©e sur le chemin de la vid√©o
-    if (videoPath.includes('html') || videoPath.includes('web')) {
-      videoSubject = 'd√©veloppement web';
-    } else if (videoPath.includes('machine') || videoPath.includes('ml') || videoPath.includes('ai')) {
-      videoSubject = 'machine learning';
-    } else if (videoPath.includes('python')) {
-      videoSubject = 'Python';
-    } else if (videoPath.includes('javascript') || videoPath.includes('js')) {
-      videoSubject = 'JavaScript';
-    } else if (videoPath.includes('java')) {
-      videoSubject = 'Java';
-    } else if (videoPath.includes('c++') || videoPath.includes('cpp')) {
-      videoSubject = 'C++';
-    }
-
-    // Analyser le contenu de la vid√©o autour du timestamp
-    let videoAnalysis;
-    try {
-      videoAnalysis = await videoAnalysisService.analyzeVideoContent(videoUrl, timestamp);
-    } catch (error) {
-      console.error('Erreur lors de l\'analyse du contenu vid√©o:', error);
-      // En cas d'erreur d'analyse, utiliser un contenu par d√©faut
-      videoAnalysis = {
-        content: "Contenu de la vid√©o √† analyser...",
-        difficulty: 'intermediate',
-        context: "Contexte de la section en cours"
-      };
-    }
-
-    // G√©n√©rer une question bas√©e sur le contenu analys√©
-    const question = await videoAnalysisService.createQuestionFromText(videoAnalysis.content);
-
-    if (!question) {
-      return res.status(500).json({
-        error: 'Impossible de g√©n√©rer une question valide',
-        details: 'Le contenu de la vid√©o ne permet pas de g√©n√©rer une question pertinente'
-      });
-    }
-
-    // Ajouter des m√©tadonn√©es √† la question
-    question.metadata = {
-      timestamp,
-      subject: videoSubject,
-      difficulty: videoAnalysis.difficulty,
-      context: videoAnalysis.context,
-      section: section ? {
-        startTime: section.startTime,
-        endTime: section.endTime
-      } : null
-    };
-
-    res.json({
-      question: {
-        text: question.question,
-        options: question.options,
-        correctAnswer: question.correctAnswer,
-        type: question.type,
-        timestamp: timestamp,
-        subject: videoSubject,
-        explanation: question.explanation,
-        metadata: question.metadata
-      }
-    });
-  } catch (error) {
-    console.error('Erreur lors de la g√©n√©ration de la question:', error);
-    res.status(500).json({
-      error: 'Erreur lors de la g√©n√©ration de la question',
-      details: error.message
-    });
-  }
+// Route pour la page d'accueil
+app.get('/', (req, res) => {
+  res.send('API is running');
 });
 
-// Route pour tester si une vid√©o existe
-app.get('/check-video/:filename', (req, res) => {
-  const videoPath = path.join(path.join(__dirname, 'uploads'), 'videos', req.params.filename);
-  if (fs.existsSync(videoPath)) {
-    res.json({ exists: true });
-  } else {
-    res.json({ exists: false });
-  }
+// Route pour vÈrifier l'Ètat du serveur
+app.get('/api/status', (req, res) => {
+  res.status(200).json({ status: 'ok', message: 'Server is running' });
 });
 
-// Route de test pour les vid√©os
-app.get('/test-video', (req, res) => {
-  res.send(`
-    <html>
-      <body>
-        <h2>Test de lecture vid√©o</h2>
-        <video width="640" height="360" controls>
-          <source src="/uploads/videos/test.mp4" type="video/mp4">
-          Votre navigateur ne supporte pas la lecture de vid√©os.
-        </video>
-      </body>
-    </html>
-  `);
-});
-
-// Route de test pour les QR codes
-app.get('/test-qrcode', (req, res) => {
-  // Lister tous les fichiers QR code disponibles
-  const qrCodeDir = path.join(__dirname, 'public/qrcodes');
-  fs.readdir(qrCodeDir, (err, files) => {
-    if (err) {
-      return res.status(500).send(`Erreur lors de la lecture du dossier QR codes: ${err.message}`);
-    }
-
-    const qrCodeFiles = files.filter(file => file.endsWith('.png'));
-
-    let html = `
-      <html>
-        <head>
-          <title>Test QR Codes</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            .qr-container { margin-bottom: 30px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
-            img { max-width: 200px; }
-            h3 { margin-top: 0; }
-          </style>
-        </head>
-        <body>
-          <h1>Test des QR Codes</h1>
-          <p>Nombre de QR codes trouv√©s: ${qrCodeFiles.length}</p>
-    `;
-
-    if (qrCodeFiles.length === 0) {
-      html += '<p>Aucun QR code trouv√© dans le dossier.</p>';
-    } else {
-      qrCodeFiles.forEach(file => {
-        const qrCodeUrl = `/public/qrcodes/${file}`;
-        html += `
-          <div class="qr-container">
-            <h3>Fichier: ${file}</h3>
-            <p>URL: ${qrCodeUrl}</p>
-            <img src="${qrCodeUrl}" alt="${file}" />
-          </div>
-        `;
-      });
-    }
-
-    html += `
-        </body>
-      </html>
-    `;
-
-    res.send(html);
-  });
-});
-
-
-// Gestion des routes non d√©finies
+// Gestion des routes non dÈfinies
 app.all("*", (req, res) => {
   res.status(404).json({ message: "Route not found" });
 });
+
+module.exports = app;

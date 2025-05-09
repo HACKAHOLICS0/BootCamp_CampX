@@ -30,21 +30,80 @@ const CourseView = () => {
     try {
       setLoading(true);
       setError(null);
-      const token = Cookies.get('token');
-
+      
+      // Afficher tous les cookies disponibles pour le débogage
+      console.log("Tous les cookies disponibles:", document.cookie);
+      
+      // Parcourir tous les cookies et les afficher individuellement
+      const allCookies = document.cookie.split(';');
+      console.log("Liste de tous les cookies:");
+      allCookies.forEach((cookie, index) => {
+        const [name, value] = cookie.trim().split('=');
+        console.log(`Cookie ${index + 1}: Nom="${name}", Valeur="${value ? value.substring(0, 10) + '...' : 'vide'}"`);
+      });
+      
+      // Essayer de récupérer le token avec js-cookie
+      let token = Cookies.get('token');
+      console.log("Token via Cookies.get('token'):", token ? token.substring(0, 10) + "..." : "Non trouvé");
+      
+      // Essayer d'autres noms possibles pour le cookie de token
       if (!token) {
-        throw new Error('Authentication required');
+        // Liste des noms possibles pour le cookie de token
+        const possibleTokenNames = ['token', 'auth_token', 'jwt', 'authToken', 'access_token', 'sid', 'JSESSIONID'];
+        
+        for (const name of possibleTokenNames) {
+          const possibleToken = Cookies.get(name);
+          if (possibleToken) {
+            console.log(`Token trouvé sous le nom "${name}": ${possibleToken.substring(0, 10)}...`);
+            token = possibleToken;
+            break;
+          }
+        }
+      }
+      
+      // Si toujours pas de token, essayer de le récupérer directement du document.cookie
+      if (!token) {
+        for (const cookie of allCookies) {
+          const [name, value] = cookie.trim().split('=');
+          if (name && value && ['token', 'auth_token', 'jwt', 'authToken', 'access_token', 'sid', 'JSESSIONID'].includes(name)) {
+            console.log(`Token trouvé dans document.cookie sous le nom "${name}": ${value.substring(0, 10)}...`);
+            token = decodeURIComponent(value);
+            break;
+          }
+        }
+      }
+      
+      // Si toujours pas de token, vérifier localStorage et sessionStorage
+      if (!token) {
+        token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        console.log("Token depuis localStorage/sessionStorage:", token ? token.substring(0, 10) + "..." : "Non trouvé");
+      }
+      
+      // Si toujours pas de token, utiliser le cookie "sid" qui semble être présent dans votre capture d'écran
+      if (!token) {
+        token = Cookies.get('sid');
+        console.log("Token depuis cookie 'sid':", token ? token.substring(0, 10) + "..." : "Non trouvé");
+      }
+      
+      if (!token) {
+        console.error("Aucun token d'authentification trouvé");
+        throw new Error('Authentication required. Please log in again.');
       }
 
-      // RÃ©cupÃ©rer les donnÃ©es du cours
+      console.log("Token utilisé pour les requêtes API:", token.substring(0, 10) + "...");
+
+      // Récupérer les données du cours
       const response = await fetch(`${config.API_URL}/api/courses/${courseId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json'
-        }
+        },
+        credentials: 'include' // Include cookies in the request
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Error response from course API:", errorText);
         throw new Error('Failed to fetch course data');
       }
 
@@ -52,17 +111,18 @@ const CourseView = () => {
       console.log("Course data received:", data);
       setCourse(data);
 
-      // RÃ©cupÃ©rer les vidÃ©os du cours
+      // Récupérer les vidéos du cours
       const videosResponse = await fetch(`${config.API_URL}/api/videos/course/${courseId}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json'
-        }
+          'Accept': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        },
+        credentials: 'include' // Inclure les cookies dans la requête
       });
 
       if (videosResponse.ok) {
         const videosData = await videosResponse.json();
-        console.log("VidÃ©os rÃ©cupÃ©rÃ©es du serveur:", videosData);
+        console.log("Vidéos récupérées du serveur:", videosData);
 
         // Format video URLs to include the full server URL
         const formattedVideos = videosData.map(video => {
@@ -70,13 +130,13 @@ const CourseView = () => {
             ...video,
             videoUrl: video.videoUrl ? `${config.API_URL}${video.videoUrl}` : null
           };
-          console.log("URL de vidÃ©o formatÃ©e:", formattedVideo.videoUrl);
+          console.log("URL de vidéo formatée:", formattedVideo.videoUrl);
           return formattedVideo;
         });
 
         setVideos(formattedVideos);
         if (formattedVideos.length > 0) {
-          console.log("VidÃ©o sÃ©lectionnÃ©e:", formattedVideos[0]);
+          console.log("Vidéo sélectionnée:", formattedVideos[0]);
           setSelectedVideo(formattedVideos[0]);
         }
       }
@@ -103,18 +163,19 @@ const CourseView = () => {
               }
             }).then(async (res) => {
               if (!res.ok) {
-                console.warn(`Impossible de rÃ©cupÃ©rer le quiz ${quizId}:`, res.status);
+                console.warn(`Impossible de récupérer le quiz ${quizId}:`, res.status);
                 return null;
               }
               const quizData = await res.json();
               console.log(`Quiz ${quizId} data:`, quizData);
 
-              // RÃ©cupÃ©rer les rÃ©sultats du quiz pour l'utilisateur actuel
+              // Récupérer les résultats du quiz pour l'utilisateur actuel
               const resultsResponse = await fetch(`${config.API_URL}/api/quiz/results/${quizId}`, {
                 headers: {
-                  'Authorization': `Bearer ${token}`,
-                  'Accept': 'application/json'
-                }
+                  'Accept': 'application/json',
+                  ...(token && { 'Authorization': `Bearer ${token}` })
+                },
+                credentials: 'include'
               });
 
               let completed = false;
@@ -125,25 +186,26 @@ const CourseView = () => {
                 const results = await resultsResponse.json();
                 completed = results.length > 0;
 
-                // RÃ©cupÃ©rer le dernier score si disponible
+                // Récupérer le dernier score si disponible
                 if (results.length > 0) {
-                  // Trier les rÃ©sultats par date (du plus rÃ©cent au plus ancien)
+                  // Trier les résultats par date (du plus récent au plus ancien)
                   const sortedResults = [...results].sort((a, b) =>
                     new Date(b.submittedAt) - new Date(a.submittedAt)
                   );
 
-                  // Prendre le score le plus rÃ©cent
+                  // Prendre le score le plus récent
                   lastScore = sortedResults[0].percentage;
                 }
 
-                // VÃ©rifier si l'utilisateur a dÃ©jÃ  un certificat pour ce quiz
+                // Vérifier si l'utilisateur a déjà un certificat pour ce quiz
                 if (quizData.isFinalQuiz) {
                   try {
                     const certificateResponse = await fetch(`${config.API_URL}/api/certificates/check/${quizId}`, {
                       headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Accept': 'application/json'
-                      }
+                        'Accept': 'application/json',
+                        ...(token && { 'Authorization': `Bearer ${token}` })
+                      },
+                      credentials: 'include'
                     });
 
                     if (certificateResponse.ok) {
@@ -151,7 +213,7 @@ const CourseView = () => {
                       hasCertificate = certData.hasCertificate;
                     }
                   } catch (error) {
-                    console.warn(`Erreur lors de la vÃ©rification du certificat pour le quiz ${quizId}:`, error);
+                    console.warn(`Erreur lors de la vérification du certificat pour le quiz ${quizId}:`, error);
                   }
                 }
               }
@@ -167,7 +229,7 @@ const CourseView = () => {
                 hasCertificate
               };
             }).catch(error => {
-              console.warn(`Erreur lors de la rÃ©cupÃ©ration du quiz ${quizId}:`, error);
+              console.warn(`Erreur lors de la récupération du quiz ${quizId}:`, error);
               return null;
             })
           );
@@ -190,7 +252,7 @@ const CourseView = () => {
          }
        } catch (error) {
          console.error('Error fetching quiz details:', error);
-         setError('Erreur lors de la rÃ©cupÃ©ration des quiz. Veuillez rafraÃ®chir la page.');
+         setError('Erreur lors de la récupération des quiz. Veuillez rafraîchir la page.');
        }
      } else {
        console.log("No quizzes found for this course");
@@ -212,7 +274,7 @@ const CourseView = () => {
   };
 
   const formatDuration = (duration) => {
-    if (!duration && duration !== 0) return 'DurÃ©e non dÃ©finie';
+    if (!duration && duration !== 0) return 'Durée non définie';
     return `${duration} ${duration <= 1 ? 'minute' : 'minutes'}`;
   };
 
@@ -242,7 +304,7 @@ const CourseView = () => {
     return (
       <div className="course-view-container">
         <Alert variant="info">
-          <Alert.Heading>Cours non trouvÃ©</Alert.Heading>
+          <Alert.Heading>Cours non trouvé</Alert.Heading>
           <p>Le cours que vous recherchez n'existe pas ou n'est pas accessible.</p>
         </Alert>
       </div>
@@ -263,7 +325,7 @@ const CourseView = () => {
               className={`content-tab ${activeTab === 'video' ? 'active' : ''}`}
               onClick={() => setActiveTab('video')}
             >
-              <FaPlay /> VidÃ©os
+              <FaPlay /> Vidéos
             </div>
             <div
               className={`content-tab ${activeTab === 'quiz' ? 'active' : ''}`}

@@ -4,7 +4,7 @@ import { Container, Row, Col, Card, Spinner, Alert, Button } from 'react-bootstr
 import { FaGraduationCap, FaArrowRight, FaExclamationTriangle } from 'react-icons/fa';
 import './CategoryStyle.css';
 
-const backendURL = "http://localhost:5000/api";
+const backendURL = "https://ikramsegni.fr/api";
 
 const CategoryList = () => {
   const navigate = useNavigate();

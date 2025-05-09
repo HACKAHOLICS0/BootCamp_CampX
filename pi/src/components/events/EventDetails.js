@@ -197,7 +197,7 @@ const EventDetails = () => {
                 <div className="qr-code-container mt-4 text-center">
                   <h5>Event QR Code</h5>
                   <img
-                    src={qrCodeUrl.startsWith('http') ? qrCodeUrl : `http://51.91.251.228:5000${qrCodeUrl}`}
+                    src={qrCodeUrl.startsWith('http') ? qrCodeUrl : `https://ikramsegni.fr${qrCodeUrl}`}
                     alt="Event QR Code"
                     className="qr-code-image"
                     onError={(e) => {

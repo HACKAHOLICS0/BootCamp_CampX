@@ -7,7 +7,7 @@ import PaymentForm from './PaymentForm';
 import './CourseStyle.css';
 import './CourseCardFix.css'; // Import the CSS fix
 
-const backendURL = "http://51.91.251.228:5000/api";
+const backendURL = "https://ikramsegni.fr/api";
 
 const CourseList = () => {
   const { categoryId, moduleId } = useParams();

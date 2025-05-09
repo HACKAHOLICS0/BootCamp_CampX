@@ -23,7 +23,7 @@ const YoutubeRecommendations = ({ limit = 6 }) => {
 
   // Create axios instance with default config
   const axiosInstance = axios.create({
-    baseURL: 'http://51.91.251.228:5000/api',
+    baseURL: 'https://ikramsegni.fr/api',
     withCredentials: true
   });
 

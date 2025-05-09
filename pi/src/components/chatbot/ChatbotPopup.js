@@ -209,7 +209,7 @@ const ChatbotPopup = () => {
         };
 
         // Déterminer l'URL du service chatbot
-        const chatbotUrl = "http://51.91.251.228:5000/predict";
+        const chatbotUrl = "https://ikramsegni.fr/predict";
 
         console.log("Envoi de la requête au chatbot:", {
             url: chatbotUrl,

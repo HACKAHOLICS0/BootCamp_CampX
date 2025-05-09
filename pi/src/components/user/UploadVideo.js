@@ -34,7 +34,7 @@ const UploadVideo = () => {
       setLoading(true);
       setError(null);
       
-      const response = await axios.post('http://51.91.251.228:5000/api/videos/upload', formData, {
+      const response = await axios.post('https://ikramsegni.fr/api/videos/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

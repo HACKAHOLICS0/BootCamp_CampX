@@ -36,7 +36,7 @@ export default function Signin() {
     }
 
     try {
-      const response = await fetch("http://51.91.251.228:5000/api/auth/signin", {
+      const response = await fetch("https://ikramsegni.fr/api/auth/signin", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -70,11 +70,11 @@ export default function Signin() {
   };
 
   const handleGoogleLoginSuccess = async () => {
-    window.location.href = "http://51.91.251.228:5000/api/auth/google";
+    window.location.href = "https://ikramsegni.fr/api/auth/google";
   };
 
   const handleGitHubLogin = () => {
-    window.location.href = "http://51.91.251.228:5000/api/auth/github/callback";
+    window.location.href = "https://ikramsegni.fr/api/auth/github/callback";
   };
 
   return (

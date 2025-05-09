@@ -23,7 +23,7 @@ const PaymentForm = ({ courseId, amount, onSuccess, onCancel }) => {
         if (!token) return;
 
         // Récupérer les informations de l'utilisateur
-        const response = await axios.get('http://51.91.251.228:5000/api/users/me', {
+        const response = await axios.get('https://ikramsegni.fr/api/users/me', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Accept': 'application/json'
@@ -86,7 +86,7 @@ const PaymentForm = ({ courseId, amount, onSuccess, onCancel }) => {
 
       try {
         // Create payment intent
-        const { data: { clientSecret } } = await axios.post('http://51.91.251.228:5000/api/payments/create-payment-intent', {
+        const { data: { clientSecret } } = await axios.post('https://ikramsegni.fr/api/payments/create-payment-intent', {
           courseId
         }, config);
 
@@ -104,7 +104,7 @@ const PaymentForm = ({ courseId, amount, onSuccess, onCancel }) => {
         }
 
         // Confirm payment on our backend
-        await axios.post('http://51.91.251.228:5000/api/payments/confirm-payment', {
+        await axios.post('https://ikramsegni.fr/api/payments/confirm-payment', {
           paymentIntentId: paymentIntent.id
         }, config);
 
