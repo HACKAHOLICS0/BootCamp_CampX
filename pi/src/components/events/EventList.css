@@ -178,6 +178,21 @@
   color: #0369a1;
 }
 
+.event-status.pending {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.event-status.completed {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.event-status.cancelled {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
 .event-actions {
   display: flex;
   gap: 0.5rem;
@@ -217,14 +232,56 @@
   background-color: #4CAF50;
 }
 
+/* Styles pour le chargement et les erreurs */
+.loading-text {
+  margin-top: 1rem;
+  color: #64748b;
+  font-size: 1rem;
+}
+
+.custom-spinner {
+  color: #5FCF80;
+  width: 3rem;
+  height: 3rem;
+}
+
+.custom-error {
+  text-align: center;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border: none;
+}
+
+.error-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.retry-button {
+  margin-top: 1rem;
+  padding: 0.7rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
 @media (max-width: 768px) {
   .events-page-header {
     border-radius: 0;
     max-width: 100%;
   }
-  
+
   .events-grid {
     grid-template-columns: 1fr;
     gap: 1.5rem;
+  }
+
+  .event-actions {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+    margin-bottom: 0.5rem;
   }
 }
