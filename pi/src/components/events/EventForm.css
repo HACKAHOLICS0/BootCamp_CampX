@@ -4,13 +4,28 @@
     padding: 2rem;
     background-color: #fff;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .event-form-container h2 {
     margin-bottom: 2rem;
-    color: #333;
+    color: #2c3e50;
     text-align: center;
+    font-weight: 700;
+    position: relative;
+    padding-bottom: 0.5rem;
+}
+
+.event-form-container h2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(90deg, #5FCF80, #4CAF50);
+    border-radius: 2px;
 }
 
 .event-form {
@@ -27,24 +42,25 @@
 
 .form-group label {
     font-weight: 600;
-    color: #444;
+    color: #4a5568;
 }
 
 .form-group input,
 .form-group textarea,
 .form-group select {
     padding: 0.75rem;
-    border: 1px solid #ddd;
+    border: 1px solid #e2e8f0;
     border-radius: 4px;
     font-size: 1rem;
-    transition: border-color 0.2s;
+    transition: all 0.3s ease;
 }
 
 .form-group input:focus,
 .form-group textarea:focus,
 .form-group select:focus {
     outline: none;
-    border-color: #007bff;
+    border-color: #5FCF80;
+    box-shadow: 0 0 0 3px rgba(95, 207, 128, 0.2);
 }
 
 .form-group textarea {
@@ -72,20 +88,20 @@
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all 0.3s ease;
 }
 
 .btn-primary {
-    background-color: #007bff;
+    background-color: #5FCF80;
     color: white;
 }
 
 .btn-primary:hover {
-    background-color: #0056b3;
+    background-color: #4CAF50;
 }
 
 .btn-primary:disabled {
-    background-color: #6c757d;
+    background-color: #a0aec0;
     cursor: not-allowed;
 }
 

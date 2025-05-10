@@ -1,42 +1,118 @@
+.event-details-container {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
 .event-details-card {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border: none;
   border-radius: 8px;
   overflow: hidden;
+  background-color: white;
 }
 
 .event-details-card .card-img-top {
-  max-height: 300px;
+  max-height: 400px;
   object-fit: cover;
 }
 
-.event-description {
-  margin-top: 15px;
-  line-height: 1.6;
-  color: #555;
+.event-details-content {
+  padding: 2rem;
 }
 
-.event-info p {
-  margin-bottom: 10px;
+.event-title {
+  color: #2c3e50;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.event-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  color: #64748b;
+}
+
+.event-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.event-description {
+  margin-top: 1.5rem;
+  line-height: 1.7;
+  color: #4a5568;
 }
 
 .event-actions {
-  margin-top: 20px;
-  padding-top: 20px;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
   border-top: 1px solid #eee;
+  display: flex;
+  gap: 1rem;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background-color: #5FCF80;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #4CAF50;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
 }
 
 .calendar-buttons {
-  margin-top: 15px;
+  margin-top: 1.5rem;
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 1rem;
+}
+
+.calendar-btn {
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
 }
 
 .qr-code-container {
-  padding: 15px;
+  padding: 1.5rem;
   background-color: #f8f9fa;
   border-radius: 8px;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.qr-code-title {
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 1rem;
 }
 
 .qr-code-image {
