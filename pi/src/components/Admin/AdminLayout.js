@@ -45,11 +45,16 @@ const Sidebar = ({ isCollapsed, toggleSidebar }) => {
   );
 };
 
-const TopBar = ({ toggleTheme, isDarkMode, onLogout }) => {
+const TopBar = ({ toggleTheme, isDarkMode, onLogout, toggleSidebar, isMobile }) => {
   const user = JSON.parse(Cookies.get("user") || '{}');
 
   return (
     <div className="topbar">
+      {isMobile && (
+        <button className="mobile-menu-btn" onClick={toggleSidebar} title="Menu">
+          <Menu size={20} />
+        </button>
+      )}
       <div className="search-box">
         <Search size={20} />
         <input type="text" placeholder="Rechercher..." />
@@ -72,13 +77,31 @@ const TopBar = ({ toggleTheme, isDarkMode, onLogout }) => {
 const AdminLayout = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!Cookies.get("user")) {
       navigate("/signin");
     }
-  }, [navigate]);
+
+    // Handle window resize for responsive design
+    const handleResize = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+      // Auto-collapse sidebar on mobile
+      if (mobile && !isCollapsed) {
+        setIsCollapsed(true);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize(); // Initial check
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [navigate, isCollapsed]);
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
@@ -95,10 +118,16 @@ const AdminLayout = () => {
   };
 
   return (
-    <div className={`admin-layout ${isDarkMode ? 'dark-mode' : ''}`}>
+    <div className={`admin-layout ${isDarkMode ? 'dark-mode' : ''} ${isMobile ? 'mobile-view' : ''}`}>
       <Sidebar isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} />
       <div className="main-content">
-        <TopBar toggleTheme={toggleTheme} isDarkMode={isDarkMode} onLogout={handleLogout} />
+        <TopBar
+          toggleTheme={toggleTheme}
+          isDarkMode={isDarkMode}
+          onLogout={handleLogout}
+          toggleSidebar={toggleSidebar}
+          isMobile={isMobile}
+        />
         <div className="content">
           <Outlet />
         </div>
