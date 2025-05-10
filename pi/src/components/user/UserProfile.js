@@ -1,9 +1,9 @@
-import "../../assets/css/user.css";
 import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { useNavigate } from 'react-router-dom';
 import CertificateList from './Certificate/CertificateList';
+import "../../assets/css/user.css";
 
 const backendURL = "https://ikramsegni.fr";
 const getImageUrl = (user) => {
@@ -235,9 +235,7 @@ export default function UserProfile() {
 
 
 
-    const checkFormValidity = (newErrors) => {
-        setIsFormValid(!Object.values(newErrors).some(error => error !== '') && Object.values(editableUser).every(value => value !== ''));
-    };
+
 
 
     const validateField = (field, value) => {
@@ -417,9 +415,7 @@ export default function UserProfile() {
         }
     }, [user]);
 
-    const navigateToCourse = (categoryId, moduleId, courseId) => {
-        navigate(`/categories/${categoryId}/modules/${moduleId}/courses/${courseId}`);
-    };
+
 
     if (!user) {
         return (
@@ -457,7 +453,7 @@ export default function UserProfile() {
                                                     className={`nav-link ${activeTab === 'interests' ? 'active' : ''}`}
                                                     onClick={() => setActiveTab('interests')}
                                                 >
-                                                    <i className="bi bi-star me-1"></i> Interets
+                                                    <i className="bi bi-star me-1"></i> Intérêts
                                                 </button>
                                             </li>
                                             <li className="nav-item">
@@ -502,7 +498,7 @@ export default function UserProfile() {
                             {activeTab === 'interests' && (
                                 <div className="card card-point w-100" style={{ position: 'relative' }}>
                                     <div className="section-header">
-                                        <h4 className="section-title">Points d'Interet</h4>
+                                        <h4 className="section-title">Points d'Intérêt</h4>
                                     </div>
                                     <div className="row p-3">
                                         {user.refinterestpoints && user.refinterestpoints.length > 0 ? (
