@@ -30,15 +30,18 @@
 
 /* En-tête de la section */
 .module-header {
-  text-align: left;
-  padding: var(--spacing-xl);
-  margin-bottom: var(--spacing-xl);
-  background: var(--primary-gradient);
-  border-radius: var(--border-radius);
-  color: white;
-  box-shadow: 0 10px 30px rgba(95, 207, 128, 0.2);
+  background-color: #5FCF80;
+  padding: 1.5rem 0;
+  margin-bottom: 2rem;
+  text-align: center;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(95, 207, 128, 0.2);
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
   position: relative;
   overflow: hidden;
+  color: white;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -57,9 +60,10 @@
 }
 
 .module-header h2 {
-  font-size: 3rem;
-  font-weight: 800;
-  margin-bottom: 1.2rem;
+  color: white;
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin: 0;
   position: relative;
   z-index: 1;
   letter-spacing: -0.5px;
@@ -67,10 +71,12 @@
 }
 
 .module-header p {
-  font-size: 1.3rem;
-  opacity: 0.9;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1rem;
+  margin-top: 0.5rem;
   max-width: 600px;
-  margin: 0;
+  margin-left: auto;
+  margin-right: auto;
   position: relative;
   z-index: 1;
   animation: fadeInUp 1s ease-out;

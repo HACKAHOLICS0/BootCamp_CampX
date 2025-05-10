@@ -211,7 +211,7 @@ const CourseList = () => {
     <Container className="mt-4">
       <div className="course-header">
         <h2>{module?.name || 'Cours disponibles'}</h2>
-        <p className="text-muted">
+        <p>
           {module?.description || 'Découvrez nos cours interactifs et enrichissants'}
         </p>
       </div>
