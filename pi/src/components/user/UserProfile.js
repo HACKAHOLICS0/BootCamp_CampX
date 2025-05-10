@@ -457,7 +457,7 @@ export default function UserProfile() {
                                                     className={`nav-link ${activeTab === 'interests' ? 'active' : ''}`}
                                                     onClick={() => setActiveTab('interests')}
                                                 >
-                                                    <i className="bi bi-star me-1"></i> Int�r�ts
+                                                    <i className="bi bi-star me-1"></i> Intérêts
                                                 </button>
                                             </li>
                                             <li className="nav-item">
@@ -502,6 +502,9 @@ export default function UserProfile() {
                             {activeTab === 'interests' && (
                                 <div className="card card-point w-100">
                                     <div className="section-header">
+                                        <button className="add-interest-button-left" onClick={openInterestPointModal} title="Ajouter un point d'intérêt">
+                                            <i className="bi bi-plus"></i>
+                                        </button>
                                         <h4 className="section-title">Points d'Intérêt</h4>
                                     </div>
                                     <div className="row p-3">
@@ -526,14 +529,10 @@ export default function UserProfile() {
                                                 </div>
                                             ))
                                         ) : (
-                                            <p className="text-center">Aucun point d'int�r�t disponible.</p>
+                                            <p className="text-center">Aucun point d'intérêt disponible.</p>
                                         )}
                                     </div>
-                                    <div className="text-end mt-3 me-3 mb-3">
-                                        <button className="add-interest-button" onClick={openInterestPointModal} title="Ajouter un point d'intérêt">
-                                            <i className="bi bi-plus"></i>
-                                        </button>
-                                    </div>
+
                                 </div>
                             )}
 
