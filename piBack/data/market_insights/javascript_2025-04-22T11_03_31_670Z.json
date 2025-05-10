@@ -1,0 +1,56 @@
+{
+  "status": "success",
+  "timestamp": "2025-04-22T12:03:41.171421",
+  "search_term": "javascript",
+  "total_courses": 6,
+  "platform_distribution": {
+    "Coursera": 5,
+    "Udemy": 1
+  },
+  "average_price": 5,
+  "average_rating": 4.7,
+  "courses": [
+    {
+      "platform": "Coursera",
+      "title": "Programming with JavaScript",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/learn/programming-with-javascript"
+    },
+    {
+      "platform": "Coursera",
+      "title": "IBM Full-Stack JavaScript Developer",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/professional-certificates/ibm-full-stack-javascript-developer"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Microsoft Full-Stack Developer",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/professional-certificates/microsoft-full-stack-developer"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Microsoft Front-End Developer",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/professional-certificates/microsoft-front-end-developer"
+    },
+    {
+      "platform": "Coursera",
+      "title": "Meta Front-End Developer",
+      "price": null,
+      "rating": null,
+      "url": "https://www.coursera.org/professional-certificates/meta-front-end-developer"
+    },
+    {
+      "platform": "Udemy",
+      "title": "The Complete JavaScript Course: From Zero to Expert!",
+      "price": 29.99,
+      "rating": 4.7,
+      "url": "https://www.udemy.com/course/the-complete-javascript-course/"
+    }
+  ]
+}

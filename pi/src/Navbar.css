@@ -1,0 +1,280 @@
+/* Navbar.css */
+
+#header {
+  background-color: #fff; /* Fond blanc */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Ombre pour donner de la profondeur */
+  position: relative;
+  z-index: 10;
+
+}
+
+#header::after {
+  content: '';
+  position: absolute;
+  bottom: -10px; /* Décale légèrement le flou vers le bas */
+  left: 0;
+  width: 100%;
+  height: 30px;
+  background: rgba(255, 255, 255, 0.8);
+  filter: blur(50px); /* Réduction de l'intensité du flou */
+  z-index: -1; /* Assure que le flou reste derrière */
+}
+
+.navbar-nav .nav-link {
+
+  font-size: 16px;
+  font-weight: 500;
+  margin-right: 15px;
+  color: black;
+}
+
+.navbar-nav .nav-link:hover {
+  color: #1abc9c; /* Couleur d'hover */
+}
+
+.navbar-nav .nav-item {
+  margin: 0 10px;
+}
+
+.logo a {
+  font-size: 24px;
+  font-weight: 700;
+  color: #5FCF80; /* Logo en vert clair */
+}
+
+.logo-text {
+  color: #5FCF80;
+}
+
+.hover-effect {
+  transition: color 0.3s ease;
+}
+
+.hover-effect:hover {
+  transition: all 0.3s ease;
+  color: #1abc9c;
+}
+
+/* Dropdown styles */
+.navbar .nav-item.dropdown {
+  position: relative;
+}
+
+.navbar .dropdown-toggle {
+  cursor: pointer;
+}
+
+.navbar .dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-width: 200px;
+  z-index: 1000;
+  padding: 0.5rem 0;
+  margin-top: 0;
+}
+
+.navbar .dropdown-menu.show {
+  display: block;
+}
+
+.navbar .dropdown-item {
+  padding: 0.5rem 1rem;
+  color: #333;
+  text-decoration: none;
+  display: block;
+  transition: background-color 0.2s ease;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.navbar .dropdown-item:hover {
+  background-color: #f8f9fa;
+  color: #1abc9c;
+}
+
+/* Ensure dropdown items are clickable */
+.navbar .dropdown-menu li {
+  position: relative;
+  z-index: 1001;
+}
+
+.navbar .dropdown-menu button {
+  font-size: 14px;
+  font-weight: normal;
+}
+
+/* Fix dropdown hover issue */
+.navbar .nav-item.dropdown:hover .dropdown-menu,
+.navbar .dropdown-menu:hover {
+  display: block;
+}
+
+.mobile-nav-toggle {
+  font-size: 24px;
+  cursor: pointer;
+  display: none;
+}
+
+/* Styles spécifiques pour les écrans petits */
+@media (max-width: 991px) {
+  .mobile-nav-toggle {
+    display: block;
+  }
+
+  .navbar ul {
+    display: none;
+  }
+
+  .navbar .dropdown-menu {
+    position: static;
+    box-shadow: none;
+    border: none;
+    padding-left: 1rem;
+  }
+}
+
+#header {
+  transition: all 0.5s;
+  z-index: 997;
+  padding: 15px 0;
+}
+
+#header.header-scrolled {
+  background: rgba(255, 255, 255, 0.8);
+  padding: 15px 0;
+}
+
+.logo img {
+  max-height: 40px;
+  margin-right: 6px;
+}
+
+.navbar {
+  padding: 0;
+}
+
+.navbar ul {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  list-style: none;
+  align-items: center;
+}
+
+.navbar li {
+  position: relative;
+}
+
+.navbar a,
+.navbar a:focus {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0 10px 30px;
+  font-size: 15px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: 0.3s;
+}
+
+.navbar a i,
+.navbar a:focus i {
+  font-size: 12px;
+  line-height: 0;
+  margin-left: 5px;
+}
+
+#footer {
+  padding: 20px 0;
+  font-size: 12px;
+  background-color: #1e293b;
+  color: white;
+}
+
+#footer .footer-info {
+  margin-bottom: 15px;
+}
+
+#footer h4 {
+  font-size: 14px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+#footer .social-links {
+  margin-top: 10px;
+}
+
+#footer .social-links a {
+  font-size: 16px;
+  display: inline-block;
+  color: white;
+  line-height: 1;
+  padding: 8px 0;
+  margin-right: 10px;
+  border-radius: 50%;
+  text-align: center;
+  width: 32px;
+  height: 32px;
+  transition: 0.3s;
+}
+
+footer .footer-info p {
+  font-size: 12px;
+  line-height: 20px;
+  margin-bottom: 0;
+}
+
+footer .credits {
+  font-size: 11px;
+  padding-top: 5px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+footer .social-links li {
+  display: inline-block;
+  margin-right: 10px;
+}
+
+footer .social-links li:last-child {
+  margin-right: 0;
+}
+
+footer .social-links li a {
+  color: white;
+  font-size: 16px;
+  transition: 0.3s;
+}
+
+footer .social-links li a:hover {
+  color: #1abc9c !important;
+}
+
+/* Style pour le bouton de déconnexion avec icône */
+.logout-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px !important;
+  margin-left: 5px;
+  transition: all 0.3s ease;
+}
+
+.logout-icon-btn i {
+  font-size: 20px;
+  color: #5FCF80;
+}
+
+.logout-icon-btn:hover i {
+  color: #1abc9c;
+  transform: translateX(2px);
+}
