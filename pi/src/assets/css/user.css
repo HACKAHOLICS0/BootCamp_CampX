@@ -108,6 +108,9 @@ body.modal-open {
     position: relative;
     overflow: hidden;
     color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .section-header::before {
@@ -161,6 +164,32 @@ body.modal-open {
 .add-interest-button:hover {
     background-color: #218838;
     transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Style pour le bouton d'ajout à gauche */
+.add-interest-button-left {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    position: absolute;
+    left: 20px;
+    z-index: 2;
+}
+
+.add-interest-button-left:hover {
+    background-color: #218838;
+    transform: scale(1.1);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
