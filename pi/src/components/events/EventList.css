@@ -9,6 +9,31 @@
   max-width: 900px;
   margin-left: auto;
   margin-right: auto;
+  position: relative;
+  overflow: hidden;
+  color: white;
+}
+
+.events-page-header::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 200px;
+  height: 200px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+}
+
+.events-page-header::after {
+  content: '';
+  position: absolute;
+  bottom: -30px;
+  left: -30px;
+  width: 150px;
+  height: 150px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
 }
 
 .events-page-title {
@@ -16,19 +41,30 @@
   font-size: 1.8rem;
   font-weight: 600;
   margin: 0;
+  position: relative;
+  z-index: 1;
+  animation: fadeInUp 0.8s ease-out;
 }
 
 .events-page-subtitle {
   color: rgba(255, 255, 255, 0.9);
   font-size: 1rem;
   margin-top: 0.5rem;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+  z-index: 1;
+  animation: fadeInUp 1s ease-out;
 }
 
 /* Container principal pour les événements */
 .events-container {
-  max-width: 1200px;
-  margin: 2rem auto;
-  padding: 0 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+  background-color: var(--background, #f8fafc);
+  min-height: calc(100vh - 80px);
 }
 
 /* Grille d'événements */
@@ -263,6 +299,24 @@
   padding: 0.7rem 1.5rem;
   border-radius: 8px;
   font-weight: 600;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 768px) {

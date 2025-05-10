@@ -90,40 +90,48 @@ const EventList = () => {
         }
     };
 
-    if (loading) return (
-        <div className="text-center my-4">
-            <Spinner animation="border" role="status" className="custom-spinner">
-                <span className="visually-hidden">Chargement des événements...</span>
-            </Spinner>
-            <p className="loading-text">Chargement des événements...</p>
-        </div>
-    );
+    if (loading) {
+        return (
+            <div className="events-container">
+                <div className="loading-container">
+                    <Spinner animation="border" role="status" className="custom-spinner">
+                        <span className="visually-hidden">Chargement des événements...</span>
+                    </Spinner>
+                    <p className="loading-text">Chargement des événements...</p>
+                </div>
+            </div>
+        );
+    }
 
-    if (error) return (
-        <div className="events-container">
-            <Alert variant="danger" className="custom-error">
-                <div className="error-icon">⚠️</div>
-                <h3>Une erreur est survenue</h3>
-                <p>{error}</p>
-                <Button
-                    variant="outline-danger"
-                    onClick={() => window.location.reload()}
-                    className="retry-button"
-                >
-                    Réessayer
-                </Button>
-            </Alert>
-        </div>
-    );
+    if (error) {
+        return (
+            <div className="events-container">
+                <div className="error-container">
+                    <Alert variant="danger" className="custom-error">
+                        <div className="error-icon">⚠️</div>
+                        <h3>Une erreur est survenue</h3>
+                        <p>{error}</p>
+                        <Button
+                            variant="outline-danger"
+                            onClick={() => window.location.reload()}
+                            className="retry-button"
+                        >
+                            Réessayer
+                        </Button>
+                    </Alert>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div>
+        <div className="events-container">
             <div className="events-page-header">
-                <h1 className="events-page-title">Événements</h1>
+                <h2 className="events-page-title">Événements</h2>
                 <p className="events-page-subtitle">Découvrez et participez à nos événements</p>
             </div>
 
-            <div className="events-container">
+            <div>
                 {user && (
                     <Link to="/events/create" className="create-event-button">
                         <i className="bi bi-plus-circle"></i> Créer un événement
