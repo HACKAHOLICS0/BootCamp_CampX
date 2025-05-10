@@ -11,10 +11,16 @@ const Sidebar = ({ isCollapsed, toggleSidebar }) => {
   return (
     <div className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
+        <div className="logo-container">
+          <h2><span>CampX</span> Admin</h2>
+        </div>
         <button className="toggle-btn" onClick={toggleSidebar}>
           <Menu size={20} />
         </button>
       </div>
+
+      <div className="sidebar-divider"></div>
+
       <nav className="sidebar-nav">
         <ul>
           <li><Link to="/admin"><Home size={20} /> <span>Tableau de bord</span></Link></li>
@@ -28,6 +34,8 @@ const Sidebar = ({ isCollapsed, toggleSidebar }) => {
           <li><Link to="/admin/analytics"><BarChart2 size={20} /> <span>Analytiques</span></Link></li>
           <li><Link to="/admin/events"><Calendar size={20} /> <span>Événements</span></Link></li>
           <li><Link to="/admin/pending-events"><CheckSquare size={20} /> <span>Événements en attente</span></Link></li>
+
+          <div className="sidebar-divider"></div>
 
           <li><Link to="/admin/notifications"><Bell size={20} /> <span>Notifications</span></Link></li>
           <li><Link to="/admin/settings"><Settings size={20} /> <span>Paramètres</span></Link></li>

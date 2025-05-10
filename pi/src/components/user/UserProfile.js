@@ -7,9 +7,9 @@ import "../../assets/css/user.css";
 
 const backendURL = "https://ikramsegni.fr";
 const getImageUrl = (user) => {
-    // V rifie si l'utilisateur ou son image est d fini
+    // Vérifie si l'utilisateur ou son image est défini
     if (!user || !user.image) {
-        return "/uploads/avatar7.png"; // Image par d faut
+        return "/uploads/avatar7.png"; // Image par défaut
     }
 
     // Si l'utilisateur utilise Google ou GitHub
@@ -17,14 +17,14 @@ const getImageUrl = (user) => {
         return user.image; // Retourner directement l'URL de l'image
     }
 
-    // Si l'image est d j  une URL compl te
+    // Si l'image est déjà une URL complète
     if (user.image.startsWith("http")) {
         return user.image;
     }
 
     // Si l'image contient le chemin complet du serveur
     if (user.image.includes('/home/ubuntu/camp-final/campx_finale/piBack/')) {
-        // Extraire la partie relative du chemin (apr s 'piBack/')
+        // Extraire la partie relative du chemin (après 'piBack/')
         const relativePath = user.image.split('piBack/')[1];
         return `${backendURL}/${relativePath}`;
     }
@@ -86,12 +86,12 @@ export default function UserProfile() {
     useEffect(() => {
         const fetchInterestPoints = async () => {
             try {
-                // Corriger le chemin de l'API pour s'assurer qu'il correspond � la route backend
+                // Corriger le chemin de l'API pour s'assurer qu'il correspond à la route backend
                 const response = await fetch(`${backendURL}/api/interest-points`);
                 const data = await response.json();
-                console.log("Fetched interest points:", data); // V�rifie le format des donn�es
+                console.log("Fetched interest points:", data); // Vérifie le format des données
 
-                // Assurez-vous que les donn�es r�cup�r�es sont correctement filtr�es
+                // Assurez-vous que les données récupérées sont correctement filtrées
                 if (Array.isArray(data)) {
                     setInterestPoints(data);
 
@@ -100,10 +100,10 @@ export default function UserProfile() {
                         setSelectedPoints(filteredPoints.map(point => point.value));
                     }
                 } else {
-                    console.error("Les donn�es r�cup�r�es ne sont pas un tableau:", data);
+                    console.error("Les données récupérées ne sont pas un tableau:", data);
                 }
             } catch (error) {
-                console.error("Erreur lors de la r�cup�ration des points d'int�r�t :", error);
+                console.error("Erreur lors de la récupération des points d'intérêt :", error);
             }
         };
 
@@ -203,7 +203,7 @@ export default function UserProfile() {
             });
 
             if (!response.ok) {
-                throw new Error("�chec de l'enregistrement des points d'int�r�t");
+                throw new Error("Échec de l'enregistrement des points d'intérêt");
             }
 
             const updatedUser = await response.json();
@@ -213,7 +213,7 @@ export default function UserProfile() {
             Cookies.set("user", JSON.stringify(updatedUser), { expires: 7 });
             setIsInterestPointModalOpen(false);
         } catch (error) {
-            console.error("Erreur lors de l'enregistrement des points d'int�r�t :", error);
+            console.error("Erreur lors de l'enregistrement des points d'intérêt :", error);
         }
     };
 
@@ -259,7 +259,7 @@ export default function UserProfile() {
                 if (!value) {
                     error = "Phone number is required";
                 } else {
-                    // Supprimer les espaces et les caract�res sp�ciaux pour la validation
+                    // Supprimer les espaces et les caractères spéciaux pour la validation
                     const cleanPhone = value.replace(/[\s-()]/g, '');
                     if (!/^\+?[0-9]{8,15}$/.test(cleanPhone)) {
                         error = "Phone number must be between 8 and 15 digits and can start with +";
@@ -291,11 +291,11 @@ export default function UserProfile() {
     };
 
     const handleInputChange = (field, value) => {
-        // Formatage sp�cial pour le num�ro de t�l�phone
+        // Formatage spécial pour le numéro de téléphone
         if (field === "phone") {
-            // Supprimer tous les caract�res non num�riques sauf le + au d�but
+            // Supprimer tous les caractères non numériques sauf le + au début
             const cleanValue = value.replace(/[^\d+]/g, '');
-            // Limiter la longueur � 15 caract�res
+            // Limiter la longueur à 15 caractères
             const limitedValue = cleanValue.slice(0, 15);
             value = limitedValue;
         }
@@ -318,7 +318,7 @@ export default function UserProfile() {
         setIsFormValid(isValid);
     };
     const openDeleteModal = (point) => {
-        console.log("Selected point for deletion:", point); // V�rifie ce qui est s�lectionn�
+        console.log("Selected point for deletion:", point); // Vérifie ce qui est sélectionné
         setPointToDelete(point);  // Assure-toi d'utiliser `point.value`
         setIsDeleteModalOpen(true);
     };
@@ -329,7 +329,7 @@ export default function UserProfile() {
         setPointToDelete(null);
     };
     const deleteInterestPoint = async () => {
-        console.log("Point to delete:", pointToDelete);  // V�rifie ce que contient pointToDelete
+        console.log("Point to delete:", pointToDelete);  // Vérifie ce que contient pointToDelete
 
         const storedUser = Cookies.get("user");
         if (!storedUser) {
@@ -353,10 +353,10 @@ export default function UserProfile() {
                 throw new Error("Failed to delete interest point");
             }
 
-            // Mettre � jour les points d'int�r�t de l'utilisateur
+            // Mettre à jour les points d'intérêt de l'utilisateur
             const updatedUserInterestPoints = user.refinterestpoints.filter(point => point !== pointToDelete);
 
-            // Mettez � jour les donn�es de l'utilisateur pour refl�ter les points supprim�s
+            // Mettez à jour les données de l'utilisateur pour refléter les points supprimés
             const updatedUser = {
                 ...user,
                 refinterestpoints: updatedUserInterestPoints
@@ -365,14 +365,14 @@ export default function UserProfile() {
             setUser(updatedUser);
             Cookies.set("user", JSON.stringify(updatedUser), { expires: 7 });
 
-            // Mettre � jour l'�tat local des points d'int�r�t
+            // Mettre à jour l'état local des points d'intérêt
             setInterestPoints(updatedUserInterestPoints);  // Seuls les points de l'utilisateur
 
-            // Fermer le modal apr�s suppression
+            // Fermer le modal après suppression
             closeDeleteModal();
 
         } catch (error) {
-            console.error("Erreur lors de la suppression du point d'int�r�t :", error);
+            console.error("Erreur lors de la suppression du point d'intérêt :", error);
         }
     };
 
