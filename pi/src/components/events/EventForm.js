@@ -80,14 +80,14 @@ const EventForm = () => {
     if (!user) return null;
 
     return (
-        <div>
+        <div className="event-form-container">
             <div className="event-form-page-header">
-                <h1 className="event-form-page-title">
+                <h2 className="event-form-page-title">
                     {id ? 'Modifier l\'événement' : 'Créer un événement'}
-                </h1>
+                </h2>
             </div>
-            
-            <div className="event-form-container">
+
+            <div className="event-form-card">
                 {error && <div className="error-message">{error}</div>}
                 <form onSubmit={handleSubmit} className="event-form">
                     <div className="form-group">
@@ -196,4 +196,4 @@ const EventForm = () => {
     );
 };
 
-export default EventForm; 
+export default EventForm;

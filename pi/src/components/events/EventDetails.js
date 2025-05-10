@@ -26,7 +26,7 @@ const EventDetails = () => {
   useEffect(() => {
     // R�cup�rer l'utilisateur uniquement depuis les cookies
     const userFromCookie = Cookies.get('user');
-    
+
     if (userFromCookie) {
       try {
         setUser(JSON.parse(userFromCookie));
@@ -138,39 +138,64 @@ const EventDetails = () => {
 
   if (loading) {
     return (
-      <Container className="text-center my-5">
-        <Spinner animation="border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
-      </Container>
+      <div className="event-details-container">
+        <div className="loading-container">
+          <Spinner animation="border" role="status" className="custom-spinner">
+            <span className="visually-hidden">Chargement...</span>
+          </Spinner>
+          <p className="loading-text">Chargement des détails de l'événement...</p>
+        </div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Container className="my-5">
-        <Alert variant="danger">{error}</Alert>
-      </Container>
+      <div className="event-details-container">
+        <div className="error-container">
+          <Alert variant="danger" className="custom-error">
+            <div className="error-icon">⚠️</div>
+            <h3>Une erreur est survenue</h3>
+            <p>{error}</p>
+            <Button
+              variant="outline-danger"
+              onClick={() => window.location.reload()}
+              className="retry-button"
+            >
+              Réessayer
+            </Button>
+          </Alert>
+        </div>
+      </div>
     );
   }
 
   if (!event) {
     return (
-      <Container className="my-5">
-        <Alert variant="warning">Event not found</Alert>
-      </Container>
+      <div className="event-details-container">
+        <div className="error-container">
+          <Alert variant="warning" className="custom-error">
+            <div className="error-icon">⚠️</div>
+            <h3>Événement non trouvé</h3>
+            <p>L'événement que vous recherchez n'existe pas ou a été supprimé.</p>
+            <Link to="/events" className="btn btn-primary">
+              Retour aux événements
+            </Link>
+          </Alert>
+        </div>
+      </div>
     );
   }
 
   return (
-    <div>
+    <div className="event-details-container">
       <div className="event-details-page-header">
-        <h1 className="event-details-page-title">Détails de l'événement</h1>
+        <h2 className="event-details-page-title">Détails de l'événement</h2>
         <p className="event-details-page-subtitle">Informations complètes sur l'événement</p>
       </div>
-      
-      <div className="event-details-container">
-        <Container className="my-5">
+
+      <div className="event-details-content-wrapper">
+        <Container>
           <Row>
             <Col md={8}>
               <Card className="event-details-card">
