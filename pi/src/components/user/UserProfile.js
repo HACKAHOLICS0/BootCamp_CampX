@@ -457,7 +457,7 @@ export default function UserProfile() {
                                                     className={`nav-link ${activeTab === 'interests' ? 'active' : ''}`}
                                                     onClick={() => setActiveTab('interests')}
                                                 >
-                                                    <i className="bi bi-star me-1"></i> Intérêts
+                                                    <i className="bi bi-star me-1"></i> Interets
                                                 </button>
                                             </li>
                                             <li className="nav-item">
@@ -500,12 +500,9 @@ export default function UserProfile() {
                             )}
 
                             {activeTab === 'interests' && (
-                                <div className="card card-point w-100">
+                                <div className="card card-point w-100" style={{ position: 'relative' }}>
                                     <div className="section-header">
-                                        <button className="add-interest-button-left" onClick={openInterestPointModal} title="Ajouter un point d'intérêt">
-                                            <i className="bi bi-plus"></i>
-                                        </button>
-                                        <h4 className="section-title">Points d'Intérêt</h4>
+                                        <h4 className="section-title">Points d'Interet</h4>
                                     </div>
                                     <div className="row p-3">
                                         {user.refinterestpoints && user.refinterestpoints.length > 0 ? (
@@ -532,7 +529,31 @@ export default function UserProfile() {
                                             <p className="text-center">Aucun point d'intérêt disponible.</p>
                                         )}
                                     </div>
-
+                                    <button
+                                        className="edit-button"
+                                        onClick={openInterestPointModal}
+                                        title="Ajouter un point d'intérêt"
+                                        style={{
+                                            position: 'absolute',
+                                            bottom: '15px',
+                                            right: '15px',
+                                            backgroundColor: '#5FCF80',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '50%',
+                                            width: '45px',
+                                            height: '45px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontSize: '1.5rem',
+                                            cursor: 'pointer',
+                                            boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)',
+                                            zIndex: '1'
+                                        }}
+                                    >
+                                        <i className="bi bi-plus"></i>
+                                    </button>
                                 </div>
                             )}
 

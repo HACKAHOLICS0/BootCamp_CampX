@@ -44,19 +44,15 @@ const TopBar = ({ toggleTheme, isDarkMode, onLogout }) => {
     <div className="topbar">
       <div className="search-box">
         <Search size={20} />
-        <input type="text" placeholder="Search..." />
+        <input type="text" placeholder="Rechercher..." />
       </div>
       <div className="topbar-right">
-        <button className="theme-toggle" onClick={toggleTheme}>
+        <button className="theme-toggle" onClick={toggleTheme} title={isDarkMode ? "Mode clair" : "Mode sombre"}>
           {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
         </button>
         <div className="user-menu">
-          <img
-            src={user?.image || "https://via.placeholder.com/100"}
-            alt="User"
-          />
-          <span>{user?.name || 'User'} {user?.lastName || ''}</span>
-          <button className="logout-icon-btn" onClick={onLogout}>
+          <span className="user-name">{user?.name || 'User'} {user?.lastName || ''}</span>
+          <button className="logout-icon-btn" onClick={onLogout} title="Déconnexion">
             <LogOut size={20} />
           </button>
         </div>
