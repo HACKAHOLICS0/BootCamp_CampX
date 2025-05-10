@@ -21,7 +21,7 @@
 }
 
 .navbar-nav .nav-link {
-   
+
   font-size: 16px;
   font-weight: 500;
   margin-right: 15px;
@@ -257,4 +257,24 @@ footer .social-links li a {
 
 footer .social-links li a:hover {
   color: #1abc9c !important;
+}
+
+/* Style pour le bouton de déconnexion avec icône */
+.logout-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px !important;
+  margin-left: 5px;
+  transition: all 0.3s ease;
+}
+
+.logout-icon-btn i {
+  font-size: 20px;
+  color: #5FCF80;
+}
+
+.logout-icon-btn:hover i {
+  color: #1abc9c;
+  transform: translateX(2px);
 }

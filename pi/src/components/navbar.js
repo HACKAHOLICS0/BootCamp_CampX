@@ -184,9 +184,10 @@ export default function Navbar() {
                 </Link>
                 <button
                   onClick={handleSignOut}
-                  className="nav-link btn btn-link text-dark hover-effect"
+                  className="nav-link btn btn-link text-dark hover-effect logout-icon-btn"
+                  title="Déconnexion"
                 >
-                  Déconnexion
+                  <i className="bi bi-box-arrow-right"></i>
                 </button>
               </li>
             ) : (
