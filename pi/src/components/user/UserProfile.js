@@ -1,15 +1,15 @@
-import "../../assets/css/user.css";
 import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { useNavigate } from 'react-router-dom';
 import CertificateList from './Certificate/CertificateList';
+import "../../assets/css/user.css";
 
 const backendURL = "https://ikramsegni.fr";
 const getImageUrl = (user) => {
-    // V rifie si l'utilisateur ou son image est d fini
+    // Vérifie si l'utilisateur ou son image est défini
     if (!user || !user.image) {
-        return "/uploads/avatar7.png"; // Image par d faut
+        return "/uploads/avatar7.png"; // Image par défaut
     }
 
     // Si l'utilisateur utilise Google ou GitHub
@@ -17,14 +17,14 @@ const getImageUrl = (user) => {
         return user.image; // Retourner directement l'URL de l'image
     }
 
-    // Si l'image est d j  une URL compl te
+    // Si l'image est déjà une URL complète
     if (user.image.startsWith("http")) {
         return user.image;
     }
 
     // Si l'image contient le chemin complet du serveur
     if (user.image.includes('/home/ubuntu/camp-final/campx_finale/piBack/')) {
-        // Extraire la partie relative du chemin (apr s 'piBack/')
+        // Extraire la partie relative du chemin (après 'piBack/')
         const relativePath = user.image.split('piBack/')[1];
         return `${backendURL}/${relativePath}`;
     }
@@ -86,12 +86,12 @@ export default function UserProfile() {
     useEffect(() => {
         const fetchInterestPoints = async () => {
             try {
-                // Corriger le chemin de l'API pour s'assurer qu'il correspond ï¿½ la route backend
+                // Corriger le chemin de l'API pour s'assurer qu'il correspond à la route backend
                 const response = await fetch(`${backendURL}/api/interest-points`);
                 const data = await response.json();
-                console.log("Fetched interest points:", data); // Vï¿½rifie le format des donnï¿½es
+                console.log("Fetched interest points:", data); // Vérifie le format des données
 
-                // Assurez-vous que les donnï¿½es rï¿½cupï¿½rï¿½es sont correctement filtrï¿½es
+                // Assurez-vous que les données récupérées sont correctement filtrées
                 if (Array.isArray(data)) {
                     setInterestPoints(data);
 
@@ -100,10 +100,10 @@ export default function UserProfile() {
                         setSelectedPoints(filteredPoints.map(point => point.value));
                     }
                 } else {
-                    console.error("Les donnï¿½es rï¿½cupï¿½rï¿½es ne sont pas un tableau:", data);
+                    console.error("Les données récupérées ne sont pas un tableau:", data);
                 }
             } catch (error) {
-                console.error("Erreur lors de la rï¿½cupï¿½ration des points d'intï¿½rï¿½t :", error);
+                console.error("Erreur lors de la récupération des points d'intérêt :", error);
             }
         };
 
@@ -203,7 +203,7 @@ export default function UserProfile() {
             });
 
             if (!response.ok) {
-                throw new Error("ï¿½chec de l'enregistrement des points d'intï¿½rï¿½t");
+                throw new Error("Échec de l'enregistrement des points d'intérêt");
             }
 
             const updatedUser = await response.json();
@@ -213,7 +213,7 @@ export default function UserProfile() {
             Cookies.set("user", JSON.stringify(updatedUser), { expires: 7 });
             setIsInterestPointModalOpen(false);
         } catch (error) {
-            console.error("Erreur lors de l'enregistrement des points d'intï¿½rï¿½t :", error);
+            console.error("Erreur lors de l'enregistrement des points d'intérêt :", error);
         }
     };
 
@@ -235,9 +235,7 @@ export default function UserProfile() {
 
 
 
-    const checkFormValidity = (newErrors) => {
-        setIsFormValid(!Object.values(newErrors).some(error => error !== '') && Object.values(editableUser).every(value => value !== ''));
-    };
+
 
 
     const validateField = (field, value) => {
@@ -261,7 +259,7 @@ export default function UserProfile() {
                 if (!value) {
                     error = "Phone number is required";
                 } else {
-                    // Supprimer les espaces et les caractï¿½res spï¿½ciaux pour la validation
+                    // Supprimer les espaces et les caractères spéciaux pour la validation
                     const cleanPhone = value.replace(/[\s-()]/g, '');
                     if (!/^\+?[0-9]{8,15}$/.test(cleanPhone)) {
                         error = "Phone number must be between 8 and 15 digits and can start with +";
@@ -293,11 +291,11 @@ export default function UserProfile() {
     };
 
     const handleInputChange = (field, value) => {
-        // Formatage spï¿½cial pour le numï¿½ro de tï¿½lï¿½phone
+        // Formatage spécial pour le numéro de téléphone
         if (field === "phone") {
-            // Supprimer tous les caractï¿½res non numï¿½riques sauf le + au dï¿½but
+            // Supprimer tous les caractères non numériques sauf le + au début
             const cleanValue = value.replace(/[^\d+]/g, '');
-            // Limiter la longueur ï¿½ 15 caractï¿½res
+            // Limiter la longueur à 15 caractères
             const limitedValue = cleanValue.slice(0, 15);
             value = limitedValue;
         }
@@ -320,7 +318,7 @@ export default function UserProfile() {
         setIsFormValid(isValid);
     };
     const openDeleteModal = (point) => {
-        console.log("Selected point for deletion:", point); // Vï¿½rifie ce qui est sï¿½lectionnï¿½
+        console.log("Selected point for deletion:", point); // Vérifie ce qui est sélectionné
         setPointToDelete(point);  // Assure-toi d'utiliser `point.value`
         setIsDeleteModalOpen(true);
     };
@@ -331,7 +329,7 @@ export default function UserProfile() {
         setPointToDelete(null);
     };
     const deleteInterestPoint = async () => {
-        console.log("Point to delete:", pointToDelete);  // Vï¿½rifie ce que contient pointToDelete
+        console.log("Point to delete:", pointToDelete);  // Vérifie ce que contient pointToDelete
 
         const storedUser = Cookies.get("user");
         if (!storedUser) {
@@ -355,10 +353,10 @@ export default function UserProfile() {
                 throw new Error("Failed to delete interest point");
             }
 
-            // Mettre ï¿½ jour les points d'intï¿½rï¿½t de l'utilisateur
+            // Mettre à jour les points d'intérêt de l'utilisateur
             const updatedUserInterestPoints = user.refinterestpoints.filter(point => point !== pointToDelete);
 
-            // Mettez ï¿½ jour les donnï¿½es de l'utilisateur pour reflï¿½ter les points supprimï¿½s
+            // Mettez à jour les données de l'utilisateur pour refléter les points supprimés
             const updatedUser = {
                 ...user,
                 refinterestpoints: updatedUserInterestPoints
@@ -367,14 +365,14 @@ export default function UserProfile() {
             setUser(updatedUser);
             Cookies.set("user", JSON.stringify(updatedUser), { expires: 7 });
 
-            // Mettre ï¿½ jour l'ï¿½tat local des points d'intï¿½rï¿½t
+            // Mettre à jour l'état local des points d'intérêt
             setInterestPoints(updatedUserInterestPoints);  // Seuls les points de l'utilisateur
 
-            // Fermer le modal aprï¿½s suppression
+            // Fermer le modal après suppression
             closeDeleteModal();
 
         } catch (error) {
-            console.error("Erreur lors de la suppression du point d'intï¿½rï¿½t :", error);
+            console.error("Erreur lors de la suppression du point d'intérêt :", error);
         }
     };
 
@@ -417,9 +415,7 @@ export default function UserProfile() {
         }
     }, [user]);
 
-    const navigateToCourse = (categoryId, moduleId, courseId) => {
-        navigate(`/categories/${categoryId}/modules/${moduleId}/courses/${courseId}`);
-    };
+
 
     if (!user) {
         return (
@@ -457,7 +453,7 @@ export default function UserProfile() {
                                                     className={`nav-link ${activeTab === 'interests' ? 'active' : ''}`}
                                                     onClick={() => setActiveTab('interests')}
                                                 >
-                                                    <i className="bi bi-star me-1"></i> Interets
+                                                    <i className="bi bi-star me-1"></i> Intérêts
                                                 </button>
                                             </li>
                                             <li className="nav-item">
@@ -502,7 +498,7 @@ export default function UserProfile() {
                             {activeTab === 'interests' && (
                                 <div className="card card-point w-100" style={{ position: 'relative' }}>
                                     <div className="section-header">
-                                        <h4 className="section-title">Points d'Interet</h4>
+                                        <h4 className="section-title">Points d'Intérêt</h4>
                                     </div>
                                     <div className="row p-3">
                                         {user.refinterestpoints && user.refinterestpoints.length > 0 ? (
@@ -526,13 +522,13 @@ export default function UserProfile() {
                                                 </div>
                                             ))
                                         ) : (
-                                            <p className="text-center">Aucun point d'intÃ©rÃªt disponible.</p>
+                                            <p className="text-center">Aucun point d'intérêt disponible.</p>
                                         )}
                                     </div>
                                     <button
                                         className="edit-button"
                                         onClick={openInterestPointModal}
-                                        title="Ajouter un point d'intÃ©rÃªt"
+                                        title="Ajouter un point d'intérêt"
                                         style={{
                                             position: 'absolute',
                                             bottom: '15px',
