@@ -41,15 +41,15 @@ const getCurrentUser = async (req, res) => {
 
 const signup = async (req, res) => {
   const { name, lastName, birthDate, phone, email, password } = req.body; // 'lastName' ici
-  const imagePath = req.file ? req.file.path : null; // RÃ©cupÃ¨re le chemin de l'image tÃ©lÃ©chargÃ©e
+  const imagePath = req.file ? req.file.path : null; // Récupère le chemin de l'image téléchargée
 
-  // Validation des champs nÃ©cessaires
+  // Validation des champs nécessaires
   if (!name || !lastName || !birthDate || !phone || !email || !password) {  // 'lastName' ici
       return res.status(400).json({ error: 'All fields are required' });
   }
 
   try {
-      // VÃ©rifie si l'utilisateur existe dÃ©jÃ 
+      // Vérifie si l'utilisateur existe déjà
       const existingUser = await User.findOne({ email });
       if (existingUser) {
           return res.status(400).json({ error: 'Email already exists' });
@@ -70,9 +70,9 @@ const signup = async (req, res) => {
 
       // Hacher le mot de passe avant de le sauvegarder
       const hashedPassword = await bcrypt.hash(password, 10);
-      const verificationToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+      const verificationToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '24h' }); // Augmenté à 24 heures
 
-      // CrÃ©er un nouvel utilisateur
+      // Créer un nouvel utilisateur
       const newUser = new User({
           name,
           lastName, // 'lastName' ici
@@ -80,18 +80,18 @@ const signup = async (req, res) => {
           phone,
           email,
           typeUser: "user", // Ajouter le type d'utilisateur
-          password: hashedPassword, // Mot de passe hachÃ©
+          password: hashedPassword, // Mot de passe haché
           image: imagePath, // Ajouter l'image
-          emailVerificationToken: verificationToken, // âœ… Stocke le token
-          isVerified: false // S'assurer que l'utilisateur n'est pas vÃ©rifiÃ© par dÃ©faut
+          emailVerificationToken: verificationToken, // ? Stocke le token
+          isVerified: false // S'assurer que l'utilisateur n'est pas vérifié par défaut
       });
 
-      // Sauvegarder l'utilisateur dans la base de donnÃ©es
+      // Sauvegarder l'utilisateur dans la base de données
       const savedUser = await newUser.save();
       console.log('User saved successfully:', savedUser._id);
 
       try {
-          // Envoyer l'email de vÃ©rification
+          // Envoyer l'email de vérification
           const verificationLink = `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
           const emailSubject = 'Verify Your Email';
           const emailBody = `
@@ -128,7 +128,7 @@ const signup = async (req, res) => {
           await sendEmail(newUser.email, emailSubject, emailBody);
           console.log('Verification email sent to:', newUser.email);
 
-          // Renvoyer la rÃ©ponse avec les informations appropriÃ©es
+          // Renvoyer la réponse avec les informations appropriées
           return res.status(201).json({
               message: 'User registered successfully. Please check your email to verify your account.',
               userId: savedUser._id,
@@ -136,7 +136,7 @@ const signup = async (req, res) => {
           });
       } catch (emailError) {
           console.error('Error sending verification email:', emailError);
-          // MÃªme si l'envoi d'email Ã©choue, l'utilisateur a Ã©tÃ© crÃ©Ã© avec succÃ¨s
+          // Même si l'envoi d'email échoue, l'utilisateur a été créé avec succès
           return res.status(201).json({
               message: 'User registered successfully, but we could not send the verification email. Please contact support.',
               userId: savedUser._id,
@@ -145,45 +145,69 @@ const signup = async (req, res) => {
       }
   } catch (error) {
       console.error('Error during signup:', error);
-      // VÃ©rifier si l'erreur est liÃ©e Ã  la validation MongoDB
+      // Vérifier si l'erreur est liée à la validation MongoDB
       if (error.name === 'ValidationError') {
           const validationErrors = Object.values(error.errors).map(err => err.message);
           return res.status(400).json({ error: validationErrors.join(', ') });
       }
-      // Erreur gÃ©nÃ©rique
+      // Erreur générique
       return res.status(500).json({ error: 'Internal server error during registration. Please try again later.' });
   }
 };
 
 const verifyEmail = async (req, res) => {
   const { token } = req.params;
-  console.log("Received token:", token); // âœ… Affiche le token reÃ§u
+  console.log("Received token:", token); // ? Affiche le token reçu
 
   try {
-      // VÃ©rifier le token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      console.log("Decoded token:", decoded); // âœ… Affiche les infos du token
+      // Vérifier le token
+      let decoded;
+      try {
+          decoded = jwt.verify(token, process.env.JWT_SECRET);
+          console.log("Decoded token:", decoded); // ? Affiche les infos du token
+      } catch (jwtError) {
+          console.error("JWT verification error:", jwtError);
 
-      // Trouver l'utilisateur avec ce token et cet email
-      const user = await User.findOne({ email: decoded.email, emailVerificationToken: token });
-      console.log("Found user:", user); // âœ… Affiche l'utilisateur trouvÃ© ou null
+          // Vérifier si l'erreur est due à l'expiration du token
+          if (jwtError.name === 'TokenExpiredError') {
+              return res.status(400).json({
+                  message: 'Verification link has expired. Please request a new verification email.',
+                  expired: true
+              });
+          }
 
-      if (!user) {
-          return res.status(400).json({ message: 'Invalid or expired token' });
+          return res.status(400).json({ message: 'Invalid verification token' });
       }
 
-      // Mettre Ã  jour l'utilisateur comme vÃ©rifiÃ©
+      // Trouver l'utilisateur avec cet email
+      const user = await User.findOne({ email: decoded.email });
+
+      if (!user) {
+          return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Vérifier si l'utilisateur est déjà vérifié
+      if (user.isVerified) {
+          return res.status(200).json({ message: 'Email already verified. You can log in.' });
+      }
+
+      // Vérifier si le token correspond
+      if (user.emailVerificationToken !== token) {
+          return res.status(400).json({ message: 'Invalid verification token' });
+      }
+
+      // Mettre à jour l'utilisateur comme vérifié
       user.isVerified = true;
-      user.emailVerificationToken = null; // âœ… Supprime le token aprÃ¨s vÃ©rification
+      user.emailVerificationToken = null; // ? Supprime le token après vérification
       await user.save();
 
-      console.log("User updated:", user); // âœ… VÃ©rifie si l'utilisateur est bien mis Ã  jour
+      console.log("User updated:", user); // ? Vérifie si l'utilisateur est bien mis à jour
 
       res.status(200).json({ message: 'Email verified successfully' });
 
   } catch (error) {
-      console.error("Token verification error:", error);
-      res.status(400).json({ message: 'Invalid or expired token' });
+      console.error("General verification error:", error);
+      res.status(500).json({ message: 'Server error during verification' });
   }
 };
 const validateImage = async (req, res) => {
@@ -195,28 +219,28 @@ const validateImage = async (req, res) => {
   }
 
   try {
-      console.log("Fichier reÃ§u:", req.file);
+      console.log("Fichier reçu:", req.file);
 
-      // VÃ©rifier si le fichier existe
+      // Vérifier si le fichier existe
       const fs = require('fs');
       if (!fs.existsSync(req.file.path)) {
           console.error(`Le fichier n'existe pas: ${req.file.path}`);
           return res.status(400).json({
               isValid: false,
-              message: "Le fichier image n'a pas Ã©tÃ© correctement tÃ©lÃ©chargÃ©"
+              message: "Le fichier image n'a pas été correctement téléchargé"
           });
       }
 
-      // VÃ©rifier si le fichier est une image
+      // Vérifier si le fichier est une image
       if (!req.file.mimetype.startsWith('image/')) {
           console.error(`Le fichier n'est pas une image: ${req.file.mimetype}`);
           return res.status(400).json({
               isValid: false,
-              message: "Le fichier doit Ãªtre une image (jpg, png, etc.)"
+              message: "Le fichier doit être une image (jpg, png, etc.)"
           });
       }
 
-      // VÃ©rifier la taille du fichier
+      // Vérifier la taille du fichier
       if (req.file.size > 5 * 1024 * 1024) { // 5MB
           console.error(`Le fichier est trop grand: ${req.file.size} octets`);
           return res.status(400).json({
@@ -230,16 +254,16 @@ const validateImage = async (req, res) => {
           const absolutePath = path.resolve(req.file.path);
           console.log(`Chemin absolu du fichier: ${absolutePath}`);
 
-          // VÃ©rifier Ã  nouveau si le fichier existe avec le chemin absolu
+          // Vérifier à nouveau si le fichier existe avec le chemin absolu
           if (!fs.existsSync(absolutePath)) {
               console.error(`Le fichier n'existe pas avec le chemin absolu: ${absolutePath}`);
               return res.status(400).json({
                   isValid: false,
-                  message: "Le fichier image n'a pas Ã©tÃ© correctement tÃ©lÃ©chargÃ©"
+                  message: "Le fichier image n'a pas été correctement téléchargé"
               });
           }
 
-          // VÃ©rifier si le fichier est lisible
+          // Vérifier si le fichier est lisible
           try {
               fs.accessSync(absolutePath, fs.constants.R_OK);
               console.log(`Le fichier est lisible: ${absolutePath}`);
@@ -252,27 +276,27 @@ const validateImage = async (req, res) => {
           }
 
           const faceValidation = await validateFace(absolutePath);
-          console.log("RÃ©sultat de la validation:", faceValidation);
+          console.log("Résultat de la validation:", faceValidation);
 
-          // VÃ©rifier que la rÃ©ponse est bien formÃ©e
+          // Vérifier que la réponse est bien formée
           if (typeof faceValidation !== 'object' || faceValidation === null) {
-              console.error("RÃ©ponse de validation invalide:", faceValidation);
+              console.error("Réponse de validation invalide:", faceValidation);
               return res.status(500).json({
                   isValid: false,
-                  message: "Erreur lors de la validation: rÃ©ponse invalide"
+                  message: "Erreur lors de la validation: réponse invalide"
               });
           }
 
-          // S'assurer que la rÃ©ponse contient les champs attendus
+          // S'assurer que la réponse contient les champs attendus
           if (!('isValid' in faceValidation) || !('message' in faceValidation)) {
-              console.error("RÃ©ponse de validation incomplÃ¨te:", faceValidation);
+              console.error("Réponse de validation incomplète:", faceValidation);
               return res.status(500).json({
                   isValid: false,
-                  message: "Erreur lors de la validation: rÃ©ponse incomplÃ¨te"
+                  message: "Erreur lors de la validation: réponse incomplète"
               });
           }
 
-          // Renvoyer la rÃ©ponse au client
+          // Renvoyer la réponse au client
           return res.json({
               isValid: Boolean(faceValidation.isValid),
               message: String(faceValidation.message || "")
@@ -285,7 +309,7 @@ const validateImage = async (req, res) => {
           });
       }
   } catch (error) {
-      console.error("Erreur gÃ©nÃ©rale lors de la validation de l'image:", error);
+      console.error("Erreur générale lors de la validation de l'image:", error);
       return res.status(500).json({
           isValid: false,
           message: `Erreur lors de la validation: ${error.message}`
@@ -296,7 +320,7 @@ const validateImage = async (req, res) => {
 const validateFace = async (imagePath) => {
   console.log(`Validation du visage pour l'image: ${imagePath}`);
 
-  // Vérifier si le fichier existe
+  // V rifier si le fichier existe
   const fs = require('fs');
   if (!fs.existsSync(imagePath)) {
     console.error(`Le fichier n'existe pas: ${imagePath}`);
@@ -308,7 +332,7 @@ const validateFace = async (imagePath) => {
       const scriptPath = path.resolve(__dirname, '../scripts/face_validator_cli.py');
       console.log(`Chemin du script Python: ${scriptPath}`);
 
-      // Vérifier si le script Python existe
+      // V rifier si le script Python existe
       if (!fs.existsSync(scriptPath)) {
         console.error(`Le script Python n'existe pas: ${scriptPath}`);
         resolve({ isValid: false, message: "Erreur de configuration: script Python introuvable" });
@@ -344,7 +368,7 @@ const validateFace = async (imagePath) => {
           error += chunk;
       });
 
-      // Définir un timeout pour le processus Python
+      // D finir un timeout pour le processus Python
       const timeout = setTimeout(() => {
           console.error('Timeout: Le processus Python prend trop de temps');
           pythonProcess.kill();
@@ -353,47 +377,47 @@ const validateFace = async (imagePath) => {
 
       pythonProcess.on('close', (code) => {
           clearTimeout(timeout); // Annuler le timeout
-          console.log(`Process Python terminé avec le code: ${code}`);
+          console.log(`Process Python termin  avec le code: ${code}`);
 
           if (code !== 0) {
               console.error('Python script error:', error);
-              // Au lieu de rejeter, on renvoie une réponse d'erreur
-              resolve({ isValid: false, message: "Erreur lors de l'exécution du script de validation" });
+              // Au lieu de rejeter, on renvoie une r ponse d'erreur
+              resolve({ isValid: false, message: "Erreur lors de l'ex cution du script de validation" });
               return;
           }
 
           try {
-              // Nettoyez la réponse pour s'assurer qu'elle est un JSON valide
+              // Nettoyez la r ponse pour s'assurer qu'elle est un JSON valide
               let cleanResult = result.trim();
-              console.log(`Résultat nettoyé: ${cleanResult}`);
+              console.log(`R sultat nettoy : ${cleanResult}`);
 
               if (!cleanResult) {
-                  console.error('Réponse vide du script Python');
-                  resolve({ isValid: false, message: 'Réponse vide du script Python' });
+                  console.error('R ponse vide du script Python');
+                  resolve({ isValid: false, message: 'R ponse vide du script Python' });
                   return;
               }
 
-              // Recherche d'un objet JSON complet dans la réponse
+              // Recherche d'un objet JSON complet dans la r ponse
               const jsonRegex = /(\{.*\})/s;  // Regex pour trouver un objet JSON complet
               const match = cleanResult.match(jsonRegex);
 
               if (match && match[1]) {
-                  // Extraire uniquement la partie JSON de la réponse
+                  // Extraire uniquement la partie JSON de la r ponse
                   let jsonString = match[1];
                   console.log(`JSON extrait par regex: ${jsonString}`);
 
                   try {
                       const response = JSON.parse(jsonString);
-                      console.log(`Réponse parsée:`, response);
+                      console.log(`R ponse pars e:`, response);
 
-                      // Vérifier que la réponse contient les champs attendus
+                      // V rifier que la r ponse contient les champs attendus
                       if (response.hasOwnProperty('isValid') && response.hasOwnProperty('message')) {
                           resolve(response);
                       } else {
-                          console.error('Réponse JSON incomplète:', response);
+                          console.error('R ponse JSON incompl te:', response);
                           resolve({
                               isValid: false,
-                              message: "Réponse incomplète du script de validation"
+                              message: "R ponse incompl te du script de validation"
                           });
                       }
                   } catch (e) {
@@ -401,16 +425,16 @@ const validateFace = async (imagePath) => {
 
                       // Tentative alternative: chercher le dernier objet JSON valide
                       try {
-                          // Trouver le dernier objet JSON dans la chaîne
+                          // Trouver le dernier objet JSON dans la cha ne
                           const lastJsonStart = cleanResult.lastIndexOf('{');
                           const lastJsonEnd = cleanResult.lastIndexOf('}');
 
                           if (lastJsonStart !== -1 && lastJsonEnd !== -1 && lastJsonEnd > lastJsonStart) {
                               jsonString = cleanResult.substring(lastJsonStart, lastJsonEnd + 1);
-                              console.log(`Dernier JSON trouvé: ${jsonString}`);
+                              console.log(`Dernier JSON trouv : ${jsonString}`);
 
                               const response = JSON.parse(jsonString);
-                              console.log(`Réponse parsée (dernier JSON):`, response);
+                              console.log(`R ponse pars e (dernier JSON):`, response);
 
                               if (response.hasOwnProperty('isValid') && response.hasOwnProperty('message')) {
                                   resolve(response);
@@ -418,20 +442,20 @@ const validateFace = async (imagePath) => {
                               }
                           }
 
-                          // Si on arrive ici, c'est qu'on n'a pas trouvé de JSON valide
-                          throw new Error("Aucun JSON valide trouvé");
+                          // Si on arrive ici, c'est qu'on n'a pas trouv  de JSON valide
+                          throw new Error("Aucun JSON valide trouv ");
                       } catch (e2) {
                           console.error('Second parse error:', e2);
                           resolve({
                               isValid: false,
-                              message: "Erreur de format dans la réponse du script"
+                              message: "Erreur de format dans la r ponse du script"
                           });
                       }
                   }
               } else {
-                  console.error('Aucun JSON valide trouvé par regex dans:', cleanResult);
+                  console.error('Aucun JSON valide trouv  par regex dans:', cleanResult);
 
-                  // Dernière tentative: chercher manuellement les accolades
+                  // Derni re tentative: chercher manuellement les accolades
                   try {
                       const lastOpenBrace = cleanResult.lastIndexOf('{');
                       const lastCloseBrace = cleanResult.lastIndexOf('}');
@@ -441,7 +465,7 @@ const validateFace = async (imagePath) => {
                           console.log(`JSON extrait manuellement: ${jsonString}`);
 
                           const response = JSON.parse(jsonString);
-                          console.log(`Réponse parsée (extraction manuelle):`, response);
+                          console.log(`R ponse pars e (extraction manuelle):`, response);
 
                           if (response.hasOwnProperty('isValid') && response.hasOwnProperty('message')) {
                               resolve(response);
@@ -449,25 +473,25 @@ const validateFace = async (imagePath) => {
                           }
                       }
                   } catch (e3) {
-                      console.error('Extraction manuelle échouée:', e3);
+                      console.error('Extraction manuelle  chou e:', e3);
                   }
 
-                  // Si toutes les tentatives échouent, renvoyer une erreur
+                  // Si toutes les tentatives  chouent, renvoyer une erreur
                   resolve({
                       isValid: false,
-                      message: "Format de réponse invalide du script de validation"
+                      message: "Format de r ponse invalide du script de validation"
                   });
               }
           } catch (e) {
               console.error('General error:', e, 'Raw result:', result);
               resolve({
                   isValid: false,
-                  message: "Erreur lors du traitement de la réponse"
+                  message: "Erreur lors du traitement de la r ponse"
               });
           }
       });
 
-      // Gérer les erreurs de lancement du processus
+      // G rer les erreurs de lancement du processus
       pythonProcess.on('error', (err) => {
           clearTimeout(timeout); // Annuler le timeout
           console.error('Failed to start Python process:', err);
@@ -480,16 +504,16 @@ const validateFace = async (imagePath) => {
 const signin = async (req, res) => {
   const { email, password, recaptchaToken } = req.body;
 
-  // Validation des champs nÃ©cessaires
+  // Validation des champs nécessaires
   if (!email || !password || !recaptchaToken) {
     return res.status(400).json({ error: "All fields and reCAPTCHA are required" });
   }
 
   try {
-    // VÃ©rifier le reCAPTCHA avec Google
+    // Vérifier le reCAPTCHA avec Google
     const recaptchaVerify = await axios.post(`https://www.google.com/recaptcha/api/siteverify`, null, {
       params: {
-        secret: process.env.RECAPTCHA_SECRET, // Ajoute la clÃ© secrÃ¨te dans ton .env
+        secret: process.env.RECAPTCHA_SECRET, // Ajoute la clé secrète dans ton .env
         response: recaptchaToken,
       },
     });
@@ -497,7 +521,7 @@ const signin = async (req, res) => {
     if (!recaptchaVerify.data.success) {
       return res.status(400).json({ error: "reCAPTCHA verification failed" });
     }
-      // VÃ©rifier si l'utilisateur existe
+      // Vérifier si l'utilisateur existe
       const user = await User.findOne({ email });
       if (!user) {
           return res.status(400).json({ msg: 'User not found' });
@@ -505,24 +529,24 @@ const signin = async (req, res) => {
       if (!user.isVerified) {
         return res.status(400).json({ msg: 'Please verify your email first' });
     }
-      // VÃ©rifier le mot de passe
+      // Vérifier le mot de passe
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
           return res.status(400).json({ msg: 'Incorrect password' });
       }
 
-      // GÃ©nÃ©rer un token JWT
+      // Générer un token JWT
       const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '6h' });
 
-      // Enregistrer le token JWT dans un cookie sÃ©curisÃ© (HTTPOnly)
+      // Enregistrer le token JWT dans un cookie sécurisé (HTTPOnly)
       res.cookie('token', token, {
-          httpOnly: true,  // Ne peut Ãªtre accÃ©dÃ© par JavaScript
+          httpOnly: true,  // Ne peut être accédé par JavaScript
           secure: process.env.NODE_ENV === 'production',  // Utilise 'secure' en mode production
-          sameSite: 'Strict', // EmpÃªche les attaques CSRF
-          maxAge: 3600000, // DurÃ©e du cookie (1 heure)
+          sameSite: 'Strict', // Empêche les attaques CSRF
+          maxAge: 3600000, // Durée du cookie (1 heure)
       });
 
-      // Retourner la rÃ©ponse avec les informations de l'utilisateur
+      // Retourner la réponse avec les informations de l'utilisateur
       res.status(200).json({
           msg: 'Login successful',
           token,
@@ -531,14 +555,14 @@ const signin = async (req, res) => {
               name: user.name,
               lastName: user.lastName, // Nom de famille
               birthDate: user.birthDate, // Date de naissance
-              phone: user.phone, // NumÃ©ro de tÃ©lÃ©phone
+              phone: user.phone, // Numéro de téléphone
               email: user.email, // Email
               image: user.image, // Image de profil
-              state: user.state, // Ã‰tat de l'utilisateur (par exemple actif, inactif, etc.)
-              coursepreferences: user.coursepreferences, // PrÃ©fÃ©rences de cours
-              refinterestpoints: user.refinterestpoints, // Points d'intÃ©rÃªt
-              refmodules: user.refmodules, // Modules de rÃ©fÃ©rence
-              reffriends: user.reffriends, // Amis de rÃ©fÃ©rence
+              state: user.state, // État de l'utilisateur (par exemple actif, inactif, etc.)
+              coursepreferences: user.coursepreferences, // Préférences de cours
+              refinterestpoints: user.refinterestpoints, // Points d'intérêt
+              refmodules: user.refmodules, // Modules de référence
+              reffriends: user.reffriends, // Amis de référence
               typeUser: user.typeUser,
               isVerified: user.isVerified
 
@@ -559,7 +583,7 @@ const authenticate = (req, res, next) => {
 
   try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = decoded; // Sauvegarder l'utilisateur dÃ©codÃ© dans `req.user`
+      req.user = decoded; // Sauvegarder l'utilisateur décodé dans `req.user`
       next();
   } catch (err) {
       console.error(err);
@@ -568,7 +592,7 @@ const authenticate = (req, res, next) => {
 };
 const editUser = async (req, res) => {
   try {
-    console.log("Params:", req.params); // ğŸ” VÃ©rifie ce qui est reÃ§u
+    console.log("Params:", req.params); // ?? Vérifie ce qui est reçu
     const { name, lastName, birthDate, phone, email, password } = req.body;
     const userId = req.params.id;
 
@@ -576,7 +600,7 @@ const editUser = async (req, res) => {
       return res.status(400).json({ error: "User ID is required" });
     }
 
-    console.log("User ID:", userId); // ğŸ” VÃ©rifie si l'ID est dÃ©fini
+    console.log("User ID:", userId); // ?? Vérifie si l'ID est défini
 
     const imagePath = req.file ? req.file.path : null;
 
@@ -615,7 +639,7 @@ const getUserById = async (req, res) => {
   try {
       const { id } = req.params;
 
-      // VÃ©rifie si l'ID est valide
+      // Vérifie si l'ID est valide
       if (!id.match(/^[0-9a-fA-F]{24}$/)) {
           return res.status(400).json({ error: "Invalid user ID format" });
       }
@@ -639,14 +663,14 @@ const sendVerificationCode = async (req, res) => {
 
   try {
     if (!phone) {
-      return res.status(400).json({ message: 'NumÃ©ro de tÃ©lÃ©phone est requis' });
+      return res.status(400).json({ message: 'Numéro de téléphone est requis' });
     }
 
     // Find the user by phone number
     const user = await User.findOne({ phone });
     if (!user) {
       console.log("User not found:", phone);
-      return res.status(404).json({ message: 'NumÃ©ro de tÃ©lÃ©phone non trouvÃ©' });
+      return res.status(404).json({ message: 'Numéro de téléphone non trouvé' });
     }
 
     // Generate a verification code
@@ -658,12 +682,12 @@ const sendVerificationCode = async (req, res) => {
 
     // Send SMS with Twilio
     await client.messages.create({
-      body: `Votre code de vÃ©rification est : ${verificationCode}`,
+      body: `Votre code de vérification est : ${verificationCode}`,
       from: process.env.TWILIO_PHONE_NUMBER,
       to: phone,
     });
 
-    res.status(200).json({ message: 'Code de vÃ©rification envoyÃ© par SMS' });
+    res.status(200).json({ message: 'Code de vérification envoyé par SMS' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Erreur interne du serveur' });
@@ -679,7 +703,7 @@ const verifyCode = async (req, res) => {
     if (!user || user.verificationCode !== code) {
       return res.status(400).json({ message: 'Code invalide' });
     }
-    res.status(200).json({ message: 'Code vÃ©rifiÃ© avec succÃ¨s' });
+    res.status(200).json({ message: 'Code vérifié avec succès' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Erreur interne du serveur' });
@@ -693,7 +717,7 @@ const resetPassword = async (req, res) => {
   try {
     const user = await User.findOne({ phone });
     if (!user) {
-      return res.status(404).json({ message: 'NumÃ©ro de tÃ©lÃ©phone non trouvÃ©' });
+      return res.status(404).json({ message: 'Numéro de téléphone non trouvé' });
     }
 
     // Hash the new password
@@ -702,14 +726,14 @@ const resetPassword = async (req, res) => {
     user.verificationCode = null; // Reset the verification code
     await user.save();
 
-    res.status(200).json({ message: 'Mot de passe mis Ã  jour avec succÃ¨s' });
+    res.status(200).json({ message: 'Mot de passe mis à jour avec succès' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Erreur interne du serveur' });
   }
 };
 /**
- * Nouvelle fonction : Envoi du code de vÃ©rification par e-mail uniquement pour la rÃ©initialisation du mot de passe
+ * Nouvelle fonction : Envoi du code de vérification par e-mail uniquement pour la réinitialisation du mot de passe
  */
 const forgotPasswordEmail = async (req, res) => {
   const { email } = req.body;
@@ -722,18 +746,18 @@ const forgotPasswordEmail = async (req, res) => {
       // Recherche de l'utilisateur par e-mail
       const user = await User.findOne({ email });
       if (!user) {
-          return res.status(404).json({ message: 'Utilisateur non trouvÃ©' });
+          return res.status(404).json({ message: 'Utilisateur non trouvé' });
       }
 
-      // GÃ©nÃ©ration d'un code de vÃ©rification Ã  6 chiffres
+      // Génération d'un code de vérification à 6 chiffres
       const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-      // Sauvegarde du code dans la base de donnÃ©es
+      // Sauvegarde du code dans la base de données
       user.verificationCode = verificationCode;
       await user.save();
 
-      // Contenu amÃ©liorÃ© du mail
-      const emailSubject = 'ğŸ” RÃ©initialisation de votre mot de passe';
+      // Contenu amélioré du mail
+      const emailSubject = '?? Réinitialisation de votre mot de passe';
       const emailBody = `
   <html>
     <head>
@@ -782,7 +806,7 @@ const forgotPasswordEmail = async (req, res) => {
       // Envoi du mail avec format HTML
       await sendEmail(email, emailSubject, emailBody);
 
-      res.status(200).json({ message: 'Code de vÃ©rification envoyÃ© par e-mail' });
+      res.status(200).json({ message: 'Code de vérification envoyé par e-mail' });
   } catch (error) {
       console.error(error);
       res.status(500).json({ message: 'Erreur interne du serveur' });
@@ -791,7 +815,7 @@ const forgotPasswordEmail = async (req, res) => {
 
 
   /**
-   * Nouvelle fonction : RÃ©initialisation du mot de passe aprÃ¨s vÃ©rification par e-mail
+   * Nouvelle fonction : Réinitialisation du mot de passe après vérification par e-mail
    */
   const resetPasswordEmail = async (req, res) => {
     const { email, code, password } = req.body;
@@ -804,16 +828,16 @@ const forgotPasswordEmail = async (req, res) => {
       // Recherche de l'utilisateur par e-mail
       const user = await User.findOne({ email });
       if (!user || user.verificationCode !== code) {
-        return res.status(400).json({ message: 'Code invalide ou utilisateur non trouvÃ©' });
+        return res.status(400).json({ message: 'Code invalide ou utilisateur non trouvé' });
       }
 
       // Hachage du nouveau mot de passe
       const hashedPassword = await bcrypt.hash(password, 10);
       user.password = hashedPassword;
-      user.verificationCode = null; // RÃ©initialisation du code de vÃ©rification
+      user.verificationCode = null; // Réinitialisation du code de vérification
       await user.save();
 
-      res.status(200).json({ message: 'Mot de passe mis Ã  jour avec succÃ¨s' });
+      res.status(200).json({ message: 'Mot de passe mis à jour avec succès' });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: 'Erreur interne du serveur' });
@@ -836,7 +860,7 @@ const forgotPasswordEmail = async (req, res) => {
                 typeUser: "user",
                 image: decoded.picture,
                 authProvider: 'google',
-                isVerified: true // Les utilisateurs Google sont automatiquement vÃ©rifiÃ©s
+                isVerified: true // Les utilisateurs Google sont automatiquement vérifiés
             });
             await user.save();
         }
