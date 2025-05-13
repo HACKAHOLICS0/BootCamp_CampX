@@ -20,12 +20,9 @@ services:
     image: mongo:latest
     volumes:
       - mongo-data:/data/db  # persistent storage for MongoDB
-    networks:
-      - app-network
+    
 
-  networks:
-    app-network:
-      driver: bridge
+ 
 
   volumes:
     mongo-data:
