@@ -1,0 +1,31 @@
+version: '3.8'
+services:
+  front:
+    build: ./pi
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_BACKEND_URL=http://localhost:5000
+    depends_on:
+      - back
+
+  back:
+    build: ./piBack
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGO_URL=mongodb://host.docker.internal:27017/appdb
+
+  mongo:
+    image: mongo:latest
+    volumes:
+      - mongo-data:/data/db  # persistent storage for MongoDB
+    networks:
+      - app-network
+
+  networks:
+    app-network:
+      driver: bridge
+
+  volumes:
+    mongo-data:
