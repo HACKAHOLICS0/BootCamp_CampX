@@ -1,10 +1,10 @@
-# BootCamp_CampV
+# BootCamp_CampX
 
 Une plateforme d'apprentissage en ligne complète développée dans le cadre du bootcamp, intégrant des vidéos interactives, des quiz, un chatbot intelligent et un système de reconnaissance faciale pour garantir l'engagement des apprenants.
 
 ## Aperçu
 
-Ce projet a été développé dans le cadre du programme de formation BootCamp_CampV. Il s'agit d'une plateforme e-learning complète offrant une expérience d'apprentissage immersive et interactive. Elle intègre des technologies avancées comme la reconnaissance faciale, la transcription audio, et l'intelligence artificielle pour améliorer l'expérience d'apprentissage.
+Ce projet a été développé dans le cadre du programme de formation BootCamp_CampX. Il s'agit d'une plateforme e-learning complète offrant une expérience d'apprentissage immersive et interactive. Elle intègre des technologies avancées comme la reconnaissance faciale, la transcription audio, et l'intelligence artificielle pour améliorer l'expérience d'apprentissage.
 
 ### Objectifs du Projet
 
@@ -183,8 +183,8 @@ Ce projet a été développé dans le cadre du programme de formation BootCamp_C
 
 1. Cloner le dépôt
    ```bash
-   git clone https://github.com/HACKAHOLICS30/BootCamp_CampV.git
-   cd BootCamp_CampV
+   git clone https://github.com/HACKAHOLICS30/BootCamp_CampX.git
+   cd BootCamp_CampX
    ```
 
 2. Installer les dépendances du Backend
@@ -302,11 +302,11 @@ Pour contribuer au projet:
 | Branche | Dernière mise à jour | Statut | Commits | Description |
 |---------|---------------------|--------|---------|-------------|
 | main    | 10 minutes ago      | 3/3    | Default | Branche principale stable |
-| firas   | Last week           | 29/1   | Active  | Développement des fonctionnalités de quiz |
-| achraf  | 9 hours ago         | 12/4   | Active  | Intégration de la reconnaissance faciale |
-| ach2   | 20 hours ago        | 12/1   | Active  | Améliorations de l'interface utilisateur |
-| ahmed   | 4 days ago          | 52/1   | Active  | Fonctionnalités avancées pour la prochaine version |
-| khalil  | Last week           | 41/34  | Active  | Corrections de bugs et optimisations |
+| #1ras   | Last week           | 29/1   | Active  | Développement des fonctionnalités de quiz |
+| #lmraf  | 9 hours ago         | 12/4   | Active  | Intégration de la reconnaissance faciale |
+| #r7i2   | 20 hours ago        | 12/1   | Active  | Améliorations de l'interface utilisateur |
+| ahead   | 4 days ago          | 52/1   | Active  | Fonctionnalités avancées pour la prochaine version |
+| sha1:1  | Last week           | 41/34  | Active  | Corrections de bugs et optimisations |
 
 ### Standards de Développement
 
@@ -330,7 +330,7 @@ Ce projet est sous licence [MIT](LICENSE), ce qui permet une utilisation libre t
 ### Équipe de Développement
 Pour toute question technique ou suggestion d'amélioration, veuillez contacter l'équipe de développement via:
 - **GitHub**: Ouvrir une issue dans le dépôt
-- **Email**: [équipe@bootcampv.com](mailto:équipe@bootcampv.com)
+- **Email**: [équipe@bootcampx.com](mailto:équipe@bootcampx.com)
 
 ### Support Utilisateur
 Pour l'assistance aux utilisateurs de la plateforme:
@@ -348,6 +348,6 @@ Pour l'assistance aux utilisateurs de la plateforme:
 
 ---
 
-Développé avec passion dans le cadre du programme HACKAHOLICS30/BootCamp_CampV.
+Développé avec passion dans le cadre du programme HACKAHOLICS30/BootCamp_CampX.
 
-![Logo BootCamp_CampV](https://github.com/HACKAHOLICS30/BootCamp_CampV/raw/main/logo.png)
+![Logo BootCamp_CampX](https://github.com/HACKAHOLICS30/BootCamp_CampX/raw/main/logo.png)
