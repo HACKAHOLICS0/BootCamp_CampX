@@ -131,7 +131,7 @@ export default function Navbar() {
       <div className="container d-flex align-items-center justify-content-between">
         <h1 className="logo me-auto text-light">
           <Link to="/" className="text-light text-decoration-none">
-            <span className="logo-text">camp X </span>
+            <span className="logo-text">camp XX </span>
 
           </Link>
         </h1>
