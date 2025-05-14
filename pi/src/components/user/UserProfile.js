@@ -234,10 +234,6 @@ export default function UserProfile() {
     const [isFormValid, setIsFormValid] = useState(false);
 
 
-
-
-
-
     const validateField = (field, value) => {
         let error = "";
         switch (field) {
