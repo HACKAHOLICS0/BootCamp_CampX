@@ -4,7 +4,7 @@ const config = {
     apiBaseUrl: 'https://ikramsegni.fr/api',  // Utiliser HTTPS en production
     stripePublicKey: process.env.REACT_APP_STRIPE_PUBLIC_KEY,
     paymentApiUrl: 'https://ikramsegni.fr/api/payments',  // Utiliser HTTPS
-    websocketUrl: 'wss://ikramsegni.fr/ws',  // Ajout de l'URL WebSocket sans port spécifique
+    websocketUrl: 'wss://ikramsegni.fr/ws',  // Ajout de l'URL WebSocket sans port spï¿½cifique
     endpoints: {
         courses: '/api/courses',
         quizzes: '/api/quiz',

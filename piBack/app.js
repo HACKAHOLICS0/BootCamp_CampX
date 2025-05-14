@@ -11,7 +11,6 @@ const adminRoutes = require("./routes/AdminRoutes");
 const moduleRoutes = require("./routes/moduleRoutes");
 const http = require("http");
 const { Server } = require("socket.io");
-
 const quizRoutes=require('./routes/quizRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const courseRoutes = require('./routes/courseRoutes');
@@ -23,6 +22,7 @@ const connectDB = require("./config/dbConfig");
 const eventRoutes = require('./routes/eventRoutes');
 const youtubeRecommendationRoutes = require('./routes/youtubeRecommendationRoutes');
 const certificateRoutes = require('./routes/certificateRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
 
 require("dotenv").config({ path: "./config/.env" });
 
@@ -44,10 +44,13 @@ const paymentRoutes = require('./routes/paymentRoutes'); // Add payment routes
 const app = express();
 const server = http.createServer(app);
 
-// Liste des origines autorisées
+// Liste des origines autorisï¿½es
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
+  'http://localhost:5000',
+  'http://localhost:5002',
+  'http://localhost:5003',
   'http://www.ikramsegni.fr',
   'https://www.ikramsegni.fr',
   'http://ikramsegni.fr',
@@ -78,11 +81,11 @@ const io = new Server(server, {
 // Configuration CORS pour Express
 const corsOptions = {
   origin: function (origin, callback) {
-    // Autoriser les requêtes sans origin (comme Postman ou curl)
+    // Autoriser les requï¿½tes sans origin (comme Postman ou curl)
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.log('Origin non autorisée:', origin);
+      console.log('Origin non autorisï¿½e:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -113,30 +116,30 @@ app.use(passport.initialize());
 app.use(express.json()); // Activer le parsing JSON
 app.use(express.urlencoded({ extended: true }));
 
-// Vérifier si les dossiers pour les fichiers statiques existent
+// Vï¿½rifier si les dossiers pour les fichiers statiques existent
 const uploadsDir = path.join(__dirname, "uploads");
 const publicDir = path.join(__dirname, "public");
 const qrCodesDir = path.join(__dirname, "public/qrcodes");
 const icsDir = path.join(__dirname, "public/ics");
 
-// Créer les dossiers s'ils n'existent pas
+// Crï¿½er les dossiers s'ils n'existent pas
 if (!fs.existsSync(uploadsDir)) {
-  console.log('Création du dossier uploads...');
+  console.log('Crï¿½ation du dossier uploads...');
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
 if (!fs.existsSync(publicDir)) {
-  console.log('Création du dossier public...');
+  console.log('Crï¿½ation du dossier public...');
   fs.mkdirSync(publicDir, { recursive: true });
 }
 
 if (!fs.existsSync(qrCodesDir)) {
-  console.log('Création du dossier public/qrcodes...');
+  console.log('Crï¿½ation du dossier public/qrcodes...');
   fs.mkdirSync(qrCodesDir, { recursive: true });
 }
 
 if (!fs.existsSync(icsDir)) {
-  console.log('Création du dossier public/ics...');
+  console.log('Crï¿½ation du dossier public/ics...');
   fs.mkdirSync(icsDir, { recursive: true });
 }
 
@@ -144,7 +147,7 @@ if (!fs.existsSync(icsDir)) {
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/public", express.static(path.join(__dirname, "public")));
 
-// Afficher les chemins des dossiers statiques pour le débogage
+// Afficher les chemins des dossiers statiques pour le dï¿½bogage
 console.log('Dossier uploads:', uploadsDir);
 console.log('Dossier public:', publicDir);
 console.log('Dossier QR codes:', qrCodesDir);
@@ -165,21 +168,21 @@ app.use('/public', (req, res, next) => {
   next();
 }, express.static(path.join(__dirname, 'public')));
 
-// Connexion MongoDB et démarrage du serveur
+// Connexion MongoDB et dï¿½marrage du serveur
 const startServer = async () => {
   try {
     await connectDB();
-    console.log("Connexion à MongoDB réussie");
-    
+    console.log("Connexion ï¿½ MongoDB rï¿½ussie");
+
     // Corriger les chemins d'image
     try {
       const { fixImagePaths } = require('./utils/imagePathFixer');
       await fixImagePaths();
-      console.log("Vérification des chemins d'image terminée");
+      console.log("Vï¿½rification des chemins d'image terminï¿½e");
     } catch (error) {
       console.error("Erreur lors de la correction des chemins d'image:", error);
     }
-    
+
     initializePoints();
 
     // Start Server
@@ -188,7 +191,7 @@ const startServer = async () => {
       console.log(`Server running on port ${port}`);
     });
   } catch (err) {
-    console.error("Erreur lors du démarrage du serveur:", err);
+    console.error("Erreur lors du dï¿½marrage du serveur:", err);
   }
 };
 
@@ -216,6 +219,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api', transcriptionRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/certificates', certificateRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Routes pour le moteur de recommandation
 const recommendationRoutes = require('./routes/recommendationRoutes');
@@ -224,13 +228,13 @@ app.use('/api/recommendations', recommendationRoutes);
 // Routes pour les recommandations YouTube
 app.use('/api/youtube', youtubeRecommendationRoutes);
 
-// Routes pour le proxy vidéo
+// Routes pour le proxy vidï¿½o
 const videoProxyRoutes = require('./routes/videoProxy');
 app.use('/api/video-proxy', videoProxyRoutes);
 
 // Socket.IO events
 io.on('connection', (socket) => {
-  console.log('Un utilisateur s\'est connecté');
+  console.log('Un utilisateur s\'est connectï¿½');
   let currentUser = null;
 
   // Authentification du socket
@@ -243,10 +247,10 @@ io.on('connection', (socket) => {
       socket.userId = userId;
       socket.displayName = displayName;
       socket.avatar = avatar || '';
-      console.log(`Utilisateur ${displayName} (${userId}) authentifié avec avatar: ${avatar}`);
+      console.log(`Utilisateur ${displayName} (${userId}) authentifiï¿½ avec avatar: ${avatar}`);
     } catch (error) {
       console.error('Erreur d\'authentification:', error);
-      socket.emit('auth_error', { message: 'Authentification échouée' });
+      socket.emit('auth_error', { message: 'Authentification ï¿½chouï¿½e' });
     }
   });
 
@@ -257,11 +261,11 @@ io.on('connection', (socket) => {
       console.log('Join room data:', data);
 
       if (!roomId || !userId || !displayName) {
-        console.error('Données manquantes:', data);
+        console.error('Donnï¿½es manquantes:', data);
         return;
       }
 
-      // Vérifier si la room existe, sinon la créer
+      // Vï¿½rifier si la room existe, sinon la crï¿½er
       let chatRoom = await ChatRoom.findOne({ name: roomId });
 
       try {
@@ -270,10 +274,10 @@ io.on('connection', (socket) => {
             name: roomId,
             createdBy: userId
           });
-          console.log('Nouvelle room créée:', roomId);
+          console.log('Nouvelle room crï¿½ï¿½e:', roomId);
         }
 
-        // Mettre à jour ou ajouter l'utilisateur avec son avatar
+        // Mettre ï¿½ jour ou ajouter l'utilisateur avec son avatar
         const existingParticipant = chatRoom.participants.find(p => p.userId === userId);
         if (existingParticipant) {
           existingParticipant.username = displayName;
@@ -286,14 +290,14 @@ io.on('connection', (socket) => {
         socket.join(roomId);
         console.log(`Utilisateur ${displayName} (${userId}) a rejoint la room: ${roomId}`);
 
-        // Récupérer tous les participants avec leurs avatars
+        // Rï¿½cupï¿½rer tous les participants avec leurs avatars
         const participants = chatRoom.participants.map(p => ({
           userId: p.userId,
           displayName: p.username,
           avatar: p.avatar || ''
         }));
 
-        // Envoyer la liste mise à jour des participants à tous les utilisateurs
+        // Envoyer la liste mise ï¿½ jour des participants ï¿½ tous les utilisateurs
         io.to(roomId).emit('users_in_room', participants);
 
         // Envoyer l'historique des messages avec les avatars
@@ -329,31 +333,31 @@ io.on('connection', (socket) => {
   socket.on('send_message', async (data) => {
     try {
       const { roomId, userId, message, username, displayName, avatar } = data;
-      console.log('Message reçu:', data);
+      console.log('Message reï¿½u:', data);
 
       if (!userId || !roomId || !message) {
-        console.error('Données manquantes:', data);
+        console.error('Donnï¿½es manquantes:', data);
         return;
       }
 
       // Trouver la room et ajouter le message
       const chatRoom = await ChatRoom.findOne({ name: roomId });
       if (!chatRoom) {
-        console.error('Room non trouvée:', roomId);
+        console.error('Room non trouvï¿½e:', roomId);
         return;
       }
 
       // S'assurer que l'utilisateur est un participant
       const participant = chatRoom.participants.find(p => p.userId === userId);
       if (!participant) {
-        console.error('Utilisateur non trouvé dans la room:', userId);
+        console.error('Utilisateur non trouvï¿½ dans la room:', userId);
         return;
       }
 
-      // Utiliser l'avatar le plus récent
+      // Utiliser l'avatar le plus rï¿½cent
       const messageAvatar = avatar || participant.avatar || '';
 
-      // Mettre à jour l'avatar du participant si nécessaire
+      // Mettre ï¿½ jour l'avatar du participant si nï¿½cessaire
       if (avatar && avatar !== participant.avatar) {
         participant.avatar = avatar;
         await chatRoom.save();
@@ -363,10 +367,10 @@ io.on('connection', (socket) => {
       chatRoom.addMessage(userId, username || displayName || participant.username, message, messageAvatar);
       await chatRoom.save();
 
-      // Récupérer le dernier message ajouté
+      // Rï¿½cupï¿½rer le dernier message ajoutï¿½
       const newMessage = chatRoom.messages[chatRoom.messages.length - 1].toObject();
 
-      // Préparer le message à envoyer avec toutes les informations
+      // Prï¿½parer le message ï¿½ envoyer avec toutes les informations
       const messageToSend = {
         ...newMessage,
         userId,
@@ -375,9 +379,9 @@ io.on('connection', (socket) => {
         avatar: messageAvatar
       };
 
-      console.log('Message envoyé à la room:', roomId, messageToSend);
+      console.log('Message envoyï¿½ ï¿½ la room:', roomId, messageToSend);
 
-      // Émettre le message à tous les membres de la room
+      // ï¿½mettre le message ï¿½ tous les membres de la room
       io.to(roomId).emit('receive_message', messageToSend);
     } catch (error) {
       console.error('Erreur lors de l\'envoi du message:', error);
@@ -386,7 +390,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    console.log(`Utilisateur ${socket.displayName || 'inconnu'} s'est déconnecté`);
+    console.log(`Utilisateur ${socket.displayName || 'inconnu'} s'est dï¿½connectï¿½`);
   });
 });
 
@@ -396,35 +400,35 @@ app.get('/api/points', async (req, res) => {
       const points = await interestPointModel.find();
       res.status(200).json(points);
   } catch (err) {
-      console.error("Erreur lors de la récupération des points d'intérêt:", err);
+      console.error("Erreur lors de la rï¿½cupï¿½ration des points d'intï¿½rï¿½t:", err);
       res.status(500).json({ message: "Erreur serveur" });
   }
 });
 
-// Route pour récupérer les informations de l'utilisateur connecté
+// Route pour rï¿½cupï¿½rer les informations de l'utilisateur connectï¿½
 const { authMiddleware } = require('./middleware/authMiddleware');
 const User = require('./Model/User');
 app.get('/api/users/me', authMiddleware, async (req, res) => {
   try {
-    // L'utilisateur est déjà disponible dans req.user grâce au middleware d'authentification
+    // L'utilisateur est dï¿½jï¿½ disponible dans req.user grï¿½ce au middleware d'authentification
     const user = req.user;
 
-    console.log("Récupération des informations utilisateur pour:", user._id);
+    console.log("Rï¿½cupï¿½ration des informations utilisateur pour:", user._id);
 
-    // Récupérer l'utilisateur avec les cours achetés
+    // Rï¿½cupï¿½rer l'utilisateur avec les cours achetï¿½s
     const userWithCourses = await User.findById(user._id)
       .populate('enrolledCourses.courseId', 'title description');
 
     if (!userWithCourses) {
-      console.log("Utilisateur non trouvé dans la base de données");
-      return res.status(404).json({ message: 'Utilisateur non trouvé' });
+      console.log("Utilisateur non trouvï¿½ dans la base de donnï¿½es");
+      return res.status(404).json({ message: 'Utilisateur non trouvï¿½' });
     }
 
-    // Vérifier et formater les données des cours achetés
+    // Vï¿½rifier et formater les donnï¿½es des cours achetï¿½s
     if (userWithCourses.enrolledCourses && Array.isArray(userWithCourses.enrolledCourses)) {
-      console.log("Nombre de cours achetés:", userWithCourses.enrolledCourses.length);
+      console.log("Nombre de cours achetï¿½s:", userWithCourses.enrolledCourses.length);
 
-      // Afficher les détails des cours achetés pour le débogage
+      // Afficher les dï¿½tails des cours achetï¿½s pour le dï¿½bogage
       userWithCourses.enrolledCourses.forEach((course, index) => {
         console.log(`Cours ${index + 1}:`, course);
         if (course.courseId) {
@@ -439,13 +443,13 @@ app.get('/api/users/me', authMiddleware, async (req, res) => {
         }
       });
     } else {
-      console.log("Aucun cours acheté trouvé ou format inattendu");
+      console.log("Aucun cours achetï¿½ trouvï¿½ ou format inattendu");
     }
 
     // Retourner les informations de l'utilisateur
     res.status(200).json(userWithCourses);
   } catch (error) {
-    console.error('Erreur lors de la récupération des informations utilisateur:', error);
+    console.error('Erreur lors de la rï¿½cupï¿½ration des informations utilisateur:', error);
     res.status(500).json({ message: 'Erreur serveur' });
   }
 });
@@ -455,12 +459,12 @@ app.get('/', (req, res) => {
   res.send('API is running');
 });
 
-// Route pour vérifier l'état du serveur
+// Route pour vï¿½rifier l'ï¿½tat du serveur
 app.get('/api/status', (req, res) => {
   res.status(200).json({ status: 'ok', message: 'Server is running' });
 });
 
-// Gestion des routes non définies
+// Gestion des routes non dï¿½finies
 app.all("*", (req, res) => {
   res.status(404).json({ message: "Route not found" });
 });
