@@ -318,7 +318,7 @@ export default function UserProfile() {
         setIsFormValid(isValid);
     };
     const openDeleteModal = (point) => {
-        console.log("Selected point for deletion:", point); // V rifie ce qui est s lectionn 
+        console.log("Selected point for deletion:", point); // V rifie ce qui est s lectionn
         setPointToDelete(point);  // Assure-toi d'utiliser `point.value`
         setIsDeleteModalOpen(true);
     };
@@ -453,7 +453,7 @@ export default function UserProfile() {
                                                     className={`nav-link ${activeTab === 'interests' ? 'active' : ''}`}
                                                     onClick={() => setActiveTab('interests')}
                                                 >
-                                                    <i className="bi bi-star me-1"></i> Int r ts
+                                                    <i className="bi bi-star me-1"></i> Interets
                                                 </button>
                                             </li>
                                             <li className="nav-item">
@@ -498,7 +498,7 @@ export default function UserProfile() {
                             {activeTab === 'interests' && (
                                 <div className="card card-point w-100" style={{ position: 'relative' }}>
                                     <div className="section-header">
-                                        <h4 className="section-title">Points d'Int r t</h4>
+                                        <h4 className="section-title">Points d'Interet</h4>
                                     </div>
                                     <div className="row p-3">
                                         {user.refinterestpoints && user.refinterestpoints.length > 0 ? (
@@ -522,13 +522,13 @@ export default function UserProfile() {
                                                 </div>
                                             ))
                                         ) : (
-                                            <p className="text-center">Aucun point d'int r t disponible.</p>
+                                            <p className="text-center">Aucun point d'interet disponible.</p>
                                         )}
                                     </div>
                                     <button
                                         className="edit-button"
                                         onClick={openInterestPointModal}
-                                        title="Ajouter un point d'int r t"
+                                        title="Ajouter un point d'interet"
                                         style={{
                                             position: 'absolute',
                                             bottom: '15px',
