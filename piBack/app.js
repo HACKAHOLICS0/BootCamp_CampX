@@ -22,7 +22,7 @@ const connectDB = require("./config/dbConfig");
 const eventRoutes = require('./routes/eventRoutes');
 const youtubeRecommendationRoutes = require('./routes/youtubeRecommendationRoutes');
 const certificateRoutes = require('./routes/certificateRoutes');
-const analyticsRoutes = require('./routes/analyticsRoutes');
+
 
 require("dotenv").config({ path: "./config/.env" });
 
@@ -219,7 +219,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api', transcriptionRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/certificates', certificateRoutes);
-app.use('/api/analytics', analyticsRoutes);
+
 
 // Routes pour le moteur de recommandation
 const recommendationRoutes = require('./routes/recommendationRoutes');
