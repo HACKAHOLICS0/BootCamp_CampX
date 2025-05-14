@@ -577,3 +577,60 @@ Image lue avec PIL: (360, 360)
 Dimensions de l'image: (360, 360, 3)
 Tentative avec params {'scaleFactor': 1.1, 'minNeighbors': 5, 'minSize': (30, 30)}: 2 visages détectés
 Envoi de la réponse JSON: {"isValid": true, "message": "Image valid\u00e9e avec succ\u00e8s"}
+Arguments: ['/home/ubuntu/camp-final/campx_finale/piBack/scripts/face_validator_cli.py', '/home/ubuntu/camp-final/campx_finale/piBack/uploads/1747200118807-1.png']
+Répertoire courant: /home/ubuntu/camp-final/campx_finale/piBack
+Chemin de l'image: /home/ubuntu/camp-final/campx_finale/piBack/uploads/1747200118807-1.png
+Taille du fichier: 374564 octets
+Le fichier est accessible en lecture: True
+Tentative de lecture de l'image: /home/ubuntu/camp-final/campx_finale/piBack/uploads/1747200118807-1.png
+Taille du fichier: 374564 octets
+Image lue avec PIL: (1601, 716)
+Dimensions de l'image: (716, 1601, 3)
+Tentative avec params {'scaleFactor': 1.1, 'minNeighbors': 5, 'minSize': (30, 30)}: 0 visages détectés
+Tentative avec params {'scaleFactor': 1.2, 'minNeighbors': 3, 'minSize': (20, 20)}: 0 visages détectés
+Tentative avec params {'scaleFactor': 1.3, 'minNeighbors': 2, 'minSize': (10, 10)}: 0 visages détectés
+Envoi de la réponse JSON: {"isValid": false, "message": "Aucun visage d\u00e9tect\u00e9. Veuillez t\u00e9l\u00e9charger une image contenant clairement votre visage."}
+Arguments: ['/home/ubuntu/camp-final/campx_finale/piBack/scripts/face_validator_cli.py', '/home/ubuntu/camp-final/campx_finale/piBack/uploads/1747200127541-unnamed.jpg']
+Répertoire courant: /home/ubuntu/camp-final/campx_finale/piBack
+Chemin de l'image: /home/ubuntu/camp-final/campx_finale/piBack/uploads/1747200127541-unnamed.jpg
+Taille du fichier: 26654 octets
+Le fichier est accessible en lecture: True
+Tentative de lecture de l'image: /home/ubuntu/camp-final/campx_finale/piBack/uploads/1747200127541-unnamed.jpg
+Taille du fichier: 26654 octets
+Image lue avec PIL: (360, 360)
+Dimensions de l'image: (360, 360, 3)
+Tentative avec params {'scaleFactor': 1.1, 'minNeighbors': 5, 'minSize': (30, 30)}: 2 visages détectés
+Envoi de la réponse JSON: {"isValid": true, "message": "Image valid\u00e9e avec succ\u00e8s"}
+Arguments: ['/home/ubuntu/camp-final/campx_finale/piBack/scripts/face_validator_cli.py', '/home/ubuntu/camp-final/campx_finale/piBack/uploads/1747200254869-unnamed.jpg']
+Répertoire courant: /home/ubuntu/camp-final/campx_finale/piBack
+Chemin de l'image: /home/ubuntu/camp-final/campx_finale/piBack/uploads/1747200254869-unnamed.jpg
+Taille du fichier: 26654 octets
+Le fichier est accessible en lecture: True
+Tentative de lecture de l'image: /home/ubuntu/camp-final/campx_finale/piBack/uploads/1747200254869-unnamed.jpg
+Taille du fichier: 26654 octets
+Image lue avec PIL: (360, 360)
+Dimensions de l'image: (360, 360, 3)
+Tentative avec params {'scaleFactor': 1.1, 'minNeighbors': 5, 'minSize': (30, 30)}: 2 visages détectés
+Envoi de la réponse JSON: {"isValid": true, "message": "Image valid\u00e9e avec succ\u00e8s"}
+Arguments: ['/home/ubuntu/camp-final/campx_finale/piBack/scripts/face_validator_cli.py', '/home/ubuntu/camp-final/campx_finale/piBack/uploads/1747200796019-unnamed.jpg']
+Répertoire courant: /home/ubuntu/camp-final/campx_finale/piBack
+Chemin de l'image: /home/ubuntu/camp-final/campx_finale/piBack/uploads/1747200796019-unnamed.jpg
+Taille du fichier: 26654 octets
+Le fichier est accessible en lecture: True
+Tentative de lecture de l'image: /home/ubuntu/camp-final/campx_finale/piBack/uploads/1747200796019-unnamed.jpg
+Taille du fichier: 26654 octets
+Image lue avec PIL: (360, 360)
+Dimensions de l'image: (360, 360, 3)
+Tentative avec params {'scaleFactor': 1.1, 'minNeighbors': 5, 'minSize': (30, 30)}: 2 visages détectés
+Envoi de la réponse JSON: {"isValid": true, "message": "Image valid\u00e9e avec succ\u00e8s"}
+Arguments: ['/home/ubuntu/camp-final/campx_finale/piBack/scripts/face_validator_cli.py', '/home/ubuntu/camp-final/campx_finale/piBack/uploads/1747200799616-unnamed.jpg']
+Répertoire courant: /home/ubuntu/camp-final/campx_finale/piBack
+Chemin de l'image: /home/ubuntu/camp-final/campx_finale/piBack/uploads/1747200799616-unnamed.jpg
+Taille du fichier: 26654 octets
+Le fichier est accessible en lecture: True
+Tentative de lecture de l'image: /home/ubuntu/camp-final/campx_finale/piBack/uploads/1747200799616-unnamed.jpg
+Taille du fichier: 26654 octets
+Image lue avec PIL: (360, 360)
+Dimensions de l'image: (360, 360, 3)
+Tentative avec params {'scaleFactor': 1.1, 'minNeighbors': 5, 'minSize': (30, 30)}: 2 visages détectés
+Envoi de la réponse JSON: {"isValid": true, "message": "Image valid\u00e9e avec succ\u00e8s"}

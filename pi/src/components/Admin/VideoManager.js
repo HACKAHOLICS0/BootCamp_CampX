@@ -14,11 +14,13 @@ import {
   ListItemText,
   ListItemSecondaryAction,
   Snackbar,
-  Alert
+  Alert,
+  CircularProgress
 } from '@mui/material';
 import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
 import axios from 'axios';
 import Cookies from 'js-cookie';
+import DirectUploadForm from './DirectUploadForm';
 
 const VideoManager = ({ courseId }) => {
   const [videos, setVideos] = useState([]);
@@ -49,7 +51,7 @@ const VideoManager = ({ courseId }) => {
       console.error('Error fetching videos:', error);
       setSnackbar({
         open: true,
-        message: 'Erreur lors de la rÃ©cupÃ©ration des vidÃ©os',
+        message: 'Erreur lors de la récupération des vidéos',
         severity: 'error'
       });
     }
@@ -87,52 +89,119 @@ const VideoManager = ({ courseId }) => {
     });
   };
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
+
     try {
+      // Vérifier si les champs requis sont remplis
+      if (!formData.title || !formData.description) {
+        setSnackbar({
+          open: true,
+          message: 'Veuillez remplir tous les champs requis',
+          severity: 'error'
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Vérifier si un fichier vidéo est sélectionné pour un nouvel ajout
+      if (!selectedVideo && !formData.videoUrl) {
+        setSnackbar({
+          open: true,
+          message: 'Veuillez sélectionner un fichier vidéo',
+          severity: 'error'
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       const token = Cookies.get('token');
       const formDataToSend = new FormData();
       formDataToSend.append('title', formData.title);
       formDataToSend.append('description', formData.description);
       formDataToSend.append('courseId', courseId);
+
       if (formData.videoUrl) {
         formDataToSend.append('video', formData.videoUrl);
+        console.log('Fichier vidéo ajouté au FormData:', formData.videoUrl.name);
       }
 
+      console.log('Envoi des données:', {
+        title: formData.title,
+        description: formData.description,
+        courseId: courseId,
+        hasVideo: !!formData.videoUrl
+      });
+
       if (selectedVideo) {
-        await axios.put(`https://ikramsegni.fr/api/videos/${selectedVideo._id}`, formDataToSend, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          }
-        });
-        setSnackbar({
-          open: true,
-          message: 'VidÃ©o mise Ã  jour avec succÃ¨s',
-          severity: 'success'
-        });
+        // Mise à jour d'une vidéo existante
+        console.log('Mise à jour de la vidéo:', selectedVideo._id);
+
+        try {
+          const response = await axios.put(`https://ikramsegni.fr/api/videos/${selectedVideo._id}`, formDataToSend, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'multipart/form-data'
+            },
+            timeout: 60000 // 60 secondes
+          });
+
+          console.log('Réponse de mise à jour:', response.data);
+          setSnackbar({
+            open: true,
+            message: 'Vidéo mise à jour avec succès',
+            severity: 'success'
+          });
+          handleClose();
+          fetchVideos();
+        } catch (updateError) {
+          console.error('Erreur lors de la mise à jour de la vidéo:', updateError);
+          setSnackbar({
+            open: true,
+            message: updateError.response?.data?.message || 'Erreur lors de la mise à jour de la vidéo',
+            severity: 'error'
+          });
+        }
       } else {
-        await axios.post('https://ikramsegni.fr/api/videos', formDataToSend, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          }
+        // Ajout d'une nouvelle vidéo
+        console.log('Ajout d\'une nouvelle vidéo');
+
+        // Utiliser le formulaire d'upload direct pour contourner les problèmes CORS
+        setDirectUploadData({
+          title: formData.title,
+          description: formData.description,
+          file: formData.videoUrl
         });
-        setSnackbar({
-          open: true,
-          message: 'VidÃ©o ajoutÃ©e avec succÃ¨s',
-          severity: 'success'
-        });
+        setShowDirectUpload(true);
+
+        // Note: Le reste du processus est géré par le composant DirectUploadForm
+        // et ses gestionnaires d'événements (success, error, complete)
       }
-      handleClose();
-      fetchVideos();
     } catch (error) {
       console.error('Error saving video:', error);
+      let errorMessage = 'Erreur lors de la sauvegarde de la vidéo';
+
+      if (error.response) {
+        console.error('Détails de l\'erreur:', error.response.data);
+        errorMessage = error.response.data.message || errorMessage;
+      } else if (error.request) {
+        console.error('Pas de réponse du serveur:', error.request);
+        errorMessage = 'Le serveur ne répond pas. Veuillez réessayer.';
+      } else {
+        console.error('Erreur de configuration:', error.message);
+        errorMessage = error.message || errorMessage;
+      }
+
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || 'Erreur lors de la sauvegarde de la vidÃ©o',
+        message: errorMessage,
         severity: 'error'
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -146,7 +215,7 @@ const VideoManager = ({ courseId }) => {
       });
       setSnackbar({
         open: true,
-        message: 'VidÃ©o supprimÃ©e avec succÃ¨s',
+        message: 'Vidéo supprimée avec succès',
         severity: 'success'
       });
       fetchVideos();
@@ -154,21 +223,67 @@ const VideoManager = ({ courseId }) => {
       console.error('Error deleting video:', error);
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || 'Erreur lors de la suppression de la vidÃ©o',
+        message: error.response?.data?.message || 'Erreur lors de la suppression de la vidéo',
         severity: 'error'
       });
     }
   };
 
+  // État pour le formulaire d'upload direct
+  const [showDirectUpload, setShowDirectUpload] = useState(false);
+  const [directUploadData, setDirectUploadData] = useState(null);
+
+  // Gestionnaires pour le composant DirectUploadForm
+  const handleDirectUploadSuccess = (data) => {
+    console.log('Upload réussi via formulaire direct:', data);
+    setSnackbar({
+      open: true,
+      message: 'Vidéo ajoutée avec succès',
+      severity: 'success'
+    });
+    setShowDirectUpload(false);
+    setDirectUploadData(null);
+    handleClose();
+    fetchVideos();
+  };
+
+  const handleDirectUploadError = (error) => {
+    console.error('Erreur lors de l\'upload via formulaire direct:', error);
+    setSnackbar({
+      open: true,
+      message: error.message || 'Erreur lors de l\'upload de la vidéo',
+      severity: 'error'
+    });
+    setShowDirectUpload(false);
+    setDirectUploadData(null);
+  };
+
+  const handleDirectUploadComplete = () => {
+    setIsSubmitting(false);
+  };
+
   return (
     <Box>
+      {/* Formulaire d'upload direct caché */}
+      {showDirectUpload && directUploadData && (
+        <DirectUploadForm
+          courseId={courseId}
+          title={directUploadData.title}
+          description={directUploadData.description}
+          file={directUploadData.file}
+          onSuccess={handleDirectUploadSuccess}
+          onError={handleDirectUploadError}
+          onComplete={handleDirectUploadComplete}
+        />
+      )}
+
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-        <Typography variant="h6">Liste des vidÃ©os</Typography>
+        <Typography variant="h6">Liste des vidéos</Typography>
         <button
           className="action-btn add"
           onClick={handleOpen}
         >
-          Ajouter une vidÃ©o
+          Ajouter une vidéo
         </button>
       </Box>
 
@@ -198,15 +313,15 @@ const VideoManager = ({ courseId }) => {
             ))
           ) : (
             <tr className="no-data">
-              <td colSpan="3">Aucune vidÃ©o trouvÃ©e</td>
+              <td colSpan="3">Aucune vidéo trouvée</td>
             </tr>
           )}
         </tbody>
       </table>
 
-      {/* Dialog pour ajouter une vidÃ©o */}
+      {/* Dialog pour ajouter une vidéo */}
       <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>Ajouter une nouvelle vidÃ©o</DialogTitle>
+        <DialogTitle>Ajouter une nouvelle vidéo</DialogTitle>
         <form onSubmit={handleSubmit}>
           <DialogContent>
             <TextField
@@ -233,7 +348,7 @@ const VideoManager = ({ courseId }) => {
             <TextField
               margin="dense"
               name="videoUrl"
-              label="URL de la vidÃ©o"
+              label="URL de la vidéo"
               type="file"
               fullWidth
               onChange={(e) => setFormData({ ...formData, videoUrl: e.target.files[0] })}
@@ -242,17 +357,27 @@ const VideoManager = ({ courseId }) => {
             />
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleClose}>Annuler</Button>
-            <Button type="submit" variant="contained" color="primary">
-              Ajouter
+            <Button onClick={handleClose} disabled={isSubmitting}>Annuler</Button>
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <CircularProgress size={24} color="inherit" style={{ marginRight: '8px' }} />
+                  Envoi en cours...
+                </>
+              ) : 'Ajouter'}
             </Button>
           </DialogActions>
         </form>
       </Dialog>
 
-      {/* Dialog pour Ã©diter une vidÃ©o */}
+      {/* Dialog pour éditer une vidéo */}
       <Dialog open={openEdit} onClose={handleClose}>
-        <DialogTitle>Modifier la vidÃ©o</DialogTitle>
+        <DialogTitle>Modifier la vidéo</DialogTitle>
         <form onSubmit={handleSubmit}>
           <DialogContent>
             <TextField
@@ -279,7 +404,7 @@ const VideoManager = ({ courseId }) => {
             <TextField
               margin="dense"
               name="videoUrl"
-              label="Nouvelle vidÃ©o (optionnel)"
+              label="Nouvelle vidéo (optionnel)"
               type="file"
               fullWidth
               onChange={(e) => setFormData({ ...formData, videoUrl: e.target.files[0] })}
@@ -287,9 +412,19 @@ const VideoManager = ({ courseId }) => {
             />
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleClose}>Annuler</Button>
-            <Button type="submit" variant="contained" color="primary">
-              Mettre Ã  jour
+            <Button onClick={handleClose} disabled={isSubmitting}>Annuler</Button>
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <CircularProgress size={24} color="inherit" style={{ marginRight: '8px' }} />
+                  Mise à jour...
+                </>
+              ) : 'Mettre à jour'}
             </Button>
           </DialogActions>
         </form>

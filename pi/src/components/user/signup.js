@@ -195,17 +195,9 @@ export default function Signup() {
                 toast.success(successMessage, {
                     position: "top-right",
                     autoClose: 5000,
-                    onClose: () => {
-                        // Redirection vers la page de connexion après la fermeture du toast
-                        history("/signin");
-                    }
-                });
+                                  });
 
-                // Redirection vers la page de connexion après un délai
-                setTimeout(() => {
-                    history("/signin");
-                }, 3000);
-            } catch (signupError) {
+                         } catch (signupError) {
                 console.error("Erreur lors de l'inscription:", signupError);
                 const errorMessage = signupError.message || "Une erreur est survenue lors de l'inscription";
                 setErrorDisplay(errorMessage);

@@ -82,7 +82,7 @@ const ModuleList = () => {
       <Container className="module-list-container">
         <div className="error-container">
           <Alert variant="danger" className="custom-error">
-            <div className="error-icon">‚ö†Ô∏è</div>
+            <div className="error-icon">??</div>
             <h3>Une erreur est survenue</h3>
             <p>{error}</p>
             <Button
@@ -90,7 +90,7 @@ const ModuleList = () => {
               onClick={() => fetchData()}
               className="retry-button"
             >
-              R√©essayer
+              RÈessayer
             </Button>
           </Alert>
         </div>
@@ -101,16 +101,17 @@ const ModuleList = () => {
   return (
     <Container className="module-list-container">
       <div className="module-header">
-        <h2>{category?.name || 'Modules'}</h2>
+        <h2 className="module-title">Modules</h2>
+        <h3>{category?.name || category?.title || 'Informatique'}</h3>
         <p>
-          {category?.description || 'Explorez notre collection de modules interactifs pour d√©velopper vos comp√©tences'}
+          {category?.description || 'Explorez notre collection de modules interactifs pour dÈvelopper vos compÈtences'}
         </p>
       </div>
 
       {modules.length === 0 ? (
         <Alert variant="info" className="empty-modules-alert">
-          <p className="mb-0">Aucun module disponible pour cette cat√©gorie.</p>
-          <p className="mb-0">Revenez bient√¥t pour d√©couvrir notre nouveau contenu !</p>
+          <p className="mb-0">Aucun module disponible pour cette catÈgorie.</p>
+          <p className="mb-0">Revenez bientÙt pour dÈcouvrir notre nouveau contenu !</p>
         </Alert>
       ) : (
         <Row xs={1} md={2} lg={3} className="g-4">
@@ -118,14 +119,14 @@ const ModuleList = () => {
             <Col key={module._id} className="module-column">
               <Card className="module-card">
                 <Card.Body>
-                  <Card.Title>{module.name}</Card.Title>
+                  <Card.Title>{module.title || module.name}</Card.Title>
                   <Card.Text>{module.description}</Card.Text>
                   <div className="module-stats">
                     <small>
                       <FaBook /> {module.coursesCount || 0} cours
                     </small>
                     <small>
-                      <FaClock /> {module.duration || '0'}h dur√©e totale
+                      <FaClock /> {module.duration || '0'}h durÈe totale
                     </small>
                   </div>
                   <Button

@@ -23,7 +23,7 @@ export const FaceRecognition = ({ userImage, onVerificationComplete }) => {
     const [verificationStartTime, setVerificationStartTime] = useState(null);
     const [successfulMatches, setSuccessfulMatches] = useState(0);
     const REQUIRED_MATCHES = 3; // Nombre de correspondances successives requises
-    const VERIFICATION_TIME = 10; // ChangÃ© Ã  10 secondes
+    const VERIFICATION_TIME = 10; // Changé à 10 secondes
     const [isVerified, setIsVerified] = useState(false);
     const [remainingSeconds, setRemainingSeconds] = useState(VERIFICATION_TIME);
 
@@ -34,10 +34,10 @@ export const FaceRecognition = ({ userImage, onVerificationComplete }) => {
     useEffect(() => {
         const loadModels = async () => {
             try {
-                setLoadingMessage('Chargement des modÃ¨les...');
+                setLoadingMessage('Chargement des modèles...');
                 // Essayer d'abord le chargement local
                 try {
-                    console.log("ðŸ“‚ Tentative de chargement depuis le dossier local...");
+                    console.log("?? Tentative de chargement depuis le dossier local...");
                     setLoadingMessage('Tentative de chargement local...');
                     await Promise.all([
                         faceapi.nets.faceRecognitionNet.loadFromUri('/models'),
@@ -45,35 +45,35 @@ export const FaceRecognition = ({ userImage, onVerificationComplete }) => {
                         faceapi.nets.ssdMobilenetv1.loadFromUri('/models'),
                         faceapi.nets.tinyFaceDetector.loadFromUri('/models')
                     ]);
-                    console.log("âœ… ModÃ¨les chargÃ©s depuis le dossier local!");
-                    setLoadingMessage('ModÃ¨les chargÃ©s, dÃ©marrage de la webcam...');
+                    console.log("? Modèles chargés depuis le dossier local!");
+                    setLoadingMessage('Modèles chargés, démarrage de la webcam...');
                     await startWebcam();
                 } catch (localErr) {
-                    console.error("âŒ Ã‰chec du chargement local:", localErr);
-                    
-                    // Si le chargement local Ã©choue, essayer le CDN
+                    console.error("? Échec du chargement local:", localErr);
+
+                    // Si le chargement local échoue, essayer le CDN
                     try {
                         const MODEL_URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
-                        console.log("ðŸŒ Tentative de chargement depuis:", MODEL_URL);
-                        setLoadingMessage('Chargement des modÃ¨les ...');
-                        
+                        console.log("?? Tentative de chargement depuis:", MODEL_URL);
+                        setLoadingMessage('Chargement des modèles ...');
+
                         await Promise.all([
                             faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
                             faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
                             faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
                             faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL)
                         ]);
-                        console.log("âœ… ModÃ¨les chargÃ©s depuis le CDN!");
-                        setLoadingMessage('ModÃ¨les chargÃ©s, dÃ©marrage de la webcam...');
+                        console.log("? Modèles chargés depuis le CDN!");
+                        setLoadingMessage('Modèles chargés, démarrage de la webcam...');
                         await startWebcam();
                     } catch (cdnErr) {
-                        console.error("âŒ Ã‰chec du chargement depuis le CDN:", cdnErr);
-                        throw new Error('Impossible de charger les modÃ¨les');
+                        console.error("? Échec du chargement depuis le CDN:", cdnErr);
+                        throw new Error('Impossible de charger les modèles');
                     }
                 }
             } catch (err) {
-                console.error("âŒ Erreur globale:", err);
-                setError('âŒ Impossible de charger les modÃ¨les. Veuillez vÃ©rifier votre connexion internet et rafraÃ®chir la page.');
+                console.error("? Erreur globale:", err);
+                setError('? Impossible de charger les modèles. Veuillez vérifier votre connexion internet et rafraîchir la page.');
                 setIsLoading(false);
             }
         };
@@ -97,26 +97,26 @@ export const FaceRecognition = ({ userImage, onVerificationComplete }) => {
                 const elapsedTime = (currentTime - verificationStartTime) / 1000;
                 const remaining = Math.max(0, VERIFICATION_TIME - elapsedTime);
                 setRemainingSeconds(remaining);
-                
-                // Si le temps est Ã©coulÃ©
+
+                // Si le temps est écoulé
                 if (remaining <= 0) {
                     clearInterval(timer);
-                    
+
                     if (matchPercentage >= 60) {
-                        setScanStatus('âœ… Visage vÃ©rifiÃ© !');
+                        setScanStatus('? Visage vérifié !');
                         setIsVerified(true);
                         setTimeout(() => {
                             onVerificationComplete(true);
                         }, 1000);
                     } else {
-                        setScanStatus('âŒ VÃ©rification Ã©chouÃ©e');
+                        setScanStatus('? Vérification échouée');
                         setShowModal(true);
-                        setModalMessage("Vous n'Ãªtes pas la mÃªme personne que sur la photo de profil. Veuillez rÃ©essayer.");
+                        setModalMessage("Vous n'êtes pas la même personne que sur la photo de profil. Veuillez réessayer.");
                         setVerificationStartTime(null);
                         setIsVerified(false);
                     }
                 }
-            }, 100); // Mise Ã  jour plus frÃ©quente
+            }, 100); // Mise à jour plus fréquente
         }
         return () => {
             if (timer) {
@@ -127,9 +127,9 @@ export const FaceRecognition = ({ userImage, onVerificationComplete }) => {
 
     const startWebcam = async () => {
         try {
-            console.log("ðŸŽ¥ DÃ©marrage de la webcam...");
-            setLoadingMessage('Activation de la camÃ©ra...');
-            
+            console.log("?? Démarrage de la webcam...");
+            setLoadingMessage('Activation de la caméra...');
+
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: {
                     width: { ideal: 1280 },
@@ -141,20 +141,20 @@ export const FaceRecognition = ({ userImage, onVerificationComplete }) => {
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
                 videoRef.current.onloadedmetadata = () => {
-                    console.log("âœ… Webcam dÃ©marrÃ©e avec succÃ¨s!");
+                    console.log("? Webcam démarrée avec succès!");
                     videoRef.current.play();
                     setIsLoading(false);
                     setLoadingMessage('');
                     setIsVerified(false);
                     setVerificationStartTime(Date.now());
                     setRemainingSeconds(VERIFICATION_TIME);
-                    setScanStatus('VÃ©rification en cours...');
+                    setScanStatus('Vérification en cours...');
                     detectFace();
                 };
             }
         } catch (err) {
-            console.error("âŒ Erreur d'accÃ¨s Ã  la camÃ©ra:", err);
-            setError("âŒ Impossible d'accÃ©der Ã  la camÃ©ra. Veuillez vÃ©rifier les permissions.");
+            console.error("? Erreur d'accès à la caméra:", err);
+            setError("? Impossible d'accéder à la caméra. Veuillez vérifier les permissions.");
             setIsLoading(false);
         }
     };
@@ -162,8 +162,8 @@ export const FaceRecognition = ({ userImage, onVerificationComplete }) => {
     const drawFaceFrame = (detection, canvas, displaySize) => {
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // Ajuster la taille de la boÃ®te de dÃ©tection
+
+        // Ajuster la taille de la boîte de détection
         const box = detection.detection.box;
         const drawBox = {
             x: box.x - (box.width * 0.15),
@@ -171,27 +171,27 @@ export const FaceRecognition = ({ userImage, onVerificationComplete }) => {
             width: box.width * 1.3,
             height: box.height * 1.3
         };
-        
-        // Redimensionner la boÃ®te selon la taille d'affichage
+
+        // Redimensionner la boîte selon la taille d'affichage
         const resizedBox = faceapi.resizeResults(drawBox, displaySize);
-        
+
         // Effet de scan lumineux
         const gradient = ctx.createLinearGradient(0, resizedBox.y, 0, resizedBox.y + resizedBox.height);
         gradient.addColorStop(0, 'rgba(0, 255, 0, 0.15)');
         gradient.addColorStop(0.5, 'rgba(0, 255, 0, 0.05)');
         gradient.addColorStop(1, 'rgba(0, 255, 0, 0.15)');
-        
+
         ctx.fillStyle = gradient;
         ctx.fillRect(resizedBox.x, resizedBox.y, resizedBox.width, resizedBox.height);
-        
+
         // Cadre principal avec coins arrondis
         ctx.strokeStyle = 'rgba(0, 255, 0, 0.8)';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.roundRect(resizedBox.x, resizedBox.y, resizedBox.width, resizedBox.height, 10);
         ctx.stroke();
-        
-        // Points de repÃ¨re avec taille rÃ©duite
+
+        // Points de repère avec taille réduite
         const landmarks = detection.landmarks.positions;
         ctx.fillStyle = 'rgba(0, 255, 0, 0.6)';
         for (let i = 0; i < landmarks.length; i++) {
@@ -200,7 +200,7 @@ export const FaceRecognition = ({ userImage, onVerificationComplete }) => {
             ctx.arc(point.x, point.y, 1, 0, 2 * Math.PI);
             ctx.fill();
         }
-        
+
         // Ligne de scan
         const scanLineY = resizedBox.y + (resizedBox.height * (scanProgress / 100));
         ctx.strokeStyle = 'rgba(0, 255, 0, 0.6)';
@@ -222,10 +222,10 @@ export const FaceRecognition = ({ userImage, onVerificationComplete }) => {
             ).withFaceLandmarks().withFaceDescriptors();
 
             if (detections.length === 0) {
-                setScanStatus('Aucun visage dÃ©tectÃ©');
+                setScanStatus('Aucun visage détecté');
                 setFaceDistanceMessage(`Placez votre visage dans le cadre (${formatTime(remainingSeconds)}s)`);
                 setMatchPercentage(0);
-                
+
                 if (canvasRef.current) {
                     const ctx = canvasRef.current.getContext('2d');
                     ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
@@ -250,39 +250,71 @@ export const FaceRecognition = ({ userImage, onVerificationComplete }) => {
                 setScanProgress(prev => (prev + 2) % 100);
                 drawFaceFrame(detections[0], canvasRef.current, displaySize);
 
-                // VÃ©rification du visage
+                // Vérification du visage
                 if (userImage) {
-                    const userImageUrl = userImage.startsWith('http') ? userImage : `${config.API_URL}/${userImage}`;
-                    const img = await faceapi.fetchImage(userImageUrl);
-                    
-                    const referenceDetection = await faceapi.detectSingleFace(
-                        img,
-                        new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 })
-                    ).withFaceLandmarks().withFaceDescriptor();
+                    // Correction du chemin de l'image
+                    let userImageUrl = '';
 
-                    if (referenceDetection) {
-                        const distance = faceapi.euclideanDistance(
-                            referenceDetection.descriptor,
-                            detections[0].descriptor
-                        );
-                        
-                        const maxDistance = 1.0;
-                        const minDistance = 0.3;
-                        const normalizedDistance = Math.max(0, Math.min(1, (distance - minDistance) / (maxDistance - minDistance)));
-                        const percentage = (1 - normalizedDistance) * 100;
-                        const roundedPercentage = Math.round(percentage);
-                        setMatchPercentage(roundedPercentage);
+                    if (userImage.startsWith('http')) {
+                        // Si c'est déjà une URL complète
+                        userImageUrl = userImage;
+                    } else if (userImage.includes('/home/ubuntu/camp-final/campx_finale/piBack/')) {
+                        // Si c'est un chemin absolu du serveur, extraire la partie relative
+                        const relativePath = userImage.split('piBack/')[1];
+                        userImageUrl = `${config.API_URL}/${relativePath}`;
+                        console.log('URL d\'image corrigée (chemin absolu):', userImageUrl);
+                    } else if (userImage.includes('\\')) {
+                        // Si le chemin contient des backslashes, les remplacer
+                        const normalizedPath = userImage.replace(/\\/g, '/');
+                        userImageUrl = `${config.API_URL}/${normalizedPath}`;
+                        console.log('URL d\'image corrigée (backslashes):', userImageUrl);
+                    } else {
+                        // Chemin relatif standard
+                        userImageUrl = `${config.API_URL}/${userImage}`;
+                        console.log('URL d\'image standard:', userImageUrl);
+                    }
 
-                        // Afficher le temps restant qui diminue
-                        setScanStatus(`Analyse en cours... ${roundedPercentage}%`);
-                        setFaceDistanceMessage(`Temps restant : ${formatTime(remainingSeconds)} secondes`);
+                    try {
+                        console.log('Tentative de chargement de l\'image depuis:', userImageUrl);
+                        const img = await faceapi.fetchImage(userImageUrl);
+
+                        const referenceDetection = await faceapi.detectSingleFace(
+                            img,
+                            new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 })
+                        ).withFaceLandmarks().withFaceDescriptor();
+
+                        if (referenceDetection) {
+                            const distance = faceapi.euclideanDistance(
+                                referenceDetection.descriptor,
+                                detections[0].descriptor
+                            );
+
+                            const maxDistance = 1.0;
+                            const minDistance = 0.3;
+                            const normalizedDistance = Math.max(0, Math.min(1, (distance - minDistance) / (maxDistance - minDistance)));
+                            const percentage = (1 - normalizedDistance) * 100;
+                            const roundedPercentage = Math.round(percentage);
+                            setMatchPercentage(roundedPercentage);
+
+                            // Afficher le temps restant qui diminue
+                            setScanStatus(`Analyse en cours... ${roundedPercentage}%`);
+                            setFaceDistanceMessage(`Temps restant : ${formatTime(remainingSeconds)} secondes`);
+                        } else {
+                            console.error('? Aucune détection faciale dans l\'image de référence');
+                            setScanStatus('Problème avec l\'image de référence');
+                            setFaceDistanceMessage(`Veuillez contacter l'administrateur`);
+                        }
+                    } catch (imgError) {
+                        console.error('? Erreur lors de la détection faciale:', imgError);
+                        setScanStatus('Erreur de chargement de l\'image');
+                        setFaceDistanceMessage(`Impossible de charger l'image de profil`);
                     }
                 }
 
                 setLastDetection(detections[0]);
             }
         } catch (error) {
-            console.error("âŒ Erreur lors de la dÃ©tection faciale:", error);
+            console.error("? Erreur lors de la détection faciale:", error);
         }
 
         setIsProcessing(false);
@@ -294,9 +326,9 @@ export const FaceRecognition = ({ userImage, onVerificationComplete }) => {
     return (
         <div className="face-recognition-container">
             {error && <Alert variant="danger">{error}</Alert>}
-            
+
             <div className="video-container">
-                <video 
+                <video
                     ref={videoRef}
                     autoPlay
                     playsInline
@@ -308,7 +340,7 @@ export const FaceRecognition = ({ userImage, onVerificationComplete }) => {
                         transform: 'scaleX(-1)'
                     }}
                 />
-                
+
                 <div className="scan-status">
                     {scanStatus}
                     {matchPercentage > 0 && (
@@ -317,7 +349,7 @@ export const FaceRecognition = ({ userImage, onVerificationComplete }) => {
                         </div>
                     )}
                 </div>
-                
+
                 {isLoading && (
                     <div className="loading-container">
                         <Spinner animation="border" />
@@ -328,7 +360,7 @@ export const FaceRecognition = ({ userImage, onVerificationComplete }) => {
 
             <Modal show={showModal} onHide={() => setShowModal(false)} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>VÃ©rification Ã©chouÃ©e</Modal.Title>
+                    <Modal.Title>Vérification échouée</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     {modalMessage}
@@ -339,7 +371,7 @@ export const FaceRecognition = ({ userImage, onVerificationComplete }) => {
                         setVerificationStartTime(null);
                         setIsVerified(false);
                     }}>
-                        RÃ©essayer
+                        Réessayer
                     </Button>
                 </Modal.Footer>
             </Modal>

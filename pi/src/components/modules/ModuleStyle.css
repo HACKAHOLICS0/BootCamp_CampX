@@ -28,7 +28,7 @@
   min-height: calc(100vh - 80px);
 }
 
-/* En-tÃªte de la section */
+/* En-tête de la section */
 .module-header {
   background-color: #5FCF80;
   padding: 1.5rem 0;
@@ -59,9 +59,20 @@
   transform: rotate(30deg);
 }
 
-.module-header h2 {
+.module-header h2.module-title {
   color: white;
-  font-size: 1.8rem;
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  position: relative;
+  z-index: 1;
+  letter-spacing: -0.5px;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.module-header h3 {
+  color: white;
+  font-size: 1.6rem;
   font-weight: 600;
   margin: 0;
   position: relative;
@@ -200,7 +211,7 @@
 }
 
 .module-card .btn::after {
-  content: 'â†’';
+  content: '?';
   opacity: 0;
   transform: translateX(-5px);
   transition: all 0.3s ease;
@@ -319,7 +330,7 @@
   font-size: 1rem;
 }
 
-/* Ã‰tats de chargement et d'erreur */
+/* États de chargement et d'erreur */
 .error-container {
   display: flex;
   justify-content: center;
@@ -411,8 +422,12 @@
     margin-bottom: 2rem;
   }
 
-  .module-header h2 {
-    font-size: 2rem;
+  .module-header h2.module-title {
+    font-size: 1.8rem;
+  }
+
+  .module-header h3 {
+    font-size: 1.5rem;
   }
 
   .module-header p {
