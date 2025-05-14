@@ -318,7 +318,6 @@ export default function UserProfile() {
         setIsFormValid(isValid);
     };
     const openDeleteModal = (point) => {
-
         console.log("Selected point for deletion:", point); // V rifie ce qui est s lectionn
         setPointToDelete(point);  // Assure-toi d'utiliser `point.value`
         setIsDeleteModalOpen(true);
@@ -454,7 +453,6 @@ export default function UserProfile() {
                                                     className={`nav-link ${activeTab === 'interests' ? 'active' : ''}`}
                                                     onClick={() => setActiveTab('interests')}
                                                 >
-
                                                     <i className="bi bi-star me-1"></i> Interets
                                                 </button>
                                             </li>
@@ -500,7 +498,6 @@ export default function UserProfile() {
                             {activeTab === 'interests' && (
                                 <div className="card card-point w-100" style={{ position: 'relative' }}>
                                     <div className="section-header">
-
                                         <h4 className="section-title">Points d'Interet</h4>
                                     </div>
                                     <div className="row p-3">
@@ -525,7 +522,6 @@ export default function UserProfile() {
                                                 </div>
                                             ))
                                         ) : (
-
                                             <p className="text-center">Aucun point d'interet disponible.</p>
                                         )}
                                     </div>
