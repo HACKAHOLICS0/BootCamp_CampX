@@ -318,7 +318,11 @@ export default function UserProfile() {
         setIsFormValid(isValid);
     };
     const openDeleteModal = (point) => {
+<<<<<<< Updated upstream
         console.log("Selected point for deletion:", point); // V rifie ce qui est s lectionn
+=======
+        console.log("Selected point for deletion:", point); // V rifie ce qui est s lectionn 
+>>>>>>> Stashed changes
         setPointToDelete(point);  // Assure-toi d'utiliser `point.value`
         setIsDeleteModalOpen(true);
     };
@@ -453,7 +457,11 @@ export default function UserProfile() {
                                                     className={`nav-link ${activeTab === 'interests' ? 'active' : ''}`}
                                                     onClick={() => setActiveTab('interests')}
                                                 >
+<<<<<<< Updated upstream
                                                     <i className="bi bi-star me-1"></i> Interets
+=======
+                                                    <i className="bi bi-star me-1"></i> Intérêts
+>>>>>>> Stashed changes
                                                 </button>
                                             </li>
                                             <li className="nav-item">
@@ -498,7 +506,11 @@ export default function UserProfile() {
                             {activeTab === 'interests' && (
                                 <div className="card card-point w-100" style={{ position: 'relative' }}>
                                     <div className="section-header">
+<<<<<<< Updated upstream
                                         <h4 className="section-title">Points d'Interet</h4>
+=======
+                                        <h4 className="section-title">Points d'Intérêt</h4>
+>>>>>>> Stashed changes
                                     </div>
                                     <div className="row p-3">
                                         {user.refinterestpoints && user.refinterestpoints.length > 0 ? (
@@ -522,13 +534,21 @@ export default function UserProfile() {
                                                 </div>
                                             ))
                                         ) : (
+<<<<<<< Updated upstream
                                             <p className="text-center">Aucun point d'interet disponible.</p>
+=======
+                                            <p className="text-center">Aucun point d'intérêt disponible.</p>
+>>>>>>> Stashed changes
                                         )}
                                     </div>
                                     <button
                                         className="edit-button"
                                         onClick={openInterestPointModal}
+<<<<<<< Updated upstream
                                         title="Ajouter un point d'interet"
+=======
+                                        title="Ajouter un point d'intérêt"
+>>>>>>> Stashed changes
                                         style={{
                                             position: 'absolute',
                                             bottom: '15px',
